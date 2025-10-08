@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Gestionale Avanzato</title>
+    
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f0f2f5; }
+        .container { max-width: 1200px; margin: 40px auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { color: #007bff; text-align: center; margin-bottom: 30px; }
+        
+        /* Stili per le Schede (Tabs) */
+        .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
+        .tab-button {
+            padding: 12px 20px;
+            cursor: pointer;
+            border: none;
+            background-color: transparent;
+            font-size: 16px;
+            font-weight: 600;
+            color: #555;
+            transition: all 0.3s;
+        }
+        .tab-button.active {
+            color: #007bff;
+            border-bottom: 3px solid #007bff;
+            margin-bottom: -2px;
+        }
+        .tab-content { padding: 20px 0; border-top: 1px solid #eee; }
+        
+        /* Stili per i Form */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        input[type="text"], input[type="email"], input[type="tel"], input[type="number"], input[type="date"], input[type="time"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #30dd59;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover { background-color: #27c449; }
+        
+        /* Stili per i filtri di tipo Cliente */
+        .client-type-options { margin-bottom: 20px; }
+        .client-type-options button { background-color: #6c757d; }
+        .client-type-options button.active { background-color: #007bff; }
+        
+        /* Tabelle (per visualizzare i dati) */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f8f9fa; }
+    </style>
+
+</head>
+<body>
+    <div class="container">
+        <h1>Pannello di Controllo Aziendale 🛠️</h1>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'GestioneContatti')">1. Clienti & Fornitori</button>
+            <button class="tab-button" onclick="openTab(event, 'GestioneWorkshop')">2. Workshop (Labs)</button>
+            <button class="tab-button" onclick="openTab(event, 'CalcoloPreventivi')">3. Preventivi</button>
+        </div>
+
+        <div id="GestioneContatti" class="tab-content">
+            <h2>Gestione Clienti/Fornitori</h2>
+
+            <div class="form-group">
+                <label for="tipoRuolo">Tipo Ruolo</label>
+                <select id="tipoRuolo" onchange="toggleFornitoreFields()">
+                    <option value="Cliente">Cliente</option>
+                    <option value="Fornitore">Fornitore</option>
+                </select>
+            </div>
+            
+            <div id="fornitoreFields" class="form-group" style="display:none;">
+                <label for="nicknameFornitore">Nickname Fornitore (necessario per gestione Workshop)</label>
+                <input type="text" id="nicknameFornitore" placeholder="Es: SedeMilano, SalaSud">
+            </div>
+
+            <div id="tipoClienteSelect" class="form-group">
+                <label for="tipoCliente">Tipo Cliente</label>
+                <select id="tipoCliente" onchange="toggleClientFields()">
+                    <option value="Fisica">Persona Fisica</option>
+                    <option value="Giuridica">Persona Giuridica</option>
+                </select>
+            </div>
+
+            <hr>
+            
+            <h3>Dettagli Contatto</h3>
+            <div class="form-grid">
+                
+                <div id="campoNome" class="form-group">
+                    <label for="nome">Nome/Ragione Sociale</label>
+                    <input type="text" id="nome" placeholder="Nome o Ragione Sociale">
+                </div>
+                <div id="campoCognome" class="form-group">
+                    <label for="cognome">Cognome</label>
+                    <input type="text" id="cognome" placeholder="Cognome (solo persona fisica)">
+                </div>
+                
+                <div class="form-group"><label for="email">Email</label><input type="email" id="email" placeholder="Indirizzo e-mail"></div>
+                <div class="form-group"><label for="telefono">Telefono</label><input type="tel" id="telefono" placeholder="Numero di telefono"></div>
+                
+                <div class="form-group"><label for="indirizzo">Indirizzo Completo</label><input type="text" id="indirizzo" placeholder="Via/Piazza, Numero Civico"></div>
+                <div class="form-group"><label for="citta">Città</label><input type="text" id="citta" placeholder="Città"></div>
+                <div class="form-group"><label for="cap">CAP</label><input type="text" id="cap" placeholder="CAP"></div>
+                
+                <div id="campoCodiceFiscale" class="form-group"><label for="codiceFiscale">Codice Fiscale</label><input type="text" id="codiceFiscale" placeholder="Codice Fiscale (persona fisica)"></div>
+                <div id="campoPartitaIva" class="form-group" style="display:none;"><label for="partitaIva">Partita IVA</label><input type="text" id="partitaIva" placeholder="Partita IVA (persona giuridica)"></div>
+                
+                <div id="campoNomeFiglio" class="form-group"><label for="nomeFiglio">Nome Figlio</label><input type="text" id="nomeFiglio" placeholder="Nome Figlio (opzionale)"></div>
+                <div id="campoEtaFiglio" class="form-group"><label for="etaFiglio">Età Figlio</label><input type="number" id="etaFiglio" placeholder="Età (opzionale)"></div>
+            </div>
+            
+            <button onclick="salvaContatto()">Salva Contatto</button>
+
+            <hr>
+            
+            <h3>Elenco Contatti Salvati</h3>
+            <table id="tabellaContatti">
+                <thead>
+                    <tr>
+                        <th>Ruolo</th>
+                        <th>Tipo</th>
+                        <th>Nome</th>
+                        <th>Contatto</th>
+                        <th>Città</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="GestioneWorkshop" class="tab-content" style="display:none;">
+            <h2>Gestione Workshop (LABS)</h2>
+            
+            <h3>Crea Nuovo Workshop</h3>
+            <div class="form-grid">
+                
+                <div class="form-group"><label for="nomeWorkshop">Nome Workshop</label><input type="text" id="nomeWorkshop" placeholder="Es: Lab di Fotografia Avanzata"></div>
+                
+                <div class="form-group">
+                    <label for="sedeWorkshop">Sede (Nickname Fornitore)</label>
+                    <select id="sedeWorkshop">
+                        <option value="">Caricamento sedi...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group"><label for="dataWorkshop">Data</label><input type="date" id="dataWorkshop"></div>
+                <div class="form-group"><label for="oraInizio">Ora Inizio</label><input type="time" id="oraInizio"></div>
+                <div class="form-group"><label for="durataOre">Durata (Ore)</label><input type="number" id="durataOre" value="1" min="0"></div>
+                <div class="form-group"><label for="durataMinuti">Durata (Minuti)</label><input type="number" id="durataMinuti" value="0" min="0" max="59"></div>
+                
+                <div class="form-group"><label for="minClienti">Min Clienti</label><input type="number" id="minClienti" value="5" min="1"></div>
+                <div class="form-group"><label for="maxClienti">Max Clienti</label><input type="number" id="maxClienti" value="20" min="1"></div>
+                <div class="form-group"><label for="prezzoWorkshop">Prezzo (€ a persona)</label><input type="number" id="prezzoWorkshop" value="50.00" min="0" step="0.01"></div>
+            </div>
+            
+            <button onclick="salvaWorkshop()">Salva Workshop</button>
+
+            <hr>
+            
+            <h3>Workshop Programmati</h3>
+            <table id="tabellaWorkshop">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Data/Ora</th>
+                        <th>Sede</th>
+                        <th>Posti (Min/Max)</th>
+                        <th>Iscritti (Tot/Paganti)</th>
+                        <th>Prezzo</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            
+            <hr>
+            
+            <h3>Gestione Iscrizioni/Pagamenti</h3>
+            <div class="form-group">
+                <label for="workshopSelezionato">Workshop</label>
+                <select id="workshopSelezionato">
+                    <option value="">Seleziona un Workshop...</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="clienteIscritto">Cliente (Persona Fisica)</label>
+                <select id="clienteIscritto">
+                    <option value="">Seleziona un Cliente...</option>
+                </select>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group"><label for="dataPagamento">Data Pagamento</label><input type="date" id="dataPagamento"></div>
+                <div class="form-group"><label for="importoPagato">Importo Pagato (€)</label><input type="number" id="importoPagato" min="0" step="0.01"></div>
+                <div class="form-group">
+                    <label for="tipoPagamento">Tipo Pagamento</label>
+                    <select id="tipoPagamento">
+                        <option value="Unica Rata">Unica Rata</option>
+                        <option value="Acconto">Acconto</option>
+                        <option value="Saldo">Saldo</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="promemoriaScadenza">Promemoria Scadenza (Data)</label>
+                <input type="date" id="promemoriaScadenza">
+            </div>
+            
+            <button onclick="iscriviCliente()">Iscrivi e Registra Pagamento</button>
+            
+            <h4 id="titoloListaIscritti" style="margin-top: 20px;">Iscritti al Workshop Selezionato:</h4>
+            <ul id="listaIscritti">
+            </ul>
+
+        </div>
+
+        <div id="CalcoloPreventivi" class="tab-content" style="display:none;">
+            <h2>Calcolo Preventivi Dettagliato</h2>
+
+            <div class="section">
+                <h3>1. Registrazione Costi Sostenuti</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label for="costoNoleggio">Costo Noleggio Sede (€)</label><input type="number" id="costoNoleggio" value="0.00" min="0" step="0.01" oninput="calcolaCostoTotaleProgetto()"></div>
+                    <div class="form-group"><label for="costoMateriali">Costo Materiali Attività (€)</label><input type="number" id="costoMateriali" value="0.00" min="0" step="0.01" oninput="calcolaCostoTotaleProgetto()"></div>
+                    <div class="form-group"><label for="altriCosti">Altri Costi (€)</label><input type="number" id="altriCosti" value="0.00" min="0" step="0.01" oninput="calcolaCostoTotaleProgetto()"></div>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="section">
+                <h3>2. Calcolo Costo Viaggio</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label for="distanzaKm">Distanza (Km)</label><input type="number" id="distanzaKm" value="100" min="0"></div>
+                    <div class="form-group"><label for="consumoLKm">Consumo Carburante (Km/Litro)</label><input type="number" id="consumoLKm" value="15" min="1"></div>
+                    <div class="form-group"><label for="costoCarburante">Costo Carburante (€/Litro)</label><input type="number" id="costoCarburante" value="1.80" min="0.5" step="0.01"></div>
+                </div>
+                <button onclick="calcolaCostoViaggio()">Calcola Costo Viaggio</button>
+                <p>Costo Viaggio Stimato: <strong id="risultatoViaggio">0.00 €</strong></p>
+            </div>
+
+            <hr>
+
+            <div class="section">
+                <h3>3. Riepilogo e Documento Preventivo</h3>
+                
+                <p>Costo totale del progetto: <strong id="costoTotaleProgetto">0.00 €</strong></p>
+                <p>Margine di profitto desiderato (%): <input type="number" id="margineProfitto" value="20" min="0" oninput="calcolaPrezzoFinale()"></p>
+                <p>Prezzo Proposto al Cliente: <strong id="prezzoFinaleCliente">0.00 €</strong></p>
+
+                <button onclick="calcolaPrezzoFinale()">Aggiorna Prezzo Finale</button>
+                <button onclick="generaPreventivoFinale()">Genera/Stampa Documento Preventivo</button>
+                
+                <div id="anteprimaPreventivo" style="border: 1px solid #ccc; padding: 15px; margin-top: 15px; background-color: #fff; min-height: 200px;">
+                    Anteprima documento...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+    <script>
+        // =========================================================================
+        // 2. CONFIGURAZIONE E INIZIALIZZAZIONE FIREBASE
+        // =========================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXAEKD9WTlVrUcx_xyyuxwhOD6YzUU2xU",
+            authDomain: "epapp-bb953.firebaseapp.com",
+            projectId: "epapp-bb953",
+            storageBucket: "epapp-bb953.firebasestorage.app",
+            messagingSenderId: "797675959163",
+            appId: "1:797675959163:web:30c077ce253990239d03de",
+            measurementId: "G-RN2896V58E"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = app.firestore();
+
+        // Riferimenti alle Collezioni
+        const contattiCollection = db.collection('contattiAziendali'); 
+        const workshopCollection = db.collection('workshop');
+        const iscrizioniCollection = db.collection('iscrizioni');
+        
+        let costoViaggio = 0.00; // Variabile globale per salvare il costo del viaggio
+
+        // =========================================================================
+        // FUNZIONI PRINCIPALI DI NAVIGAZIONE E INIZIALIZZAZIONE
+        // =========================================================================
+
+        // Funzione per gestire il cambio di Scheda (Tabs)
+        function openTab(evt, tabName) {
+            var tabcontent = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+
+            var tablinks = document.getElementsByClassName("tab-button");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+
+            // Logica specifica quando si apre una tab
+            if (tabName === 'GestioneWorkshop') {
+                popolaDropdowns();
+                caricaWorkshop();
+            }
+            if (tabName === 'CalcoloPreventivi') {
+                calcolaCostoTotaleProgetto();
+                calcolaPrezzoFinale();
+            }
+        }
+
+        // Funzione per mostrare/nascondere i campi del Fornitore
+        function toggleFornitoreFields() {
+            const ruolo = document.getElementById('tipoRuolo').value;
+            const fornitoreFields = document.getElementById('fornitoreFields');
+            const tipoClienteSelect = document.getElementById('tipoClienteSelect');
+            
+            if (ruolo === 'Fornitore') {
+                fornitoreFields.style.display = 'block';
+                tipoClienteSelect.style.display = 'none';
+                toggleClientFields(); 
+            } else {
+                fornitoreFields.style.display = 'none';
+                tipoClienteSelect.style.display = 'block';
+                toggleClientFields(); 
+            }
+        }
+
+        // Funzione per mostrare/nascondere i campi specifici di Persona Fisica/Giuridica
+        function toggleClientFields() {
+            const ruolo = document.getElementById('tipoRuolo').value;
+            
+            if (ruolo === 'Cliente') {
+                const tipo = document.getElementById('tipoCliente').value;
+                const isFisica = tipo === 'Fisica';
+                document.getElementById('campoCognome').style.display = isFisica ? 'block' : 'none';
+                document.getElementById('campoCodiceFiscale').style.display = isFisica ? 'block' : 'none';
+                document.getElementById('campoNomeFiglio').style.display = isFisica ? 'block' : 'none';
+                document.getElementById('campoEtaFiglio').style.display = isFisica ? 'block' : 'none';
+
+                document.getElementById('campoPartitaIva').style.display = isFisica ? 'none' : 'block';
+                if (!isFisica) document.getElementById('campoCognome').style.display = 'none';
+            } else {
+                // Se è Fornitore, nascondi tutti i campi specifici dei Clienti
+                document.getElementById('campoCognome').style.display = 'none';
+                document.getElementById('campoCodiceFiscale').style.display = 'none';
+                document.getElementById('campoPartitaIva').style.display = 'none';
+                document.getElementById('campoNomeFiglio').style.display = 'none';
+                document.getElementById('campoEtaFiglio').style.display = 'none';
+            }
+        }
+
+        // Funzione di base per la prima scheda all'avvio
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('GestioneContatti').style.display = 'block';
+            toggleFornitoreFields();
+            caricaContatti(); 
+        });
+
+
+        // =========================================================================
+        // SCHEDA 1: GESTIONE CONTATTI (CLIENTI/FORNITORI)
+        // =========================================================================
+
+        // Funzione per raccogliere i dati dal form e salvarli su Firestore
+        function salvaContatto() {
+            const ruolo = document.getElementById('tipoRuolo').value;
+            const tipoCliente = ruolo === 'Cliente' ? document.getElementById('tipoCliente').value : 'N/A';
+            const datiContatto = {
+                ruolo: ruolo,
+                tipo: tipoCliente, 
+                
+                nome: document.getElementById('nome').value.trim(),
+                cognome: (ruolo === 'Cliente' && tipoCliente === 'Fisica') ? document.getElementById('cognome').value.trim() : '',
+                email: document.getElementById('email').value.trim(),
+                telefono: document.getElementById('telefono').value.trim(),
+
+                indirizzo: document.getElementById('indirizzo').value.trim(),
+                citta: document.getElementById('citta').value.trim(),
+                cap: document.getElementById('cap').value.trim(),
+
+                codiceFiscale: (ruolo === 'Cliente' && tipoCliente === 'Fisica') ? document.getElementById('codiceFiscale').value.trim() : '',
+                partitaIva: (ruolo === 'Cliente' && tipoCliente === 'Giuridica') ? document.getElementById('partitaIva').value.trim() : '',
+                
+                nicknameFornitore: (ruolo === 'Fornitore') ? document.getElementById('nicknameFornitore').value.trim() : '',
+
+                nomeFiglio: (ruolo === 'Cliente' && tipoCliente === 'Fisica') ? document.getElementById('nomeFiglio').value.trim() : '',
+                etaFiglio: (ruolo === 'Cliente' && tipoCliente === 'Fisica' && document.getElementById('etaFiglio').value) ? parseInt(document.getElementById('etaFiglio').value) : null,
+                
+                dataCreazione: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            if (!datiContatto.nome || !datiContatto.email) {
+                alert("Per favore, inserisci almeno Nome/Ragione Sociale e Email.");
+                return;
+            }
+
+            contattiCollection.add(datiContatto)
+                .then(() => {
+                    alert(`Contatto ${datiContatto.nome} salvato con successo!`);
+                })
+                .catch(error => {
+                    console.error("Errore nel salvataggio su Firestore:", error);
+                    alert("ERRORE! Non è stato possibile salvare il contatto. Controlla la console.");
+                });
+        }
+
+        // Funzione per caricare i contatti da Firestore e popolare la tabella
+        function caricaContatti() {
+            const tabellaBody = document.querySelector('#tabellaContatti tbody');
+            tabellaBody.innerHTML = ''; 
+
+            contattiCollection.onSnapshot((snapshot) => {
+                tabellaBody.innerHTML = ''; 
+                
+                snapshot.forEach((doc) => {
+                    const contatto = doc.data();
+                    const idContatto = doc.id; 
+
+                    const riga = tabellaBody.insertRow();
+                    
+                    riga.insertCell().textContent = contatto.ruolo;
+                    
+                    const tipoDisplay = contatto.ruolo === 'Fornitore' ? (contatto.nicknameFornitore || 'N/A') : contatto.tipo;
+                    riga.insertCell().textContent = tipoDisplay;
+
+                    const nomeDisplay = contatto.ruolo === 'Cliente' && contatto.tipo === 'Fisica' 
+                                            ? `${contatto.nome} ${contatto.cognome}` 
+                                            : contatto.nome;
+                    riga.insertCell().textContent = nomeDisplay;
+                    
+                    riga.insertCell().textContent = contatto.email || contatto.telefono;
+                    
+                    riga.insertCell().textContent = contatto.citta;
+                    
+                    const cellaAzioni = riga.insertCell();
+                    const btnElimina = document.createElement('button');
+                    btnElimina.textContent = 'Elimina';
+                    btnElimina.style.backgroundColor = '#dc3545';
+                    btnElimina.onclick = () => eliminaContatto(idContatto);
+                    cellaAzioni.appendChild(btnElimina);
+                });
+            });
+        }
+
+        // Funzione di eliminazione Contatto
+        function eliminaContatto(id) {
+            if (confirm("Sei sicuro di voler eliminare questo contatto?")) {
+                contattiCollection.doc(id).delete()
+                    .then(() => {
+                        console.log("Contatto eliminato!");
+                    })
+                    .catch(error => {
+                        console.error("Errore durante l'eliminazione:", error);
+                        alert("Errore durante l'eliminazione.");
+                    });
+            }
+        }
+
+
+        // =========================================================================
+        // SCHEDA 2: GESTIONE WORKSHOP (LABS)
+        // =========================================================================
+
+        // Funzione per popolare i menu a discesa con i dati da Firebase
+        function popolaDropdowns() {
+            const sedeDropdown = document.getElementById('sedeWorkshop');
+            const clienteDropdown = document.getElementById('clienteIscritto');
+            const workshopSelezionatoDropdown = document.getElementById('workshopSelezionato');
+            
+            sedeDropdown.innerHTML = '<option value="">Seleziona Sede...</option>';
+            clienteDropdown.innerHTML = '<option value="">Seleziona Cliente...</option>';
+            workshopSelezionatoDropdown.innerHTML = '<option value="">Seleziona Workshop...</option>';
+
+            // Carica Fornitori (Sedi)
+            contattiCollection.where('ruolo', '==', 'Fornitore').where('nicknameFornitore', '!=', '').get().then(snapshot => {
+                snapshot.forEach(doc => {
+                    const fornitore = doc.data();
+                    const option = document.createElement('option');
+                    option.value = fornitore.nicknameFornitore;
+                    option.textContent = `${fornitore.nicknameFornitore} (${fornitore.nome})`;
+                    sedeDropdown.appendChild(option);
+                });
+            });
+
+            // Carica Clienti (solo Persona Fisica per i LABS)
+            contattiCollection.where('ruolo', '==', 'Cliente').where('tipo', '==', 'Fisica').get().then(snapshot => {
+                snapshot.forEach(doc => {
+                    const cliente = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id; 
+                    option.textContent = `${cliente.nome} ${cliente.cognome} (${cliente.email})`;
+                    clienteDropdown.appendChild(option);
+                });
+            });
+
+            // Carica i Workshop (per la gestione iscrizioni)
+            workshopCollection.get().then(snapshot => {
+                snapshot.forEach(doc => {
+                    const workshop = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id; 
+                    option.textContent = `${workshop.nomeWorkshop} - ${workshop.dataWorkshop}`;
+                    workshopSelezionatoDropdown.appendChild(option);
+                });
+                workshopSelezionatoDropdown.onchange = () => caricaIscrizioni(workshopSelezionatoDropdown.value);
+            });
+        }
+
+
+        // Funzione per salvare i dati del nuovo Workshop
+        function salvaWorkshop() {
+            const nomeWorkshop = document.getElementById('nomeWorkshop').value.trim();
+            const sedeWorkshop = document.getElementById('sedeWorkshop').value;
+            const dataWorkshop = document.getElementById('dataWorkshop').value;
+            
+            if (!nomeWorkshop || !sedeWorkshop || !dataWorkshop) {
+                alert("Per favore, compila tutti i campi obbligatori (Nome, Sede, Data).");
+                return;
+            }
+
+            const datiWorkshop = {
+                nomeWorkshop,
+                sedeWorkshop,
+                dataWorkshop,
+                oraInizio: document.getElementById('oraInizio').value,
+                durataOre: parseInt(document.getElementById('durataOre').value) || 0,
+                durataMinuti: parseInt(document.getElementById('durataMinuti').value) || 0,
+                minClienti: parseInt(document.getElementById('minClienti').value) || 1,
+                maxClienti: parseInt(document.getElementById('maxClienti').value) || 20,
+                prezzoWorkshop: parseFloat(document.getElementById('prezzoWorkshop').value) || 0.00,
+                
+                iscrittiTotali: 0,
+                pagantiTotali: 0,
+                
+                dataCreazione: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            workshopCollection.add(datiWorkshop)
+                .then(() => {
+                    alert(`Workshop "${nomeWorkshop}" salvato!`);
+                    caricaWorkshop(); 
+                    popolaDropdowns(); 
+                })
+                .catch(error => {
+                    console.error("Errore nel salvataggio del workshop:", error);
+                    alert("ERRORE! Impossibile salvare il workshop.");
+                });
+        }
+
+
+        // Funzione per caricare i workshop e popolare la tabella
+        function caricaWorkshop() {
+            const tabellaBody = document.querySelector('#tabellaWorkshop tbody');
+            tabellaBody.innerHTML = '';
+
+            workshopCollection.onSnapshot(snapshot => {
+                tabellaBody.innerHTML = ''; 
+                
+                snapshot.forEach(doc => {
+                    const workshop = doc.data();
+                    const idWorkshop = doc.id;
+                    
+                    const riga = tabellaBody.insertRow();
+                    
+                    riga.insertCell().textContent = workshop.nomeWorkshop;
+                    riga.insertCell().textContent = `${workshop.dataWorkshop} alle ${workshop.oraInizio}`;
+                    riga.insertCell().textContent = workshop.sedeWorkshop;
+                    riga.insertCell().textContent = `${workshop.minClienti}/${workshop.maxClienti}`;
+                    riga.insertCell().textContent = `${workshop.iscrittiTotali || 0} / ${workshop.pagantiTotali || 0}`; 
+                    riga.insertCell().textContent = `${workshop.prezzoWorkshop.toFixed(2)} €`;
+
+                    const cellaAzioni = riga.insertCell();
+                    const btnElimina = document.createElement('button');
+                    btnElimina.textContent = 'Elimina';
+                    btnElimina.style.backgroundColor = '#dc3545';
+                    btnElimina.onclick = () => eliminaWorkshop(idWorkshop);
+                    cellaAzioni.appendChild(btnElimina);
+                });
+            });
+        }
+
+        // Funzione di eliminazione Workshop
+        function eliminaWorkshop(id) {
+            if (confirm("Attenzione! Vuoi davvero eliminare questo Workshop e tutte le sue iscrizioni?")) {
+                workshopCollection.doc(id).delete()
+                    .then(() => {
+                        alert("Workshop eliminato!");
+                    })
+                    .catch(error => console.error("Errore nell'eliminazione del workshop:", error));
+            }
+        }
+
+
+        // Funzione per iscrivere un cliente e registrare il pagamento
+        function iscriviCliente() {
+            const idWorkshop = document.getElementById('workshopSelezionato').value;
+            const idCliente = document.getElementById('clienteIscritto').value;
+            const importoPagato = parseFloat(document.getElementById('importoPagato').value) || 0;
+            const tipoPagamento = document.getElementById('tipoPagamento').value;
+            
+            if (!idWorkshop || !idCliente) {
+                alert("Per favore, seleziona un Workshop e un Cliente.");
+                return;
+            }
+
+            const datiIscrizione = {
+                idWorkshop,
+                idCliente,
+                dataPagamento: document.getElementById('dataPagamento').value,
+                importoPagato,
+                tipoPagamento,
+                promemoriaScadenza: document.getElementById('promemoriaScadenza').value || null,
+                dataIscrizione: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            iscrizioniCollection.add(datiIscrizione)
+                .then(() => {
+                    alert("Iscrizione e pagamento registrati!");
+                    
+                    // Aggiornamento atomico dei contatori: iscritti aumenta sempre
+                    const updateData = {
+                        iscrittiTotali: firebase.firestore.FieldValue.increment(1),
+                    };
+
+                    // Paganti aumenta solo se il tipo di pagamento non è solo 'Acconto'
+                    if (tipoPagamento !== 'Acconto') {
+                         updateData.pagantiTotali = firebase.firestore.FieldValue.increment(1);
+                    }
+
+                    workshopCollection.doc(idWorkshop).update(updateData)
+                    .then(() => {
+                        console.log("Contatori Workshop aggiornati con successo.");
+                        caricaIscrizioni(idWorkshop); // Aggiorna la lista
+                    })
+                    .catch(error => {
+                        console.error("Errore nell'aggiornamento dei contatori del Workshop:", error);
+                    });
+                })
+                .catch(error => {
+                    console.error("Errore nell'iscrizione:", error);
+                    alert("ERRORE! Impossibile registrare l'iscrizione.");
+                });
+        } // <--- FINE DELLA FUNZIONE iscriviCliente()
+
+        // Funzione per caricare la lista degli iscritti per un dato Workshop
+        function caricaIscrizioni(idWorkshop) {
+            const listaIscritti = document.getElementById('listaIscritti');
+            listaIscritti.innerHTML = '';
+            document.getElementById('titoloListaIscritti').textContent = "Iscritti al Workshop Selezionato:";
+            
+            if (!idWorkshop) return;
+            
+            iscrizioniCollection.where('idWorkshop', '==', idWorkshop).get().then(snapshotIscrizioni => {
+                snapshotIscrizioni.forEach(docIscrizione => {
+                    const iscrizione = docIscrizione.data();
+                    
+                    contattiCollection.doc(iscrizione.idCliente).get().then(docCliente => {
+                        const cliente = docCliente.data();
+                        
+                        const li = document.createElement('li');
+                        const statusPagamento = iscrizione.tipoPagamento === 'Acconto' 
+                            ? `⚠️ Acconto di ${iscrizione.importoPagato.toFixed(2)} €` 
+                            : `✅ Pagato ${iscrizione.importoPagato.toFixed(2)} € (${iscrizione.tipoPagamento})`;
+                        
+                        li.innerHTML = `
+                            <strong>${cliente.nome} ${cliente.cognome}</strong> 
+                            (${cliente.email}) - 
+                            ${statusPagamento}
+                        `;
+                        listaIscritti.appendChild(li);
+                    }).catch(error => {
+                        console.error("Errore nel recupero dati cliente:", error);
+                    });
+                });
+            }).catch(error => console.error("Errore nel caricamento iscrizioni:", error));
+        }
+
+
+        // =========================================================================
+        // SCHEDA 3: CALCOLO PREVENTIVI
+        // =========================================================================
+
+        // 1. Calcola il costo totale sostenuto (Noleggio + Materiali + Altri Costi + Viaggio)
+        function calcolaCostoTotaleProgetto() {
+            const noleggio = parseFloat(document.getElementById('costoNoleggio').value) || 0;
+            const materiali = parseFloat(document.getElementById('costoMateriali').value) || 0;
+            const altriCosti = parseFloat(document.getElementById('altriCosti').value) || 0;
+            
+            const costoTotale = noleggio + materiali + altriCosti + costoViaggio; 
+
+            document.getElementById('costoTotaleProgetto').textContent = costoTotale.toFixed(2) + ' €';
+            calcolaPrezzoFinale(costoTotale);
+            return costoTotale;
+        }
+
+        // 2. Calcola il costo del viaggio e aggiorna la variabile globale
+        function calcolaCostoViaggio() {
+            const distanzaKm = parseFloat(document.getElementById('distanzaKm').value) || 0;
+            const consumoLKm = parseFloat(document.getElementById('consumoLKm').value) || 1;
+            const costoCarburante = parseFloat(document.getElementById('costoCarburante').value) || 0;
+            
+            const litriNecessari = distanzaKm / consumoLKm;
+            const costoSoloAndata = litriNecessari * costoCarburante;
+            const costoTotaleViaggio = costoSoloAndata * 2; 
+            
+            costoViaggio = costoTotaleViaggio;
+            document.getElementById('risultatoViaggio').textContent = costoViaggio.toFixed(2) + ' €';
+            
+            calcolaCostoTotaleProgetto();
+        }
+
+        // 3. Calcola il prezzo finale da proporre al cliente (Costo Totale + Margine)
+        function calcolaPrezzoFinale(costoBase = null) {
+            const costoTotale = costoBase !== null ? costoBase : calcolaCostoTotaleProgetto();
+            const margineProfitto = parseFloat(document.getElementById('margineProfitto').value) || 0;
+            
+            const prezzoFinale = costoTotale * (1 + margineProfitto / 100);
+            
+            document.getElementById('prezzoFinaleCliente').textContent = prezzoFinale.toFixed(2) + ' €';
+            return prezzoFinale;
+        }
+
+        // 4. Genera un'anteprima del preventivo (simulazione)
+        function generaPreventivoFinale() {
+            const costoTotale = calcolaCostoTotaleProgetto();
+            const prezzoFinale = calcolaPrezzoFinale();
+            const margine = parseFloat(document.getElementById('margineProfitto').value) || 0;
+
+            const noleggio = parseFloat(document.getElementById('costoNoleggio').value) || 0;
+            const materiali = parseFloat(document.getElementById('costoMateriali').value) || 0;
+            const altriCosti = parseFloat(document.getElementById('altriCosti').value) || 0;
+
+            const anteprima = `
+                <h4>Preventivo Dettagliato</h4>
+                <p>Data: ${new Date().toLocaleDateString('it-IT')}</p>
+                <hr>
+                
+                <p><strong>Costi Interni Stimati:</strong></p>
+                <ul>
+                    <li>Costo Noleggio: ${noleggio.toFixed(2)} €</li>
+                    <li>Costo Materiali: ${materiali.toFixed(2)} €</li>
+                    <li>Costo Viaggio: ${costoViaggio.toFixed(2)} €</li>
+                    <li>Altri Costi: ${altriCosti.toFixed(2)} €</li>
+                </ul>
+                <p><strong>COSTO TOTALE AZIENDALE: ${costoTotale.toFixed(2)} €</strong></p>
+                <hr>
+                
+                <p>Margine Applicato: ${margine}%</p>
+                <p style="font-size: 1.2em; color: #007bff;"><strong>PREZZO PROPOSTO AL CLIENTE: ${prezzoFinale.toFixed(2)} €</strong></p>
+            `;
+            
+            document.getElementById('anteprimaPreventivo').innerHTML = anteprima;
+            alert("Documento Preventivo aggiornato nell'anteprima!");
+        } // <--- FINE DELLA FUNZIONE generaPreventivoFinale()
+
+    </script>
+</body>
+</html>
