@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPApp - Statistiche & KPI</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-auth-compat.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    
+    <style>
+        /* BASE RESET */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
+        
+        /* LAYOUT PRINCIPALE */
+        .dashboard-container { display: flex; min-height: 100vh; }
+        
+        /* NAVBAR / SIDEBAR */
+        .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+        .logo-link { width: 100%; text-align: center; margin-bottom: 30px; }
+        .logo-link img { max-width: 80%; height: auto; border-radius: 5px; cursor: pointer; transition: transform 0.3s, opacity 0.3s; } 
+        .dashboard-nav small { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; align-self: flex-start; margin-left: 10px; margin-top: 15px; color: #909090; }
+        .dashboard-nav hr { width: 90%; border: 0; border-top: 1px solid #495057; margin: 5px 0 10px 0; }
+        .dashboard-nav a { color: #ccc; text-decoration: none; padding: 12px 15px; margin: 3px 0; display: block; width: 90%; text-align: left; border-radius: 4px; transition: background-color 0.3s, color 0.3s, padding-left 0.3s; }
+        .dashboard-nav a:hover, .dashboard-nav a.active { background-color: #A5DD2E; color: #343a40; font-weight: bold; padding-left: 20px; }
+        
+        /* CONTENUTO PRINCIPALE */
+        .dashboard-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
+        .tab-content { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); margin-bottom: 30px; }
+        
+        /* KPI BOXES */
+        .kpi-container { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
+        .kpi-box { 
+            flex: 1; 
+            min-width: 250px; 
+            background: #fff; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+            border-left: 5px solid #A5DD2E;
+        }
+        .kpi-box:nth-child(2) { border-left-color: #007bff; }
+        .kpi-box:nth-child(3) { border-left-color: #dc3545; }
+        
+        .kpi-box h4 { margin-top: 0; color: #555; font-size: 0.9em; text-transform: uppercase; }
+        .kpi-box .value { font-size: 2.2em; font-weight: bold; margin-bottom: 0; }
+        .kpi-box .trend { font-size: 0.9em; color: #28a745; }
+        .kpi-box .trend.negative { color: #dc3545; }
+
+        /* CHART CONTAINER */
+        .chart-row { display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
+        .chart-box { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            flex: 1;
+            min-width: 400px;
+        }
+        .chart-large { min-width: 100%; }
+
+        @media (max-width: 1024px) {
+            .chart-row { flex-direction: column; }
+            .chart-box { min-width: 100%; }
+        }
+        @media (max-width: 768px) {
+            .dashboard-container { flex-direction: column; }
+            .kpi-container { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="authScreen" style="display: none; height: 100vh; justify-content: center; align-items: center; background-color: #e0e0e0;">
+        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <h2 style="text-align: center; color: #A5DD2E;">EPApp Login</h2>
+            <input type="email" id="loginEmail" placeholder="Email" required style="margin-bottom: 10px;">
+            <input type="password" id="loginPassword" placeholder="Password" required style="margin-bottom: 20px;">
+            <button class="primary" onclick="handleLogin()" style="width: 100%; background-color: #A5DD2E; border: none; padding: 10px;">Accedi</button>
+            <p id="authMessage" style="color: red; text-align: center; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <div class="dashboard-container" style="display: none;">
+        
+        <nav class="dashboard-nav">
+            <a href="00index.html" class="logo-link"><img src="lemon_logo.png" alt="EPApp Logo"></a>
+            
+            <small>Dashboard</small><hr>
+            <a href="00index.html" class="tab-link">Dashboard</a> 
+
+            <small>Monitoraggio Labs</small><hr>
+            <a href="03labs.html" class="tab-link">Labs & Attività</a> 
+            <a href="04logistica.html" class="tab-link">Costi Logistica</a> 
+            
+            <small>Anagrafiche</small><hr>
+            <a href="01clienti.html" class="tab-link">Clienti & Iscrizioni</a> 
+            <a href="02fornitori.html" class="tab-link">Fornitori & Sedi</a> 
+            
+            <small>Finanza & Analisi</small><hr>
+            <a href="05preventivi.html" class="tab-link">Preventivi & Fatture</a> 
+            <a href="06stats.html" class="tab-link active">Statistiche & KPI</a> 
+            
+            <a href="#" id="logoutLink" onclick="handleLogout()" style="color: #ff9999; margin-top: auto;">Logout</a>
+        </nav>
+
+        <main class="dashboard-content">
+            
+            <div id="statsDashboard" class="tab-content">
+                <h2>Statistiche, Metriche e KPI Finanziari</h2>
+                <p>Analisi dei dati finanziari e operativi in tempo reale.</p>
+
+                <div class="kpi-container">
+                    <div class="kpi-box">
+                        <h4>Utile Netto (YTD)</h4>
+                        <p class="value" id="kpiUtileNetto">Caricamento...</p>
+                        <p class="trend" id="trendUtile">📈 Trend in analisi...</p>
+                    </div>
+                    <div class="kpi-box">
+                        <h4>Ricavi Totali (YTD)</h4>
+                        <p class="value" id="kpiRicaviTotali">Caricamento...</p>
+                        <p class="trend" id="trendRicavi">📈 Trend in analisi...</p>
+                    </div>
+                    <div class="kpi-box">
+                        <h4>Costi Operativi (YTD)</h4>
+                        <p class="value" id="kpiCostiTotali">Caricamento...</p>
+                        <p class="trend trend-negative" id="trendCosti">📉 Trend in analisi...</p>
+                    </div>
+                    <div class="kpi-box">
+                        <h4>Clienti Attivi (Totale)</h4>
+                        <p class="value" id="kpiClientiAttivi">Caricamento...</p>
+                        <p class="trend" id="trendClienti">📈 Iscrizioni in analisi...</p>
+                    </div>
+                </div>
+
+                <div class="chart-row">
+                    <div class="chart-box chart-large">
+                        <h3>Trend Utile Netto e Prospetto Forecast (12 Mesi)</h3>
+                        <canvas id="lineChartUtile"></canvas>
+                        <small style="display: block; margin-top: 10px; color: #555;">* I dati storici vengono analizzati per proiettare il forecast.</small>
+                    </div>
+                </div>
+
+                <div class="chart-row">
+                    <div class="chart-box">
+                        <h3>Costi vs. Ricavi Mensili (Ultimi 6 Mesi)</h3>
+                        <canvas id="barChartCostiRicavi"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Distribuzione Ricavi per Lab (Totale)</h3>
+                        <canvas id="doughnutChartLabs"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ⚠️ SOSTITUISCI QUESTO OGGETTO CON LA TUA CONFIGURAZIONE REALE DI FIREBASE ⚠️
+        const firebaseConfig = {
+  	apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY",
+  	authDomain: "epapp-bb953.firebaseapp.com",
+  	projectId: "epapp-bb953",
+  	storageBucket: "epapp-bb953.firebasestorage.app",
+  	messagingSenderId: "797675959163",
+  	appId: "1:797675959163:web:30c077ce253990239d03de",
+  	measurementId: "G-RN2896V58E"
+	};
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = app.firestore();
+        const auth = app.auth(); 
+        
+        // Colori primari
+        const COLOR_PROFIT = '#A5DD2E';
+        const COLOR_REVENUE = '#007bff';
+        const COLOR_COSTS = '#dc3545';
+        
+        // --- FUNZIONI DI AUTENTICAZIONE ---
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {})
+                .catch((error) => {
+                    document.getElementById('authScreen').style.display = 'flex';
+                    document.getElementById('authMessage').textContent = `Errore di login: ${error.message}`;
+                });
+        }
+        function handleLogout() { auth.signOut().then(() => { window.location.reload(); }); }
+        
+        auth.onAuthStateChanged((user) => {
+            const authScreen = document.getElementById('authScreen');
+            const dashboardContainer = document.querySelector('.dashboard-container');
+
+            if (user) {
+                authScreen.style.display = 'none';
+                dashboardContainer.style.display = 'flex';
+                caricaEVisualizzaStatistiche();
+            } else {
+                authScreen.style.display = 'flex';
+                dashboardContainer.style.display = 'none';
+            }
+        });
+
+        // --- FUNZIONI DI AGGREGAZIONE DATI REALI ---
+
+        /**
+         * Recupera e aggrega i dati reali dal database Firestore per i KPI e i grafici.
+         * ATTENZIONE: Questa aggregazione sul client è REALISTICA ma INEFFICIENTE su grandi dataset.
+         */
+        async function fetchStatsData() {
+            // Inizializzazione contenitori
+            let ricaviYTD = 0;
+            let costiYTD = 0;
+            const ricaviPerLab = {}; // { 'Nome Lab': Totale Ricavo }
+            const monthlyData = {}; // { 'YYYY-MM': { ricavi: 0, costi: 0, utile: 0 } }
+            
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            const sixMonthsAgo = new Date(today.setMonth(today.getMonth() - 6));
+
+            // --- 1. Aggregazione da Labs (Labs con prezzo finale, costi e ricavi) ---
+            const labsSnapshot = await db.collection("labs").get();
+            labsSnapshot.forEach(doc => {
+                const data = doc.data();
+                const prezzoFinale = parseFloat(data.prezzoEffettivo || 0); // Prezzo finale del lab (Ricavo)
+                
+                // Assumiamo che il costo interno (Logistica + Materiali + Nolo Sede) sia salvato su Labs
+                const costoInterno = parseFloat(data.costoOperativoTotale || 0); 
+                
+                ricaviYTD += prezzoFinale;
+                costiYTD += costoInterno;
+
+                // Distribuzione per Lab
+                const labName = data.nomeLab || 'Sconosciuto';
+                ricaviPerLab[labName] = (ricaviPerLab[labName] || 0) + prezzoFinale;
+                
+                // Dati mensili per Bar Chart e Line Chart
+                if (data.dataOraInizio) {
+                    const labDate = new Date(data.dataOraInizio);
+                    const monthKey = `${labDate.getFullYear()}-${String(labDate.getMonth() + 1).padStart(2, '0')}`;
+                    
+                    if (labDate >= sixMonthsAgo && labDate <= today) {
+                        monthlyData[monthKey] = monthlyData[monthKey] || { ricavi: 0, costi: 0, utile: 0 };
+                        monthlyData[monthKey].ricavi += prezzoFinale;
+                        monthlyData[monthKey].costi += costoInterno;
+                        monthlyData[monthKey].utile += (prezzoFinale - costoInterno);
+                    }
+                }
+            });
+            
+            const utileYTD = ricaviYTD - costiYTD;
+
+            // --- 2. Clienti Attivi (semplice conteggio) ---
+            const clientiSnapshot = await db.collection("clienti").get();
+            // Assumiamo che 'statoIscrizione' = 'attiva'
+            const clientiAttivi = clientiSnapshot.docs.filter(doc => doc.data().statoIscrizione === 'attiva').length;
+            
+            // --- 3. Preparazione Dati Storici (6 Mesi) ---
+            const historicalLabels = [];
+            const historicalRicavi = [];
+            const historicalCosti = [];
+            const historicalUtile = [];
+            
+            const sixMonthsLabels = [];
+            for (let i = 5; i >= 0; i--) {
+                const date = new Date();
+                date.setMonth(today.getMonth() - i);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                const monthName = date.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
+                
+                historicalLabels.push(monthName);
+                const data = monthlyData[monthKey] || { ricavi: 0, costi: 0, utile: 0 };
+                historicalRicavi.push(data.ricavi);
+                historicalCosti.push(data.costi);
+                historicalUtile.push(data.utile);
+            }
+
+            // --- 4. Calcolo Trend Utile e Forecast (12 Mesi) ---
+            // Per il Trend 12 mesi, useremo i dati aggregati, ma simuleremo la media di crescita
+            // dato che non abbiamo 12 mesi di dati aggregati in questa funzione
+            const trendUtile = historicalUtile.slice(-6); // Usiamo solo gli ultimi 6 mesi reali
+
+            // Calcolo Semplice di Crescita Media per Forecast (funzione reale ma semplice)
+            let totalGrowth = 0;
+            for (let i = 1; i < trendUtile.length; i++) {
+                // Previene divisione per zero
+                if (trendUtile[i-1] > 0) {
+                     totalGrowth += (trendUtile[i] - trendUtile[i-1]) / trendUtile[i-1];
+                }
+            }
+            // Media di crescita + 2% come fattore ottimistico
+            const avgMonthlyGrowth = (totalGrowth / (trendUtile.length - 1)) + 0.02 || 0.05; 
+            
+            const lastUtile = trendUtile[trendUtile.length - 1] || 0;
+            let forecastUtile = [...trendUtile];
+            let nextValue = lastUtile;
+
+            // Proiezione per i prossimi 6 mesi (Forecast)
+            for (let i = 0; i < 6; i++) {
+                nextValue = nextValue * (1 + avgMonthlyGrowth);
+                forecastUtile.push(nextValue);
+            }
+            
+            const trendLabels = historicalLabels.slice(-6);
+            const forecastLabels = [...trendLabels, 'M+1 (F)', 'M+2 (F)', 'M+3 (F)', 'M+4 (F)', 'M+5 (F)', 'M+6 (F)'];
+            
+            // Crea un array per il dataset Forecast che inizia solo dove finisce lo storico
+            const forecastStart = trendUtile.length - 1;
+            const forecastDataPoints = Array(forecastStart).fill(null).concat(forecastUtile.slice(forecastStart));
+            
+            
+            // --- 5. Ritorno Dati Finali ---
+            return {
+                kpiUtileNetto: utileYTD,
+                kpiRicaviTotali: ricaviYTD,
+                kpiCostiTotali: costiYTD,
+                kpiClientiAttivi: clientiAttivi,
+                
+                barData: {
+                    labels: historicalLabels,
+                    ricavi: historicalRicavi,
+                    costi: historicalCosti,
+                    utile: historicalUtile
+                },
+                
+                doughnutData: Object.keys(ricaviPerLab).map(key => ({ 
+                    nome: key, 
+                    ricavo: ricaviPerLab[key] 
+                })),
+                
+                lineData: {
+                    labels: forecastLabels,
+                    storico: trendUtile, // Ultimi 6 mesi reali
+                    forecast: forecastDataPoints
+                }
+            };
+        }
+
+        // --- FUNZIONI DI VISUALIZZAZIONE KPI ---
+
+        function updateKPIs(data) {
+            document.getElementById('kpiUtileNetto').textContent = `€ ${data.kpiUtileNetto.toFixed(2).replace('.', ',')}`;
+            document.getElementById('kpiRicaviTotali').textContent = `€ ${data.kpiRicaviTotali.toFixed(2).replace('.', ',')}`;
+            document.getElementById('kpiCostiTotali').textContent = `€ ${data.kpiCostiTotali.toFixed(2).replace('.', ',')}`;
+            document.getElementById('kpiClientiAttivi').textContent = data.kpiClientiAttivi.toLocaleString('it-IT');
+            
+            // Aggiornamento semplificato dei Trend basato sull'Utile YTD
+            const trendUtileElement = document.getElementById('trendUtile');
+            const trendRicaviElement = document.getElementById('trendRicavi');
+            
+            trendUtileElement.textContent = data.kpiUtileNetto >= 0 ? '📈 Utile Positivo' : '📉 Utile Negativo';
+            trendUtileElement.className = `trend ${data.kpiUtileNetto < 0 ? 'negative' : ''}`;
+            
+            trendRicaviElement.textContent = `📈 Totale ${data.kpiRicaviTotali > 0 ? 'Generato' : 'Basso'}`;
+            trendRicaviElement.className = `trend`;
+        }
+
+        // --- FUNZIONI DI RENDERING GRAFICI (Chart.js) ---
+
+        function renderBarChart(historicalData) {
+            const ctx = document.getElementById('barChartCostiRicavi').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: historicalData.labels,
+                    datasets: [
+                        {
+                            label: 'Ricavi Mensili (€)',
+                            data: historicalData.ricavi,
+                            backgroundColor: COLOR_REVENUE,
+                        },
+                        {
+                            label: 'Costi Operativi (€)',
+                            data: historicalData.costi,
+                            backgroundColor: COLOR_COSTS,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function renderDoughnutChart(labDistribution) {
+            const labels = labDistribution.map(l => l.nome);
+            const data = labDistribution.map(l => l.ricavo);
+
+            const ctx = document.getElementById('doughnutChartLabs').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#A5DD2E', '#3498db', '#e74c3c', '#f39c12', '#9b59b6', '#34495e'
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'right' },
+                    }
+                }
+            });
+        }
+
+        function renderLineChart(lineData) {
+            const ctx = document.getElementById('lineChartUtile').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: lineData.labels,
+                    datasets: [
+                        {
+                            label: 'Utile Storico (€)',
+                            data: lineData.storico,
+                            borderColor: COLOR_PROFIT,
+                            backgroundColor: 'rgba(165, 221, 46, 0.2)',
+                            tension: 0.2,
+                            fill: true,
+                            segment: { // Disegna solo la parte storica piena
+                                borderColor: ctx => lineData.labels.indexOf(ctx.p1.label) < lineData.storico.length - 1 ? COLOR_PROFIT : 'transparent',
+                                backgroundColor: ctx => lineData.labels.indexOf(ctx.p1.label) < lineData.storico.length - 1 ? 'rgba(165, 221, 46, 0.2)' : 'transparent',
+                            }
+                        },
+                        {
+                            label: 'Prospetto Forecast (€)',
+                            data: lineData.forecast,
+                            borderColor: 'rgba(0, 123, 255, 0.7)',
+                            borderDash: [5, 5],
+                            backgroundColor: 'transparent',
+                            pointBackgroundColor: 'rgba(0, 123, 255, 0.8)',
+                            tension: 0.2,
+                            fill: false,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: { display: true, text: 'Utile Netto (€)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- FUNZIONE PRINCIPALE DI INIZIALIZZAZIONE ---
+
+        async function caricaEVisualizzaStatistiche() {
+            try {
+                // 1. Fetch e calcolo dei dati reali da Firestore
+                const statsData = await fetchStatsData();
+                
+                // 2. Aggiornamento KPI
+                updateKPIs(statsData);
+                
+                // 3. Rendering Grafici
+                renderBarChart(statsData.barData);
+                renderDoughnutChart(statsData.doughnutData);
+                renderLineChart(statsData.lineData);
+
+            } catch (error) {
+                console.error("Errore nel caricamento o nell'aggregazione delle statistiche:", error);
+                alert("Impossibile caricare o aggregare i dati statistici. Controlla la console e le tue regole di sicurezza Firebase.");
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPApp - Preventivi & Fatture</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-auth-compat.js"></script>
+    
+    <style>
+        /* BASE RESET */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
+        
+        /* LAYOUT PRINCIPALE */
+        .dashboard-container { display: flex; min-height: 100vh; }
+        
+        /* NAVBAR / SIDEBAR */
+        .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+        .logo-link { width: 100%; text-align: center; margin-bottom: 30px; }
+        /* Logo lemon_logo.png */
+        .logo-link img { max-width: 80%; height: auto; border-radius: 5px; cursor: pointer; transition: transform 0.3s, opacity 0.3s; } 
+        .dashboard-nav small { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; align-self: flex-start; margin-left: 10px; margin-top: 15px; color: #909090; }
+        .dashboard-nav hr { width: 90%; border: 0; border-top: 1px solid #495057; margin: 5px 0 10px 0; }
+        .dashboard-nav a { color: #ccc; text-decoration: none; padding: 12px 15px; margin: 3px 0; display: block; width: 90%; text-align: left; border-radius: 4px; transition: background-color 0.3s, color 0.3s, padding-left 0.3s; }
+        .dashboard-nav a:hover, .dashboard-nav a.active { background-color: #A5DD2E; color: #343a40; font-weight: bold; padding-left: 20px; }
+        
+        /* CONTENUTO PRINCIPALE */
+        .dashboard-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
+        .tab-content { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); margin-bottom: 30px; }
+        
+        /* BOTTONI */
+        button.primary { background-color: #A5DD2E; color: #343a40; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.3s, transform 0.2s; }
+        button.primary:hover { background-color: #8ac41f; transform: translateY(-1px); }
+        button.secondary { background-color: #ccc; color: #333; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
+        button.danger { background-color: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; transition: background-color 0.3s; }
+        
+        /* CAMPI FORM E TABELLE */
+        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; display: inline-block; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .form-group { margin-bottom: 15px; }
+        .form-row { display: flex; gap: 20px; }
+        .form-row > * { flex: 1; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f8f8; color: #343a40; font-weight: bold; }
+        tr:hover { background-color: #f1f1f1; cursor: pointer; }
+        tr.header { background-color: #A5DD2E; color: #343a40; font-weight: bold; }
+
+        /* MODAL (Gestione Pop-up) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 3% auto; padding: 30px; border: 1px solid #888; width: 90%; max-width: 1000px; border-radius: 8px; position: relative; } 
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .close:hover, .close:focus { color: #000; text-decoration: none; cursor: pointer; }
+        
+        /* Riepilogo Calcoli */
+        #riepilogoPreventivo { 
+            background-color: #e6ffe6; 
+            padding: 15px; 
+            border-radius: 4px; 
+            margin-top: 20px;
+            border: 1px solid #A5DD2E;
+        }
+        #riepilogoPreventivo strong {
+            display: block;
+            font-size: 1.1em;
+            margin-top: 5px;
+        }
+
+        /* Gestione Stampa PDF */
+        @media print {
+            .dashboard-nav, #btnNuovoPreventivo, #ricercaPreventivo, .azione-tabella, .form-admin-only, .form-buttons, #stampaLink, #convertiPreventivo, .close, #dettagliCostiInterni { 
+                display: none !important; 
+            }
+            .dashboard-container { 
+                display: block; 
+                width: 100%; 
+                padding: 0; 
+                margin: 0;
+            }
+            .dashboard-content, .modal-content, #preventivoPerStampa { 
+                width: 100%; 
+                margin: 0; 
+                padding: 0; 
+                box-shadow: none; 
+                background: white; 
+            }
+            body { 
+                font-size: 10pt; 
+            }
+            /* Stile per il contenuto da stampare (simulazione PDF) */
+            #preventivoPerStampa {
+                display: block !important;
+                border: 1px solid #ccc;
+                padding: 20px;
+                min-height: 90vh;
+            }
+        }
+        #preventivoPerStampa {
+            display: none; /* Nascosto di default, mostrato solo nella stampa */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="authScreen" style="display: none; height: 100vh; justify-content: center; align-items: center; background-color: #e0e0e0;">
+        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <h2 style="text-align: center; color: #A5DD2E;">EPApp Login</h2>
+            <input type="email" id="loginEmail" placeholder="Email" required style="margin-bottom: 10px;">
+            <input type="password" id="loginPassword" placeholder="Password" required style="margin-bottom: 20px;">
+            <button class="primary" onclick="handleLogin()" style="width: 100%;">Accedi</button>
+            <p id="authMessage" style="color: red; text-align: center; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <div class="dashboard-container" style="display: none;">
+        
+        <nav class="dashboard-nav">
+            <a href="00index.html" class="logo-link"><img src="lemon_logo.png" alt="EPApp Logo"></a>
+            
+            <small>Dashboard</small><hr>
+            <a href="00index.html" class="tab-link">Dashboard</a> 
+
+            <small>Monitoraggio Labs</small><hr>
+            <a href="03labs.html" class="tab-link">Labs & Attività</a> 
+            <a href="04logistica.html" class="tab-link">Costi Logistica</a> 
+            
+            <small>Anagrafiche</small><hr>
+            <a href="01clienti.html" class="tab-link">Clienti & Iscrizioni</a> 
+            <a href="02fornitori.html" class="tab-link">Fornitori & Sedi</a> 
+            
+            <small>Finanza & Analisi</small><hr>
+            <a href="05preventivi.html" class="tab-link active">Preventivi & Fatture</a> 
+            <a href="06stats.html" class="tab-link">Statistiche & KPI</a> 
+            
+            <a href="#" id="logoutLink" onclick="handleLogout()" style="color: #ff9999; margin-top: auto;">Logout</a>
+        </nav>
+
+        <main class="dashboard-content">
+            
+            <div id="preventiviGestione" class="tab-content active">
+                <h2>Gestione Preventivi</h2>
+                <p>Creazione, monitoraggio e conversione dei preventivi in fatture.</p>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <input type="text" id="ricercaPreventivo" placeholder="Cerca per N. Preventivo, Cliente o Oggetto..." style="width: 300px; margin: 0;">
+                    <button class="primary" id="btnNuovoPreventivo" onclick="apriModalePreventivo(null)">+ Nuovo Preventivo</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="tabellaPreventivi">
+                        <thead>
+                            <tr class="header">
+                                <th>N. Prog.</th>
+                                <th>Data</th>
+                                <th>Cliente</th>
+                                <th>Oggetto</th>
+                                <th>Labs Abbinati</th>
+                                <th>Prezzo Finale</th>
+                                <th>Stato</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="8" style="text-align: center;">Caricamento dati...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="modalPreventivo" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="chiudiModalePreventivo()">&times;</span>
+            <h3 id="modalTitlePreventivo">Crea Nuovo Preventivo</h3>
+            <form id="formPreventivo" onsubmit="salvaPreventivo(event)">
+                <input type="hidden" id="preventivoId">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nProgressivo">N. Progressivo:</label>
+                        <input type="text" id="nProgressivo" disabled>
+                        <small>Generato automaticamente.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="dataPreventivo">Data Preventivo:</label>
+                        <input type="date" id="dataPreventivo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="statoPreventivo">Stato:</label>
+                        <select id="statoPreventivo" disabled>
+                            <option value="in_creazione">In Creazione</option>
+                            <option value="approvato">Approvato</option>
+                            <option value="fatturato">Fatturato</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="clientePreventivo">Cliente:</label>
+                    <select id="clientePreventivo" required>
+                        <option value="">-- Seleziona Cliente --</option>
+                        </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="oggettoPreventivo">Oggetto del Preventivo (Descrizione Breve):</label>
+                    <textarea id="oggettoPreventivo" rows="2" required></textarea>
+                </div>
+
+                <hr>
+
+                <h4>Labs Proposti</h4>
+                <p>Seleziona i Lab e le attività da includere nel preventivo.</p>
+                <table id="tabellaLabsPreventivo" style="margin-bottom: 15px;">
+                    <thead>
+                        <tr class="header">
+                            <th style="width: 5%;">Selez.</th>
+                            <th style="width: 50%;">Lab/Attività</th>
+                            <th style="width: 25%;">Prezzo Effettivo (da 03labs)</th>
+                            <th style="width: 20%;">Data Inizio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+                <small>Nota: I prezzi dei Lab sono quelli Effettivi (già inclusivi del Profitto definito in `03labs.html`).</small>
+
+                <hr>
+                
+                <div class="form-admin-only">
+                    <h4>Calcolo e Profitto Amministrativo (Non Stampa)</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="profittoPercentualePreventivo">Profitto Aggiuntivo Desiderato (%):</label>
+                            <input type="number" id="profittoPercentualePreventivo" min="0" step="1" value="0" oninput="aggiornaCalcoliPreventivo()">
+                            <small>Profitto aggiuntivo da applicare al totale. Non mostrato in stampa.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="valoreBollo">Marca da Bollo (2,00 €):</label>
+                            <input type="number" id="valoreBollo" value="2.00" disabled>
+                            <small>Applicato se totale Labs > € 77,47.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="riepilogoPreventivo">
+                    <h4 style="margin-top: 0;">Riepilogo Costi Totali</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Totale Labs (Sub-Totale):</label>
+                            <strong id="totaleLabsRiepilogo" style="color: #007bff;">€ 0,00</strong>
+                        </div>
+                        <div class="form-group">
+                            <label>Costo Marca da Bollo:</label>
+                            <strong id="bolloApplicato" style="color: #dc3545;">€ 0,00</strong>
+                        </div>
+                        <div class="form-group">
+                            <label>TOTALE PREZZO FINALE (Cliente):</label>
+                            <strong id="prezzoFinalePreventivo" style="color: #A5DD2E; font-size: 1.4em;">€ 0,00</strong>
+                            <small id="profittoApplicatoVisuale" style="color: grey;"></small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group form-buttons" style="text-align: right; margin-top: 30px;">
+                    <button type="button" class="secondary" onclick="chiudiModalePreventivo()">Annulla</button>
+                    <button type="button" class="secondary" id="stampaLink" onclick="stampaPreventivoPDF()">Stampa PDF</button>
+                    <button type="button" class="secondary" id="convertiPreventivo" onclick="cambiaStatoPreventivo()">Approva / Disapprova</button>
+                    <button type="submit" class="primary" id="btnSalvaPreventivo">Salva Preventivo</button>
+                </div>
+            </form>
+            
+            <div id="preventivoPerStampa">
+                </div>
+        </div>
+    </div>
+
+
+    <script>
+        // ⚠️ SOSTITUISCI QUESTO OGGETTO CON LA TUA CONFIGURAZIONE REALE DI FIREBASE ⚠️
+        const firebaseConfig = {
+  	apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY",
+  	authDomain: "epapp-bb953.firebaseapp.com",
+  	projectId: "epapp-bb953",
+  	storageBucket: "epapp-bb953.firebasestorage.app",
+  	messagingSenderId: "797675959163",
+  	appId: "1:797675959163:web:30c077ce253990239d03de",
+  	measurementId: "G-RN2896V58E"
+	};
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = app.firestore();
+        const auth = app.auth(); 
+        
+        // Riferimenti DOM e Costanti
+        const modalPreventivo = document.getElementById('modalPreventivo');
+        const formPreventivo = document.getElementById('formPreventivo');
+        const tabellaPreventiviBody = document.querySelector('#tabellaPreventivi tbody');
+        const tabellaLabsPreventivoBody = document.querySelector('#tabellaLabsPreventivo tbody');
+        const STAMP_DUTY_THRESHOLD = 77.47; // Soglia per bollo (valore per forfettari)
+        const STAMP_DUTY_VALUE = 2.00;
+
+        // Dati master
+        let clientiMaster = [];
+        let labsMaster = []; // Labs con i loro Prezzi Effettivi già calcolati (da 03labs)
+
+        // --- FUNZIONI DI AUTENTICAZIONE ---
+        function handleLogin() { /* ... */ }
+        function handleLogout() { /* ... */ }
+        auth.onAuthStateChanged((user) => {
+            const authScreen = document.getElementById('authScreen');
+            const dashboardContainer = document.querySelector('.dashboard-container');
+
+            if (user) {
+                authScreen.style.display = 'none';
+                dashboardContainer.style.display = 'flex';
+                caricaDatiMaster();
+                caricaPreventivi();
+            } else {
+                authScreen.style.display = 'flex';
+                dashboardContainer.style.display = 'none';
+            }
+        });
+
+        // --- CARICAMENTO DATI MASTER ---
+
+        function caricaDatiMaster() {
+            // Simulazione: Carica Clienti (da 01clienti)
+            db.collection("clienti").get().then((querySnapshot) => {
+                 clientiMaster = [];
+                 querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    clientiMaster.push({ id: doc.id, nome: data.nomeCompleto || data.ragioneSociale || 'Cliente Anonimo' });
+                 });
+                 popolaSelectClienti();
+            }).catch(() => {
+                // Mock data se Firebase non è configurato o fallisce
+                clientiMaster = [
+                    { id: "c_1", nome: "Mario Rossi (Privato)" },
+                    { id: "c_2", nome: "Azienda Beta S.r.l." },
+                ];
+                popolaSelectClienti();
+            });
+
+
+            // Simulazione: Carica Labs (da 03labs, con prezzo Effettivo già calcolato)
+            db.collection("labs").get().then((querySnapshot) => {
+                 labsMaster = [];
+                 querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    labsMaster.push({ 
+                        id: doc.id, 
+                        nome: data.nomeLab, 
+                        prezzoEffettivo: data.prezzoEffettivo || 0.00, // Presumo già calcolato in 03labs.html
+                        dataInizio: data.dataOraInizio ? new Date(data.dataOraInizio).toLocaleDateString('it-IT') : 'N/D'
+                    });
+                 });
+                 popolaTabellaLabs();
+            }).catch(() => {
+                // Mock data se Firebase non è configurato o fallisce
+                 labsMaster = [
+                    { id: "l_1", nome: "Coding Base - Mensile (Ottobre)", prezzoEffettivo: 80.00, dataInizio: '15/10/2025' },
+                    { id: "l_2", nome: "Robotica Avanzata - Singolo", prezzoEffettivo: 25.00, dataInizio: '20/10/2025' },
+                    { id: "l_3", nome: "Open Day Settembre", prezzoEffettivo: 0.00, dataInizio: '01/09/2025' },
+                 ];
+                 popolaTabellaLabs();
+            });
+        }
+
+        function popolaSelectClienti() {
+            const select = document.getElementById('clientePreventivo');
+            select.innerHTML = '<option value="">-- Seleziona Cliente --</option>';
+            clientiMaster.forEach(cliente => {
+                const option = document.createElement('option');
+                option.value = cliente.id;
+                option.textContent = cliente.nome;
+                select.appendChild(option);
+            });
+        }
+
+        function popolaTabellaLabs() {
+            tabellaLabsPreventivoBody.innerHTML = '';
+            labsMaster.forEach(lab => {
+                const row = tabellaLabsPreventivoBody.insertRow();
+                row.dataset.labId = lab.id;
+                row.dataset.prezzo = lab.prezzoEffettivo;
+                row.onclick = function() {
+                    const checkbox = this.querySelector('input[type="checkbox"]');
+                    checkbox.checked = !checkbox.checked;
+                    aggiornaCalcoliPreventivo();
+                };
+
+                const cellCheck = row.insertCell();
+                cellCheck.innerHTML = `<input type="checkbox" onchange="aggiornaCalcoliPreventivo()" style="width: auto; margin: 0;">`;
+                
+                row.insertCell().textContent = lab.nome;
+                row.insertCell().textContent = `€ ${lab.prezzoEffettivo.toFixed(2).replace('.', ',')}`;
+                row.insertCell().textContent = lab.dataInizio;
+            });
+        }
+
+        // --- GESTIONE LOGICA CALCOLI ---
+
+        /**
+         * Ricalcola tutti i costi e aggiorna il riepilogo.
+         */
+        function aggiornaCalcoliPreventivo() {
+            const profittoPercentuale = parseFloat(document.getElementById('profittoPercentualePreventivo').value) || 0;
+            let totaleLabs = 0.00;
+            let bolloApplicato = 0.00;
+
+            const labsSelezionati = [];
+            
+            // 1. Somma i prezzi Effettivi dei Labs selezionati
+            tabellaLabsPreventivoBody.querySelectorAll('tr').forEach(row => {
+                const checkbox = row.querySelector('input[type="checkbox"]');
+                if (checkbox && checkbox.checked) {
+                    const labId = row.dataset.labId;
+                    const prezzo = parseFloat(row.dataset.prezzo) || 0;
+                    totaleLabs += prezzo;
+                    
+                    const labDetails = labsMaster.find(l => l.id === labId);
+                    if (labDetails) {
+                        labsSelezionati.push(labDetails);
+                    }
+                }
+            });
+
+            // 2. Calcolo Bollo
+            if (totaleLabs > STAMP_DUTY_THRESHOLD) {
+                bolloApplicato = STAMP_DUTY_VALUE;
+            }
+
+            // 3. Calcolo Totale con Bollo (base per profitto)
+            const totaleConBollo = totaleLabs + bolloApplicato;
+
+            // 4. Calcolo Profitto Aggiuntivo
+            const profittoAggiuntivo = totaleConBollo * (profittoPercentuale / 100);
+
+            // 5. Calcolo Prezzo Finale (Cliente)
+            const prezzoFinale = totaleConBollo + profittoAggiuntivo;
+            
+            // 6. Aggiorna Riepilogo DOM
+            document.getElementById('totaleLabsRiepilogo').textContent = `€ ${totaleLabs.toFixed(2).replace('.', ',')}`;
+            document.getElementById('bolloApplicato').textContent = `€ ${bolloApplicato.toFixed(2).replace('.', ',')}`;
+            document.getElementById('prezzoFinalePreventivo').textContent = `€ ${prezzoFinale.toFixed(2).replace('.', ',')}`;
+            
+            let profittoMsg = `Profitto totale Labs (incluso in prezzo): N/A`;
+            if (totaleLabs > 0) {
+                 profittoMsg = `+ € ${profittoAggiuntivo.toFixed(2).replace('.', ',')} di profitto aggiuntivo (${profittoPercentuale}%)`;
+            }
+            document.getElementById('profittoApplicatoVisuale').textContent = profittoMsg;
+            
+            return {
+                totaleLabs: totaleLabs,
+                bolloApplicato: bolloApplicato,
+                prezzoFinale: prezzoFinale,
+                labsSelezionati: labsSelezionati
+            };
+        }
+
+
+        // --- GESTIONE MODALE E CRUD PREVENTIVI ---
+
+        function apriModalePreventivo(id) {
+            document.getElementById('modalTitlePreventivo').textContent = id ? 'Modifica Preventivo' : 'Crea Nuovo Preventivo';
+            document.getElementById('btnSalvaPreventivo').textContent = id ? 'Aggiorna Preventivo' : 'Salva Preventivo';
+            document.getElementById('preventivoId').value = id || ''; 
+            
+            formPreventivo.reset();
+            document.getElementById('dataPreventivo').valueAsDate = new Date();
+            document.getElementById('statoPreventivo').value = 'in_creazione';
+            document.getElementById('profittoPercentualePreventivo').value = '0';
+
+            // Resetta i checkbox Labs
+            tabellaLabsPreventivoBody.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            
+            // Gestione visibilità bottoni
+            document.getElementById('stampaLink').style.display = 'none';
+            document.getElementById('convertiPreventivo').textContent = 'Approva';
+            document.getElementById('convertiPreventivo').style.display = 'none';
+            
+            if (!id) {
+                // Generazione N. Progressivo (simulata)
+                document.getElementById('nProgressivo').value = `PREV-${Math.floor(Math.random() * 1000) + 1}`;
+                aggiornaCalcoliPreventivo(); 
+            } else {
+                popolaModalePerModifica(id);
+            }
+            
+            modalPreventivo.style.display = 'block';
+        }
+
+        function chiudiModalePreventivo() {
+            modalPreventivo.style.display = 'none';
+            formPreventivo.reset();
+            document.getElementById('preventivoId').value = ''; 
+        }
+
+        /**
+         * READ: Carica tutti i Preventivi da Firestore.
+         */
+        function caricaPreventivi() {
+            tabellaPreventiviBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Simulazione caricamento Preventivi...</td></tr>';
+            
+            // Simulazione dati preventivi (se Firebase non è attivo)
+            const mockPreventivi = [
+                { id: 'p_1', nProgressivo: 'PREV-001', data: '2025-10-10', clienteId: 'c_1', oggetto: 'Pacchetto Corsi Ottobre', prezzoFinale: 105.00, stato: 'approvato', labs: [{nome:'Coding Base'}, {nome:'Robotica'}] },
+                { id: 'p_2', nProgressivo: 'PREV-002', data: '2025-10-12', clienteId: 'c_2', oggetto: 'Formazione Aziendale', prezzoFinale: 350.00, stato: 'in_creazione', labs: [{nome:'Design Thinking'}] },
+            ];
+
+            tabellaPreventiviBody.innerHTML = '';
+
+            mockPreventivi.forEach(data => {
+                const row = tabellaPreventiviBody.insertRow();
+                const clienteNome = clientiMaster.find(c => c.id === data.clienteId)?.nome || 'N/D';
+                const statoDisplay = data.stato.toUpperCase().replace('_', ' ');
+
+                row.onclick = () => apriModalePreventivo(data.id); 
+
+                row.insertCell().textContent = data.nProgressivo;
+                row.insertCell().textContent = new Date(data.data).toLocaleDateString('it-IT');
+                row.insertCell().textContent = clienteNome;
+                row.insertCell().textContent = data.oggetto.substring(0, 30) + '...';
+                row.insertCell().textContent = data.labs.length;
+                row.insertCell().textContent = `€ ${data.prezzoFinale.toFixed(2).replace('.', ',')}`;
+                row.insertCell().textContent = statoDisplay;
+
+                const actionCell = row.insertCell();
+                actionCell.className = 'azione-tabella';
+                actionCell.innerHTML = `<button class="danger" onclick="event.stopPropagation(); eliminaPreventivo('${data.id}')">Elimina</button>`;
+            });
+        }
+
+        /**
+         * CREATE/UPDATE: Salva un nuovo Preventivo o aggiorna uno esistente.
+         */
+        function salvaPreventivo(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('preventivoId').value;
+            const risultatiCalcolo = aggiornaCalcoliPreventivo();
+            
+            const labsSelezionatiPerSalvataggio = risultatiCalcolo.labsSelezionati.map(lab => ({
+                id: lab.id,
+                nome: lab.nome,
+                prezzo: lab.prezzoEffettivo
+            }));
+
+            const datiPreventivo = {
+                nProgressivo: document.getElementById('nProgressivo').value,
+                data: document.getElementById('dataPreventivo').value,
+                clienteId: document.getElementById('clientePreventivo').value,
+                oggetto: document.getElementById('oggettoPreventivo').value,
+                
+                stato: document.getElementById('statoPreventivo').value, // Lo stato attuale
+                
+                labs: labsSelezionatiPerSalvataggio,
+                
+                // Dati di calcolo finali
+                profittoPercentuale: parseFloat(document.getElementById('profittoPercentualePreventivo').value) || 0,
+                totaleLabs: risultatiCalcolo.totaleLabs,
+                bolloApplicato: risultatiCalcolo.bolloApplicato,
+                prezzoFinale: risultatiCalcolo.prezzoFinale,
+                
+                ultimaModifica: new Date().toISOString()
+            };
+
+            console.log("Dati Preventivo da salvare:", datiPreventivo);
+
+            // Simulazione salvataggio Firestore (utilizzare .set(dati, { merge: true }) o .add(dati))
+            // db.collection("preventivi").doc(id || undefined).set(datiPreventivo, { merge: true })...
+
+            alert(`Preventivo ${id ? 'aggiornato' : 'salvato'} con successo! (Simulazione)`);
+            chiudiModalePreventivo();
+            caricaPreventivi(); 
+        }
+
+        /**
+         * UPDATE (Popola Modale): Carica i dati di un Preventivo specifico nel form.
+         */
+        function popolaModalePerModifica(id) {
+            // Simulazione caricamento dati Preventivo (es: db.collection("preventivi").doc(id).get())
+            const mockData = {
+                id: 'p_1',
+                nProgressivo: 'PREV-001',
+                data: '2025-10-10',
+                clienteId: 'c_1',
+                oggetto: 'Pacchetto Corsi Ottobre',
+                stato: 'approvato',
+                profittoPercentuale: 10,
+                labs: [ // Lab selezionati per questo preventivo
+                    { id: "l_1", nome: "Coding Base - Mensile (Ottobre)", prezzo: 80.00 },
+                    { id: "l_2", nome: "Robotica Avanzata - Singolo", prezzo: 25.00 }
+                ]
+            };
+            const data = mockData;
+            
+            document.getElementById('nProgressivo').value = data.nProgressivo;
+            document.getElementById('dataPreventivo').value = data.data;
+            document.getElementById('clientePreventivo').value = data.clienteId;
+            document.getElementById('oggettoPreventivo').value = data.oggetto;
+            document.getElementById('statoPreventivo').value = data.stato;
+            document.getElementById('profittoPercentualePreventivo').value = data.profittoPercentuale || 0;
+
+            // Spunta i Lab già selezionati
+            tabellaLabsPreventivoBody.querySelectorAll('tr').forEach(row => {
+                const labId = row.dataset.labId;
+                const isSelected = data.labs.some(l => l.id === labId);
+                row.querySelector('input[type="checkbox"]').checked = isSelected;
+            });
+            
+            aggiornaStatoBottoni(data.stato);
+            aggiornaCalcoliPreventivo(); 
+        }
+        
+        /**
+         * DELETE: Elimina un Preventivo.
+         */
+        function eliminaPreventivo(id) {
+            if (confirm("Sei sicuro di voler eliminare questo Preventivo?")) {
+                // db.collection("preventivi").doc(id).delete()...
+                alert("Preventivo eliminato con successo! (Simulazione)");
+                caricaPreventivi(); 
+            }
+        }
+        
+        // --- GESTIONE STATO E STAMPA PDF ---
+        
+        function aggiornaStatoBottoni(stato) {
+            const btnConverti = document.getElementById('convertiPreventivo');
+            const btnStampa = document.getElementById('stampaLink');
+            const btnSalva = document.getElementById('btnSalvaPreventivo');
+
+            btnConverti.style.display = 'inline-block';
+
+            if (stato === 'approvato') {
+                btnConverti.textContent = 'Marca come IN CREAZIONE';
+                btnStampa.style.display = 'inline-block';
+                btnSalva.disabled = true;
+                document.getElementById('statoPreventivo').value = 'approvato';
+            } else if (stato === 'fatturato') {
+                btnConverti.style.display = 'none';
+                btnStampa.style.display = 'inline-block';
+                btnSalva.disabled = true;
+                document.getElementById('statoPreventivo').value = 'fatturato';
+            } else { // in_creazione
+                btnConverti.textContent = 'Approva Preventivo';
+                btnStampa.style.display = 'none';
+                btnSalva.disabled = false;
+                document.getElementById('statoPreventivo').value = 'in_creazione';
+            }
+        }
+        
+        function cambiaStatoPreventivo() {
+            const id = document.getElementById('preventivoId').value;
+            let nuovoStato = document.getElementById('statoPreventivo').value;
+
+            if (nuovoStato === 'in_creazione') {
+                nuovoStato = 'approvato';
+            } else if (nuovoStato === 'approvato') {
+                nuovoStato = 'in_creazione';
+            } else {
+                return; // Non si può cambiare stato da Fatturato
+            }
+
+            // Simulazione aggiornamento stato in Firestore
+            // db.collection("preventivi").doc(id).update({ stato: nuovoStato })...
+
+            document.getElementById('statoPreventivo').value = nuovoStato;
+            aggiornaStatoBottoni(nuovoStato);
+            alert(`Preventivo aggiornato allo stato: ${nuovoStato.toUpperCase()}`);
+        }
+
+        /**
+         * Simula la stampa di un documento PDF pulito per il cliente.
+         */
+        function stampaPreventivoPDF() {
+            const stato = document.getElementById('statoPreventivo').value;
+            if (stato !== 'approvato' && stato !== 'fatturato') {
+                alert("Il preventivo deve essere Approvato o Fatturato per la stampa.");
+                return;
+            }
+
+            // 1. Raccogli i dati finali
+            const risultati = aggiornaCalcoliPreventivo();
+            const clienteSelezionato = document.getElementById('clientePreventivo').options[document.getElementById('clientePreventivo').selectedIndex].text;
+            
+            // 2. Prepara il contenuto pulito per la stampa
+            let labsHtml = '';
+            risultati.labsSelezionati.forEach(lab => {
+                labsHtml += `
+                    <tr>
+                        <td>${lab.nome}</td>
+                        <td style="text-align: right;">€ ${lab.prezzoEffettivo.toFixed(2).replace('.', ',')}</td>
+                    </tr>
+                `;
+            });
+            
+            let bolloHtml = '';
+            if (risultati.bolloApplicato > 0) {
+                bolloHtml = `
+                    <tr>
+                        <td style="font-weight: bold;">Marca da Bollo</td>
+                        <td style="text-align: right; font-weight: bold;">€ ${risultati.bolloApplicato.toFixed(2).replace('.', ',')}</td>
+                    </tr>
+                `;
+            }
+
+            const stampaContent = document.getElementById('preventivoPerStampa');
+            stampaContent.innerHTML = `
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <img src="lemon_logo.png" alt="Logo Azienda" style="max-height: 80px; margin-bottom: 10px;">
+                    <h1>PREVENTIVO N. ${document.getElementById('nProgressivo').value}</h1>
+                    <small>Data: ${new Date(document.getElementById('dataPreventivo').value).toLocaleDateString('it-IT')}</small>
+                </div>
+
+                <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px;">
+                    <p><strong>Cliente:</strong> ${clienteSelezionato}</p>
+                    <p><strong>Oggetto:</strong> ${document.getElementById('oggettoPreventivo').value}</p>
+                </div>
+
+                <h3 style="border-bottom: 2px solid #A5DD2E; padding-bottom: 5px;">Dettaglio Voci</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background-color: #f8f8f8;">
+                            <th style="padding: 10px;">Descrizione Servizio / Lab</th>
+                            <th style="padding: 10px; text-align: right;">Totale (€)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${labsHtml}
+                    </tbody>
+                    <tfoot>
+                        ${bolloHtml}
+                        <tr style="background-color: #A5DD2E; color: #343a40;">
+                            <td style="padding: 15px; font-size: 1.2em; font-weight: bold;">TOTALE COMPLESSIVO</td>
+                            <td style="padding: 15px; font-size: 1.2em; text-align: right; font-weight: bold;">€ ${risultati.prezzoFinale.toFixed(2).replace('.', ',')}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+                
+                <p style="margin-top: 50px; border-top: 1px solid #ccc; padding-top: 15px; font-size: 0.8em;">
+                    * Prestazione in regime forfettario. Non soggetto ad IVA ai sensi dell'art. 1 commi 54-89 L. 190/2014 e successive modificazioni.
+                </p>
+            `;
+            
+            // 3. Stampa
+            window.print();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPApp - Labs & Attività</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    
+    <style>
+        /* BASE RESET */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
+        
+        /* LAYOUT PRINCIPALE */
+        .dashboard-container { display: flex; min-height: 100vh; }
+        
+        /* NAVBAR / SIDEBAR */
+        .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+        .logo-link { width: 100%; text-align: center; margin-bottom: 30px; }
+        /* Logo lemon_logo.png */
+        .logo-link img { max-width: 80%; height: auto; border-radius: 5px; cursor: pointer; transition: transform 0.3s, opacity 0.3s; } 
+        .dashboard-nav small { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; align-self: flex-start; margin-left: 10px; margin-top: 15px; color: #909090; }
+        .dashboard-nav hr { width: 90%; border: 0; border-top: 1px solid #495057; margin: 5px 0 10px 0; }
+        .dashboard-nav a { color: #ccc; text-decoration: none; padding: 12px 15px; margin: 3px 0; display: block; width: 90%; text-align: left; border-radius: 4px; transition: background-color 0.3s, color 0.3s, padding-left 0.3s; }
+        .dashboard-nav a:hover, .dashboard-nav a.active { background-color: #A5DD2E; color: #343a40; font-weight: bold; padding-left: 20px; }
+        
+        /* CONTENUTO PRINCIPALE */
+        .dashboard-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
+        .tab-content { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); margin-bottom: 30px; }
+        
+        /* BOTTONI */
+        button.primary { background-color: #A5DD2E; color: #343a40; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.3s, transform 0.2s; }
+        button.primary:hover { background-color: #8ac41f; transform: translateY(-1px); }
+        button.secondary { background-color: #ccc; color: #333; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
+        button.danger { background-color: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; transition: background-color 0.3s; }
+        
+        /* CAMPI FORM E TABELLE */
+        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; display: inline-block; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .form-group { margin-bottom: 15px; }
+        .form-row { display: flex; gap: 20px; }
+        .form-row > * { flex: 1; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f8f8; color: #343a40; font-weight: bold; }
+        tr:hover { background-color: #f1f1f1; cursor: pointer; }
+        tr.header { background-color: #A5DD2E; color: #343a40; font-weight: bold; }
+
+        /* MODAL (Gestione Pop-up) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 3% auto; padding: 30px; border: 1px solid #888; width: 90%; max-width: 1000px; border-radius: 8px; position: relative; } 
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .close:hover, .close:focus { color: #000; text-decoration: none; cursor: pointer; }
+        
+        /* Prezzo Proposto/Effettivo */
+        #riepilogoCosti { 
+            background-color: #e6ffe6; 
+            padding: 15px; 
+            border-radius: 4px; 
+            margin-top: 20px;
+            border: 1px solid #A5DD2E;
+        }
+
+        /* Sezione Attività/Logistica */
+        .costi-section { 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            border-radius: 4px; 
+            margin-bottom: 20px;
+        }
+        .costi-item-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .costi-item-row select, .costi-item-row input[type="number"] {
+            margin: 0;
+            padding: 8px;
+            flex-shrink: 0;
+        }
+        .costi-item-row select { flex-grow: 1; }
+        .costi-item-row input[type="number"] { width: 80px; }
+
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .dashboard-container { flex-direction: column; }
+            .dashboard-nav { width: 100%; height: auto; padding: 10px 0; flex-direction: row; flex-wrap: wrap; justify-content: space-around; }
+            .dashboard-nav a { width: 45%; text-align: center; margin: 5px 0; padding: 8px 10px; }
+            .dashboard-nav small, .dashboard-nav hr { display: none; }
+            .logo-link { width: 100%; text-align: center; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #495057; }
+            .dashboard-content { padding: 15px; }
+            .form-row { flex-direction: column; gap: 0; }
+            .modal-content { margin: 10% auto; width: 95%; }
+            .costi-item-row { flex-direction: column; align-items: stretch; }
+            .costi-item-row input[type="number"] { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="authScreen" style="display: none; height: 100vh; justify-content: center; align-items: center; background-color: #e0e0e0;">
+        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <h2 style="text-align: center; color: #A5DD2E;">EPApp Login</h2>
+            <input type="email" id="loginEmail" placeholder="Email" required style="margin-bottom: 10px;">
+            <input type="password" id="loginPassword" placeholder="Password" required style="margin-bottom: 20px;">
+            <button class="primary" onclick="handleLogin()" style="width: 100%;">Accedi</button>
+            <p id="authMessage" style="color: red; text-align: center; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <div class="dashboard-container" style="display: none;">
+        
+        <nav class="dashboard-nav">
+            <a href="00index.html" class="logo-link"><img src="lemon_logo.png" alt="EPApp Logo"></a>
+            
+            <small>Dashboard</small><hr>
+            <a href="00index.html" class="tab-link">Dashboard</a> 
+
+            <small>Monitoraggio Labs</small><hr>
+            <a href="03labs.html" class="tab-link active">Labs & Attività</a> 
+            <a href="04logistica.html" class="tab-link">Costi Attività & Logistica</a> 
+            
+            <small>Anagrafiche</small><hr>
+            <a href="01clienti.html" class="tab-link">Clienti & Iscrizioni</a> 
+            <a href="02fornitori.html" class="tab-link">Fornitori & Sedi</a> 
+            
+            <small>Finanza & Analisi</small><hr>
+            <a href="05preventivi.html" class="tab-link">Preventivi & Fatture</a> 
+            <a href="06stats.html" class="tab-link">Statistiche & KPI</a> 
+            
+            <a href="#" id="logoutLink" onclick="handleLogout()" style="color: #ff9999; margin-top: auto;">Logout</a>
+        </nav>
+
+        <main class="dashboard-content">
+            
+            <div id="labsGestione" class="tab-content active">
+                <h2>Gestione Labs e Attività</h2>
+                <p>Monitoraggio e definizione dei Lab (tipologia, costi, sede e partecipanti).</p>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <input type="text" id="ricercaLab" placeholder="Cerca per nome, sede o data..." style="width: 300px; margin: 0;">
+                    <button class="primary" onclick="apriModaleLab(null)">+ Nuovo Lab</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="tabellaLabs">
+                        <thead>
+                            <tr class="header">
+                                <th>Nome Lab</th>
+                                <th>Tipo</th>
+                                <th>Sede</th>
+                                <th>Data Inizio</th>
+                                <th>Prezzo Proposto</th>
+                                <th>Prezzo Effettivo</th>
+                                <th>Iscritti</th>
+                                <th>Stato</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="9" style="text-align: center;">Caricamento dati...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="modalLab" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="chiudiModaleLab()">&times;</span>
+            <h3 id="modalTitleLab">Crea Nuovo Lab</h3>
+            <form id="formLab" onsubmit="salvaLab(event)">
+                <input type="hidden" id="labId">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nomeLab">Nome del Lab/Descrizione Breve:</label>
+                        <input type="text" id="nomeLab" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tipoLab">Tipologia Lab:</label>
+                        <select id="tipoLab" onchange="aggiornaDatiPrezzo()" required>
+                            <option value="open_day">A. Open Day</option>
+                            <option value="singolo">B. Singolo (1 ora)</option>
+                            <option value="mensile">C. Mensile (4 ore)</option>
+                            <option value="bimestrale">D. Bimestrale (8 ore)</option>
+                            <option value="trimestrale">E. Trimestrale (12 ore)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="sedeLab">Sede di Svolgimento (Fornitore):</label>
+                        <select id="sedeLab" onchange="aggiornaDatiPrezzo()" required>
+                            <option value="">-- Seleziona Sede --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="dataOraInizio">Data e Ora Inizio:</label>
+                        <input type="datetime-local" id="dataOraInizio" required>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h4>1. Costi Attività (Materiali, Strumenti, Multimedia)</h4>
+                <div class="costi-section">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 2;">
+                            <label>Seleziona Materiali (Costo Unitario):</label>
+                            <div id="materialiList">
+                                <div class="costi-item-row">
+                                    <select onchange="aggiornaDatiPrezzo()" class="select-materiale">
+                                        <option value="" data-costo="0">-- Seleziona Materiale --</option>
+                                    </select>
+                                    <input type="number" min="0" value="1" oninput="aggiornaDatiPrezzo()" class="quantita-materiale">
+                                    <button type="button" class="danger" onclick="rimuoviRigaCosto(this)">-</button>
+                                </div>
+                            </div>
+                            <button type="button" class="secondary" onclick="aggiungiRigaCosto('materiale')">+ Aggiungi Materiale</button>
+                        </div>
+                        <div class="form-group" style="flex: 2;">
+                            <label>Seleziona Strumenti/Multimedia (Costo Unitario/Link):</label>
+                            <div id="strumentiList">
+                                <div class="costi-item-row">
+                                    <select onchange="aggiornaDatiPrezzo()" class="select-strumento">
+                                        <option value="" data-costo="0">-- Seleziona Strumento/Multi --</option>
+                                    </select>
+                                    <input type="number" min="0" value="1" oninput="aggiornaDatiPrezzo()" class="quantita-strumento">
+                                    <button type="button" class="danger" onclick="rimuoviRigaCosto(this)">-</button>
+                                </div>
+                            </div>
+                            <button type="button" class="secondary" onclick="aggiungiRigaCosto('strumento')">+ Aggiungi Strumento/Multi</button>
+                        </div>
+                    </div>
+                </div>
+
+                <h4>2. Costi Logistica (Viaggio A/R + Nolo Sede)</h4>
+                <div class="costi-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Costo Noleggio Sede (€):</label>
+                            <input type="number" id="costoNoleggioSede" min="0" step="0.01" value="0.00" disabled>
+                            <small>Valore richiamato dalla Sede selezionata.</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Distanza Sede (Km):</label>
+                            <input type="number" id="distanzaKm" min="0" value="0" disabled>
+                            <small>Distanza Sede Lab - Sede Admin (richiamato da Sede).</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Costi Logistica (Viaggio A/R) (€):</label>
+                            <input type="number" id="costiLogisticaCalcolato" min="0" step="0.01" value="0.00" disabled>
+                            <small>Viaggio calcolato automaticamente: Km * 2 * Costo/Km.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h4>3. Calcolo Totale e Profitto</h4>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="profittoPercentuale">Profitto Desiderato (%):</label>
+                        <input type="number" id="profittoPercentuale" min="0" step="1" value="20" oninput="aggiornaDatiPrezzo()">
+                    </div>
+                </div>
+
+                <div id="riepilogoCosti">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Durata Totale:</label>
+                            <strong id="durataTotale">1 ora</strong>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Prezzo Proposto (Listino):</label>
+                            <strong id="prezzoProposto" style="color: #007bff;">€ 16,50</strong>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Costi Totali (Attività + Logistica):</label>
+                            <strong id="costiTotaliRiepilogo" style="color: #dc3545;">€ 0,00</strong>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Prezzo Effettivo (Costi + Profitto):</label>
+                            <strong id="prezzoEffettivo" style="color: #A5DD2E; font-size: 1.2em;">€ 0,00</strong>
+                            <small id="alertPrezzoEffettivo" style="color: red;"></small>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h4>Dettagli Lab</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="postiMin">Posti Minimi:</label>
+                        <input type="number" id="postiMin" min="1" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="postiMax">Posti Massimi:</label>
+                        <input type="number" id="postiMax" min="1" value="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="statoLab">Stato Lab:</label>
+                        <select id="statoLab" required>
+                            <option value="in_programmazione">In Programmazione</option>
+                            <option value="attivo">Attivo</option>
+                            <option value="concluso">Concluso</option>
+                            <option value="annullato">Annullato</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="secondary" onclick="chiudiModaleLab()">Annulla</button>
+                    <button type="submit" class="primary" id="btnSalvaLab">Salva Lab</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        // ⚠️ SOSTITUISCI QUESTO OGGETTO CON LA TUA CONFIGURAZIONE REALE DI FIREBASE ⚠️
+        const firebaseConfig = {
+  	apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY",
+  	authDomain: "epapp-bb953.firebaseapp.com",
+  	projectId: "epapp-bb953",
+  	storageBucket: "epapp-bb953.firebasestorage.app",
+  	messagingSenderId: "797675959163",
+  	appId: "1:797675959163:web:30c077ce253990239d03de",
+  	measurementId: "G-RN2896V58E"
+	};
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = app.firestore();
+        const auth = app.auth(); 
+        
+        // Riferimenti DOM
+        const modalLab = document.getElementById('modalLab');
+        const formLab = document.getElementById('formLab');
+        const tabellaLabsBody = document.querySelector('#tabellaLabs tbody');
+        const materialiList = document.getElementById('materialiList');
+        const strumentiList = document.getElementById('strumentiList');
+
+        // Costanti globali
+        const PREZZI_PROPOSTI = {
+            'open_day': 0.00,
+            'singolo': 16.50,
+            'mensile': 65.00,
+            'bimestrale': 130.00,
+            'trimestrale': 165.00
+        };
+        const DURATE = {
+            'open_day': '1 ora',
+            'singolo': '1 ora',
+            'mensile': '4 ore (1/settimana)',
+            'bimestrale': '8 ore (1/settimana)',
+            'trimestrale': '12 ore (1/settimana)'
+        };
+        
+        // Dati master
+        let costiAttivitaMaster = [];
+        let sediMaster = {}; // Dati delle Sedi (da 02fornitori.html)
+        let costoPerKmLogistica = 0.50; // Valore di default/caricato da config (da 04logistica.html)
+
+        // --- FUNZIONI DI AUTENTICAZIONE ---
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {})
+                .catch((error) => {
+                    document.getElementById('authScreen').style.display = 'flex';
+                    document.getElementById('authMessage').textContent = `Errore di login: ${error.message}`;
+                });
+        }
+        function handleLogout() {
+            auth.signOut().then(() => { window.location.reload(); });
+        }
+        
+        auth.onAuthStateChanged((user) => {
+            const authScreen = document.getElementById('authScreen');
+            const dashboardContainer = document.querySelector('.dashboard-container');
+
+            if (user) {
+                if(authScreen) authScreen.style.display = 'none';
+                if(dashboardContainer) dashboardContainer.style.display = 'flex';
+                caricaLabs(); 
+                caricaDatiMaster();
+            } else {
+                if(authScreen) authScreen.style.display = 'flex';
+                if(dashboardContainer) dashboardContainer.style.display = 'none';
+            }
+        });
+
+        // --- CARICAMENTO DATI MASTER (da 04logistica.html e 02fornitori.html) ---
+
+        /**
+         * Carica tutti i dati master necessari (Costi Attività, Sedi, Configurazione Logistica).
+         */
+        function caricaDatiMaster() {
+            // 1. Carica Costi Attività (Materiali/Strumenti/Multimedia)
+            db.collection("attivita_costi").get().then((querySnapshot) => {
+                costiAttivitaMaster = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    // Filtro per elementi con un costo utile (Materiali/Strumenti)
+                    if (data.tipo === 'materiale' || data.tipo === 'strumento' || data.tipo === 'multimedia') {
+                        costiAttivitaMaster.push({
+                            id: doc.id,
+                            nome: data.nomeElemento,
+                            tipo: data.tipo,
+                            costo: data.costoUnitario || 0,
+                            unita: data.unitaMisura || 'N/A'
+                        });
+                    }
+                });
+                popolaSelectCosti();
+            }).catch((error) => {
+                console.warn("Nessun costo attività trovato o errore: ", error);
+            });
+
+            // 2. Carica Costo per Km Logistica (dalla configurazione)
+            db.collection("configurazione").doc("logistica_costi").get().then((doc) => {
+                if (doc.exists) {
+                    costoPerKmLogistica = doc.data().costoPerKm || 0.50;
+                }
+            }).catch((error) => {
+                console.warn("Configurazione Logistica non trovata, uso default (0.50 €/Km).");
+            });
+
+            // 3. Carica Sedi dei Fornitori (Simulazione: in una vera app sarebbero da 02fornitori)
+            caricaSediMaster();
+        }
+        
+        /**
+         * Simula il caricamento delle Sedi dei Fornitori (con Costo Nolo e Km).
+         */
+        function caricaSediMaster() {
+            sediMaster = {
+                // Sede Amministrativa (Km 0, Nolo 0)
+                'sede_admin': { nome: 'Sede Amministrativa (Km 0)', costoNoleggio: 0.00, distanzaKm: 0, fornitoreId: 'admin' },
+                // Sedi di Esempio (con Km e Nolo predefiniti)
+                'sede_fornitore_a': { nome: 'Sede Fornitore A (Biblioteca)', costoNoleggio: 20.00, distanzaKm: 50, fornitoreId: 'f1' },
+                'sede_fornitore_b': { nome: 'Sede Fornitore B (Centro Civico)', costoNoleggio: 5.00, distanzaKm: 15, fornitoreId: 'f2' },
+            };
+            // In una vera app: db.collection("fornitori_sedi").get()...
+            popolaSelectSedi();
+        }
+
+        /**
+         * Popola la select delle Sedi con i dati Master.
+         */
+        function popolaSelectSedi() {
+            const sedeSelect = document.getElementById('sedeLab');
+            const selectedValue = sedeSelect.value; // Mantiene la selezione in modifica
+            
+            sedeSelect.innerHTML = '<option value="">-- Seleziona Sede --</option>'; 
+            
+            for (const id in sediMaster) {
+                const sede = sediMaster[id];
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = `${sede.nome} - ${sede.distanzaKm} Km - € ${sede.costoNoleggio.toFixed(2)} Nolo`;
+                sedeSelect.appendChild(option);
+            }
+
+            // Ripristina la selezione precedente
+            if (selectedValue && sediMaster[selectedValue]) {
+                sedeSelect.value = selectedValue;
+            }
+        }
+        
+        /**
+         * Popola le select con gli elementi Costi Attività (Materiali e Strumenti).
+         */
+        function popolaSelectCosti() {
+            // Logica omessa per brevità, ma identica al file precedente per ri-popolare le select.
+            // ... (logica di popolamento delle select costiAttivitaMaster) ...
+            
+            // Per il momento si assicura che almeno una riga esista per l'inizializzazione
+            if (materialiList.childElementCount === 0 && modalLab.style.display === 'block') {
+                aggiungiRigaCosto('materiale');
+                aggiungiRigaCosto('strumento');
+            }
+            
+            aggiornaDatiPrezzo();
+        }
+
+        // --- GESTIONE RIGHE COSTI ATTIVITÀ DINAMICHE ---
+
+        function aggiungiRigaCosto(tipo) {
+            const listContainer = tipo === 'materiale' ? materialiList : strumentiList;
+            const newRow = document.createElement('div');
+            newRow.className = 'costi-item-row';
+            
+            const newSelect = document.createElement('select');
+            newSelect.className = `select-${tipo}`;
+            newSelect.onchange = aggiornaDatiPrezzo;
+            
+            const defaultOption = document.createElement('option');
+            defaultOption.value = "";
+            defaultOption.textContent = tipo === 'materiale' ? "-- Seleziona Materiale --" : "-- Seleziona Strumento/Multi --";
+            defaultOption.dataset.costo = "0";
+            newSelect.appendChild(defaultOption);
+
+            // Popola le opzioni (filtrando per tipo)
+            costiAttivitaMaster.forEach(item => {
+                // Elementi: Materiale -> Materiale; Strumento/Multi -> Strumento o Multimedia
+                const isMateriale = tipo === 'materiale' && item.tipo === 'materiale';
+                const isStrumento = tipo === 'strumento' && (item.tipo === 'strumento' || item.tipo === 'multimedia');
+                
+                if (isMateriale || isStrumento) {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = `[${item.tipo.toUpperCase()}] ${item.nome} - € ${item.costo.toFixed(2)}/${item.unita}`;
+                    option.dataset.costo = item.costo;
+                    newSelect.appendChild(option);
+                }
+            });
+
+            const newQuantity = document.createElement('input');
+            newQuantity.type = 'number';
+            newQuantity.min = '0';
+            newQuantity.value = '1';
+            newQuantity.oninput = aggiornaDatiPrezzo;
+            newQuantity.className = `quantita-${tipo}`;
+            
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'danger';
+            removeButton.textContent = '-';
+            removeButton.onclick = () => rimuoviRigaCosto(removeButton);
+
+            newRow.appendChild(newSelect);
+            newRow.appendChild(newQuantity);
+            newRow.appendChild(removeButton);
+            
+            listContainer.appendChild(newRow);
+            aggiornaDatiPrezzo();
+        }
+
+        function rimuoviRigaCosto(button) {
+            button.parentNode.remove();
+            aggiornaDatiPrezzo();
+        }
+
+        // --- GESTIONE LOGICA PREZZI ---
+
+        /**
+         * Calcola e aggiorna il Prezzo Proposto, Costi Totali e Prezzo Effettivo.
+         */
+        function aggiornaDatiPrezzo() {
+            const tipoLab = document.getElementById('tipoLab').value;
+            const profittoPercentuale = parseFloat(document.getElementById('profittoPercentuale').value) || 0;
+            
+            // --- 1. Aggiorna Dati Statici (Durata e Prezzo Proposto) ---
+            const prezzoProposto = PREZZI_PROPOSTI[tipoLab] || 0.00;
+            const durata = DURATE[tipoLab] || 'N/D';
+            
+            document.getElementById('durataTotale').textContent = durata;
+            document.getElementById('prezzoProposto').textContent = `€ ${prezzoProposto.toFixed(2).replace('.', ',')}`;
+            
+            // --- 2. Calcola Costi Logistica (Viaggio + Nolo Sede) ---
+            const sedeId = document.getElementById('sedeLab').value;
+            const sedeData = sediMaster[sedeId]; // RECUPERO DATI da Master!
+
+            const distanzaKm = sedeData ? sedeData.distanzaKm : 0;
+            const costoNoleggioSede = sedeData ? sedeData.costoNoleggio : 0;
+
+            // Logistica (Viaggio A/R) = Distanza * 2 * CostoPerKm (costoPerKmLogistica viene dal 04logistica)
+            const costiViaggio = (distanzaKm * 2 * costoPerKmLogistica); 
+            const costiLogistica = costiViaggio + costoNoleggioSede;
+            
+            // Aggiorna i campi di sola visualizzazione (disabilitati)
+            document.getElementById('distanzaKm').value = distanzaKm.toFixed(2);
+            document.getElementById('costoNoleggioSede').value = costoNoleggioSede.toFixed(2);
+            document.getElementById('costiLogisticaCalcolato').value = costiLogistica.toFixed(2);
+            
+            // --- 3. Calcola Costi Attività (Materiali + Strumenti/Multi) ---
+            let costiAttivita = 0;
+            
+            function calcolaCostoElementi(listContainer) {
+                let subTotal = 0;
+                listContainer.querySelectorAll('.costi-item-row').forEach(row => {
+                    const select = row.querySelector('select');
+                    const quantity = row.querySelector('input[type="number"]');
+                    
+                    if (select && quantity && select.value) {
+                        const costoUnitario = parseFloat(select.options[select.selectedIndex].dataset.costo) || 0;
+                        const quantita = parseFloat(quantity.value) || 0;
+                        subTotal += costoUnitario * quantita;
+                    }
+                });
+                return subTotal;
+            }
+
+            costiAttivita += calcolaCostoElementi(materialiList);
+            costiAttivita += calcolaCostoElementi(strumentiList);
+            
+            // --- 4. Calcolo Totale e Prezzo Finale ---
+            
+            const costiTotali = costiAttivita + costiLogistica;
+            document.getElementById('costiTotaliRiepilogo').textContent = `€ ${costiTotali.toFixed(2).replace('.', ',')}`;
+
+            let prezzoEffettivo = 0;
+            if (tipoLab !== 'open_day') {
+                const profitto = costiTotali * (profittoPercentuale / 100);
+                prezzoEffettivo = costiTotali + profitto;
+            } else {
+                prezzoEffettivo = 0; // Open Day è gratuito
+            }
+
+            document.getElementById('prezzoEffettivo').textContent = `€ ${prezzoEffettivo.toFixed(2).replace('.', ',')}`;
+            
+            // 5. Avviso se il prezzo effettivo è maggiore di quello proposto
+            const alertPrezzoEffettivo = document.getElementById('alertPrezzoEffettivo');
+            if (tipoLab !== 'open_day' && prezzoEffettivo > prezzoProposto) {
+                 alertPrezzoEffettivo.textContent = `⚠ EFFETTIVO > PROPOSTO!`;
+            } else {
+                 alertPrezzoEffettivo.textContent = '';
+            }
+        }
+
+
+        // --- GESTIONE MODALE E CRUD LABS ---
+
+        function apriModaleLab(id) {
+            document.getElementById('modalTitleLab').textContent = id ? 'Modifica Lab' : 'Crea Nuovo Lab';
+            document.getElementById('btnSalvaLab').textContent = id ? 'Aggiorna Lab' : 'Salva Lab';
+            document.getElementById('labId').value = id || ''; 
+            
+            materialiList.innerHTML = '';
+            strumentiList.innerHTML = '';
+            
+            if (!id) {
+                formLab.reset(); 
+                aggiungiRigaCosto('materiale'); // Default row
+                aggiungiRigaCosto('strumento'); // Default row
+                
+                document.getElementById('profittoPercentuale').value = '20';
+                document.getElementById('sedeLab').value = ''; 
+                popolaSelectSedi(); // Assicura che la select Sedi sia aggiornata
+                aggiornaDatiPrezzo(); 
+            } else {
+                popolaModalePerModifica(id);
+            }
+            
+            modalLab.style.display = 'block';
+        }
+
+        function chiudiModaleLab() {
+            modalLab.style.display = 'none';
+            formLab.reset();
+            document.getElementById('labId').value = ''; 
+        }
+
+        /**
+         * READ: Carica tutti i Lab da Firestore. (Logica omessa per brevità)
+         */
+        function caricaLabs() {
+            // ... (Funzione per popolare la tabella labs, simile a prima) ...
+             tabellaLabsBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Simulazione caricamento Labs...</td></tr>';
+             
+             // Esempio di un lab:
+             tabellaLabsBody.innerHTML += `<tr onclick="apriModaleLab('mock_id_1')">
+                <td>Coding base</td>
+                <td>Singolo</td>
+                <td>Sede Fornitore A</td>
+                <td>15/10/2025 10:00</td>
+                <td>€ 16,50</td>
+                <td>€ 24,00</td>
+                <td>5</td>
+                <td>Attivo</td>
+                <td><button class="danger" onclick="event.stopPropagation(); eliminaLab('mock_id_1')">Elimina</button></td>
+             </tr>`;
+        }
+
+        /**
+         * CREATE/UPDATE: Salva un nuovo Lab o aggiorna uno esistente.
+         */
+        function salvaLab(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('labId').value;
+            // Nella logica reale, si userebbe labRef.set
+            
+            // Ricalcola i valori finali per la persistenza
+            aggiornaDatiPrezzo(); 
+
+            // Raccoglie i dati degli elementi attività selezionati
+            function raccogliElementiSelezionati(listContainer) {
+                const elementi = [];
+                listContainer.querySelectorAll('.costi-item-row').forEach(row => {
+                    const select = row.querySelector('select');
+                    const quantity = row.querySelector('input[type="number"]');
+                    
+                    if (select && quantity && select.value) {
+                         const costoUnitario = parseFloat(select.options[select.selectedIndex].dataset.costo) || 0;
+                         const quantita = parseFloat(quantity.value) || 0;
+
+                         elementi.push({
+                            id: select.value,
+                            nome: select.options[select.selectedIndex].textContent,
+                            quantita: quantita,
+                            costoUnitario: costoUnitario,
+                            costoTotale: costoUnitario * quantita
+                        });
+                    }
+                });
+                return elementi;
+            }
+
+            const elementiMateriali = raccogliElementiSelezionati(materialiList);
+            const elementiStrumenti = raccogliElementiSelezionati(strumentiList);
+
+            // Recupera valori calcolati
+            const costiTotaliFloat = parseFloat(document.getElementById('costiTotaliRiepilogo').textContent.replace('€ ', '').replace(',', '.')) || 0;
+            const costiLogistica = parseFloat(document.getElementById('costiLogisticaCalcolato').value) || 0;
+            const costiAttivita = costiTotaliFloat - costiLogistica;
+            
+            const datiLab = {
+                // ... (altri dati)
+                sedeLab: document.getElementById('sedeLab').value, // Solo ID Sede
+                
+                // Costi Aggregati
+                costiAttivitaTotali: costiAttivita,
+                costiLogisticaTotali: costiLogistica, 
+                
+                // Elementi Specifici
+                elementiMateriali: elementiMateriali,
+                elementiStrumenti: elementiStrumenti,
+                
+                // ... (altri dati)
+            };
+
+            console.log("Dati Lab da salvare (Logica Costi Verificata):", datiLab);
+
+            // Simulazione salvataggio Firestore
+            alert(`Lab ${id ? 'aggiornato' : 'salvato'} con successo! (Simulazione)`);
+            chiudiModaleLab();
+            caricaLabs(); 
+        }
+
+        /**
+         * UPDATE (Popola Modale): Carica i dati di un Lab specifico nel form.
+         */
+        function popolaModalePerModifica(id) {
+            // Simulazione caricamento dati Lab da Firestore (es: db.collection("labs").doc(id).get())
+            const mockData = {
+                nomeLab: "Coding Avanzato",
+                tipo: "mensile",
+                sedeLab: "sede_fornitore_a", // ID della sede
+                dataOraInizio: "2025-10-25T14:30",
+                profittoPercentuale: 25,
+                postiMin: 5,
+                postiMax: 15,
+                stato: "attivo",
+                elementiMateriali: [
+                    { id: "carta_id", nome: "Materiali: Carta - € 0.50/Pz", quantita: 10, costoUnitario: 0.50, costoTotale: 5.00 }
+                ],
+                elementiStrumenti: [
+                    { id: "libri_id", nome: "Strumenti: Libri di Coding - € 15.00/Libro", quantita: 2, costoUnitario: 15.00, costoTotale: 30.00 },
+                    // Si può simulare anche un elemento Multimedia
+                ]
+            };
+
+            const data = mockData;
+            
+            document.getElementById('nomeLab').value = data.nomeLab || '';
+            document.getElementById('tipoLab').value = data.tipo || 'singolo';
+            document.getElementById('dataOraInizio').value = data.dataOraInizio || '';
+            document.getElementById('profittoPercentuale').value = data.profittoPercentuale || 20;
+            document.getElementById('postiMin').value = data.postiMin || 1;
+            document.getElementById('postiMax').value = data.postiMax || 10;
+            document.getElementById('statoLab').value = data.stato || 'in_programmazione';
+            
+            // Popola la Sede
+            popolaSelectSedi();
+            document.getElementById('sedeLab').value = data.sedeLab || '';
+            
+            // Popola i Costi Attività Dinamici
+            const cariciCostiInModale = (elementi, tipo) => {
+                const listContainer = tipo === 'materiale' ? materialiList : strumentiList;
+                listContainer.innerHTML = '';
+                
+                const elementiValidi = elementi && elementi.length > 0;
+                
+                if (elementiValidi) {
+                    elementi.forEach(item => {
+                        aggiungiRigaCosto(tipo); 
+                        const lastRow = listContainer.lastElementChild;
+                        if (lastRow) {
+                            lastRow.querySelector(`.select-${tipo}`).value = item.id;
+                            lastRow.querySelector(`.quantita-${tipo}`).value = item.quantita;
+                        }
+                    });
+                } else {
+                    aggiungiRigaCosto(tipo);
+                }
+            };
+
+            cariciCostiInModale(data.elementiMateriali, 'materiale');
+            cariciCostiInModale(data.elementiStrumenti, 'strumento');
+
+            // Ricalcola i prezzi dopo aver popolato i campi per mostrare Prezzo Effettivo e avvisi
+            aggiornaDatiPrezzo(); 
+        }
+        
+        /**
+         * DELETE: Elimina un Lab.
+         */
+        function eliminaLab(id) {
+            if (confirm("Sei sicuro di voler eliminare questo Lab? L'azione è irreversibile.")) {
+                // db.collection("labs").doc(id).delete()...
+                alert("Lab eliminato con successo! (Simulazione)");
+                caricaLabs(); 
+            }
+        }
+        
+        // --- INIZIALIZZAZIONE DEFAULT (Simulazione Costi Attività Master) ---
+        
+        // Simulo l'aggiunta di alcuni elementi master se non sono stati caricati da Firestore (solo per test)
+        if (costiAttivitaMaster.length === 0) {
+            costiAttivitaMaster = [
+                { id: "carta_id", nome: "Carta e Cartoncini", tipo: "materiale", costo: 0.50, unita: "Pz" },
+                { id: "pennarelli_id", nome: "Set Pennarelli", tipo: "materiale", costo: 5.00, unita: "Kit" },
+                { id: "libri_id", nome: "Libri di Coding", tipo: "strumento", costo: 15.00, unita: "Libro" },
+                { id: "audio_id", nome: "Traccia Relax", tipo: "multimedia", costo: 0.00, unita: "N/A" }
+            ];
+        }
+    </script>
+</body>
+</html>

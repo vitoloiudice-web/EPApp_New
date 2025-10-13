@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPApp - Configurazione Logistica</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    
+    <style>
+        /* BASE RESET */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
+        
+        /* LAYOUT PRINCIPALE */
+        .dashboard-container { display: flex; min-height: 100vh; }
+        
+        /* NAVBAR / SIDEBAR */
+        .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+        .logo-link { width: 100%; text-align: center; margin-bottom: 30px; }
+        /* Logo lemon_logo.png */
+        .logo-link img { max-width: 80%; height: auto; border-radius: 5px; cursor: pointer; transition: transform 0.3s, opacity 0.3s; } 
+        .dashboard-nav small { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; align-self: flex-start; margin-left: 10px; margin-top: 15px; color: #909090; }
+        .dashboard-nav hr { width: 90%; border: 0; border-top: 1px solid #495057; margin: 5px 0 10px 0; }
+        .dashboard-nav a { color: #ccc; text-decoration: none; padding: 12px 15px; margin: 3px 0; display: block; width: 90%; text-align: left; border-radius: 4px; transition: background-color 0.3s, color 0.3s, padding-left 0.3s; }
+        .dashboard-nav a:hover, .dashboard-nav a.active { background-color: #A5DD2E; color: #343a40; font-weight: bold; padding-left: 20px; }
+        
+        /* CONTENUTO PRINCIPALE */
+        .dashboard-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
+        .tab-content { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); margin-bottom: 30px; }
+        
+        /* BOTTONI */
+        button.primary { background-color: #A5DD2E; color: #343a40; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.3s, transform 0.2s; }
+        button.primary:hover { background-color: #8ac41f; transform: translateY(-1px); }
+        
+        /* CAMPI FORM */
+        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; display: inline-block; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .form-group { margin-bottom: 15px; }
+        .form-row { display: flex; gap: 20px; }
+        .form-row > * { flex: 1; }
+
+        /* Sezione Logistica */
+        .config-box { 
+            background-color: #e6f7ff; 
+            padding: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #007bff;
+            margin-bottom: 30px;
+        }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .dashboard-container { flex-direction: column; }
+            .dashboard-nav { width: 100%; height: auto; padding: 10px 0; flex-direction: row; flex-wrap: wrap; justify-content: space-around; }
+            .dashboard-nav a { width: 45%; text-align: center; margin: 5px 0; padding: 8px 10px; }
+            .dashboard-nav small, .dashboard-nav hr { display: none; }
+            .logo-link { width: 100%; text-align: center; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #495057; }
+            .dashboard-content { padding: 15px; }
+            .form-row { flex-direction: column; gap: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="authScreen" style="display: none; height: 100vh; justify-content: center; align-items: center; background-color: #e0e0e0;">
+        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <h2 style="text-align: center; color: #A5DD2E;">EPApp Login</h2>
+            <input type="email" id="loginEmail" placeholder="Email" required style="margin-bottom: 10px;">
+            <input type="password" id="loginPassword" placeholder="Password" required style="margin-bottom: 20px;">
+            <button class="primary" onclick="handleLogin()" style="width: 100%;">Accedi</button>
+            <p id="authMessage" style="color: red; text-align: center; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <div class="dashboard-container" style="display: none;">
+        
+        <nav class="dashboard-nav">
+            <a href="00index.html" class="logo-link"><img src="lemon_logo.png" alt="EPApp Logo"></a>
+            
+            <small>Dashboard</small><hr>
+            <a href="00index.html" class="tab-link">Dashboard</a> 
+
+            <small>Monitoraggio Labs</small><hr>
+            <a href="03labs.html" class="tab-link">Labs & Attività</a> 
+            <a href="04logistica.html" class="tab-link active">Costi Logistica</a> 
+            
+            <small>Anagrafiche</small><hr>
+            <a href="01clienti.html" class="tab-link">Clienti & Iscrizioni</a> 
+            <a href="02fornitori.html" class="tab-link">Fornitori & Sedi</a> 
+            
+            <small>Finanza & Analisi</small><hr>
+            <a href="05preventivi.html" class="tab-link">Preventivi & Fatture</a> 
+            <a href="06stats.html" class="tab-link">Statistiche & KPI</a> 
+            
+            <a href="#" id="logoutLink" onclick="handleLogout()" style="color: #ff9999; margin-top: auto;">Logout</a>
+        </nav>
+
+        <main class="dashboard-content">
+            
+            <div id="configLogistica" class="tab-content config-box">
+                <h2>Configurazione Costi Logistica (Viaggio A/R)</h2>
+                <p>Definisci il costo fisso per Km utilizzato per il calcolo automatico del Costo Viaggio.</p>
+                <p style="color: #007bff; font-weight: bold;">⚠️ **Nota:** I dati relativi al costo noleggio sede (`€ NOLO`) e la distanza (`KM`) sono gestiti nel pannello **Fornitori & Sedi** (`02fornitori.html`).</p>
+                
+                <form id="formConfigLogistica" onsubmit="salvaConfigLogistica(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="costoPerKm">Costo Fisso per Km (€/Km):</label>
+                            <input type="number" id="costoPerKm" min="0" step="0.01" value="0.50" required>
+                            <small>Questo valore, moltiplicato per **`Distanza Sede (Km) * 2`**, genera il Costo Viaggio A/R in `03labs.html`.</small>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button type="submit" class="primary" style="width: 100%; height: 40px;">Salva Configurazione</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            </main>
+    </div>
+
+    <script>
+        // ⚠️ SOSTITUISCI QUESTO OGGETTO CON LA TUA CONFIGURAZIONE REALE DI FIREBASE ⚠️
+        const firebaseConfig = {
+  	apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY",
+  	authDomain: "epapp-bb953.firebaseapp.com",
+  	projectId: "epapp-bb953",
+  	storageBucket: "epapp-bb953.firebasestorage.app",
+  	messagingSenderId: "797675959163",
+  	appId: "1:797675959163:web:30c077ce253990239d03de",
+  	measurementId: "G-RN2896V58E"
+	};
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = app.firestore();
+        const auth = app.auth(); 
+        
+        // --- FUNZIONI DI AUTENTICAZIONE ---
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {})
+                .catch((error) => {
+                    document.getElementById('authScreen').style.display = 'flex';
+                    document.getElementById('authMessage').textContent = `Errore di login: ${error.message}`;
+                });
+        }
+        function handleLogout() {
+            auth.signOut().then(() => { window.location.reload(); });
+        }
+        
+        auth.onAuthStateChanged((user) => {
+            const authScreen = document.getElementById('authScreen');
+            const dashboardContainer = document.querySelector('.dashboard-container');
+
+            if (user) {
+                if(authScreen) authScreen.style.display = 'none';
+                if(dashboardContainer) dashboardContainer.style.display = 'flex';
+                caricaConfigLogistica();
+            } else {
+                if(authScreen) authScreen.style.display = 'flex';
+                if(dashboardContainer) dashboardContainer.style.display = 'none';
+            }
+        });
+
+        // --- GESTIONE CONFIGURAZIONE LOGISTICA (Costo/Km) ---
+
+        /**
+         * READ: Carica la configurazione del costo per Km.
+         */
+        function caricaConfigLogistica() {
+            // Riferimento al documento di configurazione dei costi logistici
+            db.collection("configurazione").doc("logistica_costi").get().then((doc) => {
+                const costoPerKmInput = document.getElementById('costoPerKm');
+                if (doc.exists) {
+                    const data = doc.data();
+                    // Assicura che il valore sia numerico e imposta un default se nullo
+                    costoPerKmInput.value = data.costoPerKm || 0.50; 
+                } else {
+                    // Imposta valore di default se il documento non esiste
+                    costoPerKmInput.value = 0.50; 
+                }
+            }).catch((error) => {
+                console.warn("Errore nel caricamento configurazione logistica, uso default (0.50 €/Km): ", error);
+                document.getElementById('costoPerKm').value = 0.50;
+            });
+        }
+
+        /**
+         * UPDATE: Salva la configurazione del costo per Km.
+         */
+        function salvaConfigLogistica(e) {
+            e.preventDefault();
+            
+            const costoPerKm = parseFloat(document.getElementById('costoPerKm').value);
+
+            if (isNaN(costoPerKm) || costoPerKm < 0) {
+                 alert("Inserisci un Costo per Km valido (maggiore o uguale a zero).");
+                 return;
+            }
+
+            // Salva il valore nel documento logistica_costi
+            db.collection("configurazione").doc("logistica_costi").set({
+                costoPerKm: costoPerKm,
+                ultimaModifica: new Date().toISOString()
+            }, { merge: true })
+            .then(() => {
+                alert(`Costo per Km aggiornato a € ${costoPerKm.toFixed(2).replace('.', ',')} con successo!`);
+            })
+            .catch((error) => {
+                console.error("Errore nel salvataggio della configurazione logistica: ", error);
+                alert("Errore nel salvataggio della configurazione logistica. Controlla la console.");
+            });
+        }
+    </script>
+</body>
+</html>

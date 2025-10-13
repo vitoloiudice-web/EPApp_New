@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPApp - Fornitori & Sedi</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    
+    <style>
+        /* BASE RESET */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
+        
+        /* LAYOUT PRINCIPALE */
+        .dashboard-container { display: flex; min-height: 100vh; }
+        
+        /* NAVBAR / SIDEBAR */
+        .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+        .logo-link { width: 100%; text-align: center; margin-bottom: 30px; }
+        .logo-link img { max-width: 80%; height: auto; border-radius: 5px; cursor: pointer; transition: transform 0.3s, opacity 0.3s; }
+        .dashboard-nav small { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; align-self: flex-start; margin-left: 10px; margin-top: 15px; color: #909090; }
+        .dashboard-nav hr { width: 90%; border: 0; border-top: 1px solid #495057; margin: 5px 0 10px 0; }
+        .dashboard-nav a { color: #ccc; text-decoration: none; padding: 12px 15px; margin: 3px 0; display: block; width: 90%; text-align: left; border-radius: 4px; transition: background-color 0.3s, color 0.3s, padding-left 0.3s; }
+        .dashboard-nav a:hover, .dashboard-nav a.active { background-color: #A5DD2E; color: #343a40; font-weight: bold; padding-left: 20px; }
+        
+        /* CONTENUTO PRINCIPALE */
+        .dashboard-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
+        .tab-content { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); margin-bottom: 30px; }
+        
+        /* BOTTONI */
+        button.primary { background-color: #A5DD2E; color: #343a40; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.3s, transform 0.2s; }
+        button.primary:hover { background-color: #8ac41f; transform: translateY(-1px); }
+        button.secondary { background-color: #ccc; color: #333; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
+        button.danger { background-color: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; transition: background-color 0.3s; }
+        
+        /* CAMPI FORM E TABELLE */
+        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; display: inline-block; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .form-group { margin-bottom: 15px; }
+        .form-row { display: flex; gap: 20px; }
+        .form-row > * { flex: 1; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f8f8; color: #343a40; font-weight: bold; }
+        tr:hover { background-color: #f1f1f1; cursor: pointer; }
+        tr.header { background-color: #A5DD2E; color: #343a40; font-weight: bold; }
+
+        /* MODAL (Gestione Pop-up) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 30px; border: 1px solid #888; width: 80%; max-width: 900px; border-radius: 8px; position: relative; } /* Aumentata max-width */
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .close:hover, .close:focus { color: #000; text-decoration: none; cursor: pointer; }
+
+        /* LISTA DINAMICA SEDI */
+        #listaSedi { border: 1px solid #ccc; border-radius: 4px; padding: 10px; background-color: #f9f9f9; }
+        .sede-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 10px 0; 
+            border-bottom: 1px solid #eee; 
+        }
+        .sede-item:last-child { border-bottom: none; }
+        .sede-item button { margin-left: 10px; }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .dashboard-container { flex-direction: column; }
+            .dashboard-nav { width: 100%; height: auto; padding: 10px 0; flex-direction: row; flex-wrap: wrap; justify-content: space-around; }
+            .dashboard-nav a { width: 45%; text-align: center; margin: 5px 0; padding: 8px 10px; }
+            .dashboard-nav small, .dashboard-nav hr { display: none; }
+            .logo-link { width: 100%; text-align: center; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #495057; }
+            .dashboard-content { padding: 15px; }
+            .form-row { flex-direction: column; gap: 0; }
+            .modal-content { margin: 10% auto; width: 95%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="authScreen" style="display: none; height: 100vh; justify-content: center; align-items: center; background-color: #e0e0e0;">
+        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <h2 style="text-align: center; color: #A5DD2E;">EPApp Login</h2>
+            <input type="email" id="loginEmail" placeholder="Email" required style="margin-bottom: 10px;">
+            <input type="password" id="loginPassword" placeholder="Password" required style="margin-bottom: 20px;">
+            <button class="primary" onclick="handleLogin()" style="width: 100%;">Accedi</button>
+            <p id="authMessage" style="color: red; text-align: center; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <div class="dashboard-container" style="display: none;">
+        
+        <nav class="dashboard-nav">
+            <a href="00index.html" class="logo-link"><img src="lemon_logo.png" alt="EPApp Logo"></a>
+            
+            <small>Dashboard</small><hr>
+            <a href="00index.html" class="tab-link">Dashboard</a> 
+
+            <small>Monitoraggio Labs</small><hr>
+            <a href="03labs.html" class="tab-link">Labs & Attività</a> 
+            <a href="04logistica.html" class="tab-link">Logistica & Materiali</a> 
+            
+            <small>Anagrafiche</small><hr>
+            <a href="01clienti.html" class="tab-link">Clienti & Iscrizioni</a> 
+            <a href="02fornitori.html" class="tab-link active">Fornitori & Sedi</a> 
+            
+            <small>Finanza & Analisi</small><hr>
+            <a href="05preventivi.html" class="tab-link">Preventivi & Fatture</a> 
+            <a href="06stats.html" class="tab-link">Statistiche & KPI</a> 
+            
+            <a href="#" id="logoutLink" onclick="handleLogout()" style="color: #ff9999; margin-top: auto;">Logout</a>
+        </nav>
+
+        <main class="dashboard-content">
+            
+            <div id="fornitoriAnagrafe" class="tab-content active">
+                <h2>Anagrafe Fornitori e Sedi</h2>
+                <p>Visualizzazione e gestione completa di tutti i fornitori e delle relative sedi noleggiate.</p>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <input type="text" id="ricercaFornitore" placeholder="Cerca per nome, P.IVA o referente..." style="width: 300px; margin: 0;">
+                    <button class="primary" onclick="apriModaleFornitore(null)">+ Nuovo Fornitore</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="tabellaFornitori">
+                        <thead>
+                            <tr class="header">
+                                <th>Nome/Rag. Sociale</th>
+                                <th>Referente</th>
+                                <th>Cod. Fiscale/P.IVA</th>
+                                <th>Contatto Email</th>
+                                <th>N. Sedi</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="6" style="text-align: center;">Caricamento dati...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="modalFornitore" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="chiudiModaleFornitore()">&times;</span>
+            <h3 id="modalTitleFornitore">Crea Nuovo Fornitore</h3>
+            <form id="formFornitore" onsubmit="salvaFornitore(event)">
+                <input type="hidden" id="fornitoreId">
+
+                <h4>Anagrafica Fornitore</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nomeFornitore">Nome/Ragione Sociale:</label>
+                        <input type="text" id="nomeFornitore" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tipoFornitore">Tipo:</label>
+                        <select id="tipoFornitore" required>
+                            <option value="sede">Fornitore Sedi (Noleggio)</option>
+                            <option value="materiali">Fornitore Materiali/Servizi</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="referente">Nome Referente:</label>
+                        <input type="text" id="referente">
+                    </div>
+                    <div class="form-group">
+                        <label for="codFiscaleFornitore">Codice Fiscale/P.IVA:</label>
+                        <input type="text" id="codFiscaleFornitore" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="emailFornitore">Email:</label>
+                        <input type="email" id="emailFornitore" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="telefonoFornitore">Telefono:</label>
+                        <input type="tel" id="telefonoFornitore">
+                    </div>
+                </div>
+
+                <hr>
+
+                <div id="sezioneSedi">
+                    <h4>Gestione Sedi Noleggio</h4>
+                    <p>Aggiungi le sedi associate a questo fornitore.</p>
+
+                    <div style="border: 1px dashed #ccc; padding: 15px; margin-bottom: 15px;">
+                        <h5>Aggiungi Nuova Sede</h5>
+                        <input type="hidden" id="sedeId"> <div class="form-row">
+                            <input type="text" id="nomeSede" placeholder="Nome Sede" required>
+                            <input type="text" id="indirizzoSede" placeholder="Indirizzo Completo" required>
+                        </div>
+                        <div class="form-row">
+                            <input type="number" id="costoNoleggio" placeholder="Costo Noleggio (€)" required>
+                            <input type="number" id="distanzaKm" placeholder="Distanza (Km)" required>
+                        </div>
+                        <div class="form-row">
+                            <input type="text" id="disponibilitaGG" placeholder="GG Disponibili (es. Lun-Ven)">
+                            <input type="text" id="disponibilitaHH" placeholder="Orari Disponibili (es. 9:00-18:00)">
+                        </div>
+                        <div class="form-row">
+                            <input type="number" id="nMin" placeholder="Posti Minimi">
+                            <input type="number" id="nMax" placeholder="Posti Massimi">
+                        </div>
+                        <div style="text-align: right;">
+                            <button type="button" class="secondary" id="btnSvuotaSede" onclick="svuotaFormSede()" style="display:none;">Annulla Modifica</button>
+                            <button type="button" class="primary" onclick="aggiungiSede()">Aggiungi/Aggiorna Sede</button>
+                        </div>
+                    </div>
+                    
+                    <h5>Sedi Associate (<span id="countSedi">0</span>)</h5>
+                    <div id="listaSedi">
+                        <p id="msgNessunaSede">Nessuna sede associata.</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="form-group" style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="secondary" onclick="chiudiModaleFornitore()">Annulla</button>
+                    <button type="submit" class="primary" id="btnSalvaFornitore">Salva Fornitore</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        // ⚠️ SOSTITUISCI QUESTO OGGETTO CON LA TUA CONFIGURAZIONE REALE DI FIREBASE ⚠️
+        const firebaseConfig = {
+  	apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY",
+  	authDomain: "epapp-bb953.firebaseapp.com",
+  	projectId: "epapp-bb953",
+  	storageBucket: "epapp-bb953.firebasestorage.app",
+  	messagingSenderId: "797675959163",
+  	appId: "1:797675959163:web:30c077ce253990239d03de",
+  	measurementId: "G-RN2896V58E"
+	};
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = app.firestore();
+        const auth = app.auth(); 
+        
+        // Riferimenti DOM e Stato Locale
+        const modalFornitore = document.getElementById('modalFornitore');
+        const formFornitore = document.getElementById('formFornitore');
+        const tabellaFornitoriBody = document.querySelector('#tabellaFornitori tbody');
+        const sezioneSedi = document.getElementById('sezioneSedi');
+        const listaSediDiv = document.getElementById('listaSedi');
+        
+        let sediTemporanee = []; // Array per gestire le sedi prima del salvataggio del Fornitore
+
+        // --- FUNZIONI DI AUTENTICAZIONE ---
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {})
+                .catch((error) => {
+                    document.getElementById('authMessage').textContent = `Errore di login: ${error.message}`;
+                });
+        }
+        function handleLogout() {
+            auth.signOut().then(() => { window.location.reload(); });
+        }
+        
+        auth.onAuthStateChanged((user) => {
+            const authScreen = document.getElementById('authScreen');
+            const dashboardContainer = document.querySelector('.dashboard-container');
+
+            if (user) {
+                if(authScreen) authScreen.style.display = 'none';
+                if(dashboardContainer) dashboardContainer.style.display = 'flex';
+                // CARICA I DATI REALI SOLO DOPO L'AUTENTICAZIONE
+                caricaFornitori(); 
+            } else {
+                if(authScreen) authScreen.style.display = 'flex';
+                if(dashboardContainer) dashboardContainer.style.display = 'none';
+            }
+        });
+
+        // --- GESTIONE MODALE E TIPO FORNITORE ---
+
+        document.getElementById('tipoFornitore').addEventListener('change', function() {
+            sezioneSedi.style.display = this.value === 'sede' ? 'block' : 'none';
+        });
+
+        function apriModaleFornitore(id) {
+            document.getElementById('modalTitleFornitore').textContent = id ? 'Modifica Fornitore' : 'Crea Nuovo Fornitore';
+            document.getElementById('btnSalvaFornitore').textContent = id ? 'Aggiorna Fornitore' : 'Salva Fornitore';
+            document.getElementById('fornitoreId').value = id || ''; 
+            
+            sediTemporanee = []; // Resetta le sedi temporanee
+            renderSediTemporanee(); // Aggiorna la lista nel modale
+
+            if (id) {
+                popolaModalePerModifica(id);
+            } else {
+                formFornitore.reset(); 
+                sezioneSedi.style.display = 'block'; // Di default mostra Sedi per nuovo fornitore
+            }
+
+            modalFornitore.style.display = 'block';
+        }
+
+        function chiudiModaleFornitore() {
+            modalFornitore.style.display = 'none';
+            formFornitore.reset();
+            document.getElementById('fornitoreId').value = ''; 
+            svuotaFormSede();
+        }
+        
+        // --- GESTIONE SEDI TEMPORANEE (Aggiungi/Modifica nel Modale) ---
+
+        function aggiungiSede() {
+            const sedeId = document.getElementById('sedeId').value;
+            const nome = document.getElementById('nomeSede').value;
+            const indirizzo = document.getElementById('indirizzoSede').value;
+            const costo = parseFloat(document.getElementById('costoNoleggio').value);
+            const km = parseFloat(document.getElementById('distanzaKm').value);
+            
+            if (!nome || !indirizzo || isNaN(costo) || isNaN(km)) {
+                alert("Per favore, compila i campi obbligatori della Sede (Nome, Indirizzo, Costo, Distanza).");
+                return;
+            }
+            
+            const nuovaSede = {
+                id: sedeId || Date.now().toString(), // Genera un ID temporaneo se è una nuova sede
+                nome: nome,
+                indirizzo: indirizzo,
+                costoNoleggio: costo,
+                distanzaKm: km,
+                disponibilitaGG: document.getElementById('disponibilitaGG').value,
+                disponibilitaHH: document.getElementById('disponibilitaHH').value,
+                nMin: parseInt(document.getElementById('nMin').value) || 0,
+                nMax: parseInt(document.getElementById('nMax').value) || 0,
+            };
+
+            if (sedeId) {
+                // Modifica
+                const index = sediTemporanee.findIndex(s => s.id === sedeId);
+                if (index !== -1) {
+                    sediTemporanee[index] = nuovaSede;
+                }
+            } else {
+                // Aggiunta
+                sediTemporanee.push(nuovaSede);
+            }
+
+            svuotaFormSede();
+            renderSediTemporanee();
+        }
+
+        function renderSediTemporanee() {
+            listaSediDiv.innerHTML = '';
+            document.getElementById('countSedi').textContent = sediTemporanee.length;
+
+            if (sediTemporanee.length === 0) {
+                listaSediDiv.innerHTML = '<p id="msgNessunaSede">Nessuna sede associata.</p>';
+                return;
+            }
+
+            sediTemporanee.forEach(sede => {
+                const item = document.createElement('div');
+                item.className = 'sede-item';
+                item.innerHTML = `
+                    <span>
+                        <strong>${sede.nome}</strong> 
+                        (${sede.indirizzo.substring(0, 30)}...) - Nolo: €${sede.costoNoleggio.toFixed(2)}
+                    </span>
+                    <div>
+                        <button type="button" class="secondary" onclick="popolaFormSede('${sede.id}')">Modifica</button>
+                        <button type="button" class="danger" onclick="eliminaSedeTemporanea('${sede.id}')">Rimuovi</button>
+                    </div>
+                `;
+                listaSediDiv.appendChild(item);
+            });
+        }
+
+        function popolaFormSede(id) {
+            const sede = sediTemporanee.find(s => s.id === id);
+            if (!sede) return;
+
+            document.getElementById('sedeId').value = sede.id;
+            document.getElementById('nomeSede').value = sede.nome;
+            document.getElementById('indirizzoSede').value = sede.indirizzo;
+            document.getElementById('costoNoleggio').value = sede.costoNoleggio;
+            document.getElementById('distanzaKm').value = sede.distanzaKm;
+            document.getElementById('disponibilitaGG').value = sede.disponibilitaGG;
+            document.getElementById('disponibilitaHH').value = sede.disponibilitaHH;
+            document.getElementById('nMin').value = sede.nMin;
+            document.getElementById('nMax').value = sede.nMax;
+            
+            document.getElementById('btnSvuotaSede').style.display = 'inline-block';
+        }
+
+        function svuotaFormSede() {
+            document.getElementById('sedeId').value = '';
+            document.getElementById('nomeSede').value = '';
+            document.getElementById('indirizzoSede').value = '';
+            document.getElementById('costoNoleggio').value = '';
+            document.getElementById('distanzaKm').value = '';
+            document.getElementById('disponibilitaGG').value = '';
+            document.getElementById('disponibilitaHH').value = '';
+            document.getElementById('nMin').value = '';
+            document.getElementById('nMax').value = '';
+            document.getElementById('btnSvuotaSede').style.display = 'none';
+        }
+        
+        function eliminaSedeTemporanea(id) {
+            sediTemporanee = sediTemporanee.filter(s => s.id !== id);
+            renderSediTemporanee();
+            svuotaFormSede(); // Pulisce il form se l'elemento rimosso era in modifica
+        }
+
+        // --- FUNZIONI CRUD FORNITORI ---
+
+        /**
+         * READ: Carica tutti i fornitori da Firestore.
+         */
+        function caricaFornitori() {
+            tabellaFornitoriBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Caricamento dati in corso...</td></tr>';
+            
+            db.collection("fornitori").get().then((querySnapshot) => {
+                tabellaFornitoriBody.innerHTML = '';
+                
+                if (querySnapshot.empty) {
+                    tabellaFornitoriBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessun fornitore registrato.</td></tr>';
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const row = tabellaFornitoriBody.insertRow();
+                    
+                    row.onclick = () => apriModaleFornitore(doc.id); 
+
+                    const numSedi = data.sedi ? data.sedi.length : 0;
+
+                    row.insertCell().textContent = data.nome || 'N/D';
+                    row.insertCell().textContent = data.referente || 'N/D';
+                    row.insertCell().textContent = data.codFiscale || 'N/D';
+                    row.insertCell().textContent = data.email || 'N/D';
+                    row.insertCell().textContent = numSedi;
+
+                    const actionCell = row.insertCell();
+                    actionCell.innerHTML = `<button class="danger" onclick="event.stopPropagation(); eliminaFornitore('${doc.id}')">Elimina</button>`;
+                });
+            }).catch((error) => {
+                console.error("Errore nel caricamento dei fornitori: ", error);
+                tabellaFornitoriBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">Errore: ${error.message}</td></tr>`;
+            });
+        }
+
+        /**
+         * CREATE/UPDATE: Salva un nuovo fornitore o aggiorna uno esistente.
+         */
+        function salvaFornitore(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('fornitoreId').value;
+            const fornitoreRef = id ? db.collection("fornitori").doc(id) : db.collection("fornitori").doc();
+            
+            const datiFornitore = {
+                nome: document.getElementById('nomeFornitore').value,
+                tipo: document.getElementById('tipoFornitore').value,
+                referente: document.getElementById('referente').value,
+                codFiscale: document.getElementById('codFiscaleFornitore').value,
+                email: document.getElementById('emailFornitore').value,
+                telefono: document.getElementById('telefonoFornitore').value,
+                
+                // Salva l'array delle sedi temporanee come sottostruttura
+                sedi: sediTemporanee.map(s => ({
+                    nome: s.nome,
+                    indirizzo: s.indirizzo,
+                    costoNoleggio: s.costoNoleggio,
+                    distanzaKm: s.distanzaKm,
+                    disponibilitaGG: s.disponibilitaGG,
+                    disponibilitaHH: s.disponibilitaHH,
+                    nMin: s.nMin,
+                    nMax: s.nMax
+                })),
+                
+                // Placeholder per campi futuri
+                labsAbbinati: [], 
+                statoCrediti: 'nessuno' 
+            };
+
+            fornitoreRef.set(datiFornitore, { merge: true })
+                .then(() => {
+                    alert(`Fornitore ${id ? 'aggiornato' : 'salvato'} con successo!`);
+                    chiudiModaleFornitore();
+                    caricaFornitori(); 
+                })
+                .catch((error) => {
+                    console.error("Errore nel salvataggio: ", error);
+                    alert("Errore nel salvataggio del fornitore. Controlla la console.");
+                });
+        }
+
+        /**
+         * UPDATE (Popola Modale): Carica i dati di un fornitore specifico nel form.
+         */
+        function popolaModalePerModifica(id) {
+            db.collection("fornitori").doc(id).get().then((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    
+                    document.getElementById('nomeFornitore').value = data.nome || '';
+                    document.getElementById('tipoFornitore').value = data.tipo || 'sede';
+                    document.getElementById('referente').value = data.referente || '';
+                    document.getElementById('codFiscaleFornitore').value = data.codFiscale || '';
+                    document.getElementById('emailFornitore').value = data.email || '';
+                    document.getElementById('telefonoFornitore').value = data.telefono || '';
+                    
+                    // Gestione visibilità Sezione Sedi
+                    sezioneSedi.style.display = data.tipo === 'sede' ? 'block' : 'none';
+                    
+                    // Carica le sedi nel gestore temporaneo locale
+                    sediTemporanee = data.sedi ? data.sedi.map((s, index) => ({...s, id: index.toString()})) : []; // Aggiunge un ID temporaneo per la gestione locale
+                    renderSediTemporanee();
+
+                } else {
+                    alert("Documento fornitore non trovato.");
+                    chiudiModaleFornitore();
+                }
+            }).catch((error) => {
+                console.error("Errore nel recupero dati: ", error);
+                alert("Errore nel recupero dei dati del fornitore.");
+            });
+        }
+        
+        /**
+         * DELETE: Elimina un fornitore.
+         */
+        function eliminaFornitore(id) {
+            if (confirm("Sei sicuro di voler eliminare questo fornitore e tutte le sue sedi associate? L'azione è irreversibile.")) {
+                db.collection("fornitori").doc(id).delete().then(() => {
+                    alert("Fornitore eliminato con successo!");
+                    caricaFornitori(); // Ricarica la tabella
+                }).catch((error) => {
+                    console.error("Errore nell'eliminazione: ", error);
+                    alert("Errore nell'eliminazione del fornitore.");
+                });
+            }
+        }
+    </script>
+</body>
+</html>
