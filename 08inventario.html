@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPApp - Inventario & Costificazione</title>
+    <style>
+        /* BASE RESET */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
+        .dashboard-container { display: flex; min-height: 100vh; }
+        
+        /* NAVBAR / SIDEBAR (Stili Minimizzati) */
+        .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.2); flex-shrink: 0; }
+        .dashboard-nav a { color: #ccc; text-decoration: none; padding: 12px 15px; margin: 3px 0; display: block; width: 90%; text-align: left; border-radius: 4px; transition: background-color 0.3s; }
+        .dashboard-nav a:hover, .dashboard-nav a.active { background-color: #A5DD2E; color: #343a40; font-weight: bold; }
+        .dashboard-nav small { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; align-self: flex-start; margin-left: 10px; margin-top: 15px; color: #909090; }
+        .dashboard-nav hr { width: 90%; border: 0; border-top: 1px solid #495057; margin: 5px 0 10px 0; }
+
+        /* CONTENUTO PRINCIPALE */
+        .dashboard-content { flex-grow: 1; padding: 30px; }
+        .data-section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        
+        <nav class="dashboard-nav">
+            <a href="00index.html">Dashboard</a> 
+            
+            <small>Monitoraggio Labs</small><hr>
+            <a href="03labs.html">Labs & Attività</a> 
+            <a href="04logistica.html">Costi Logistica</a> 
+            
+            <small>Anagrafiche</small><hr>
+            <a href="01clienti.html">Clienti & Iscrizioni</a> 
+            <a href="02fornitori.html">Fornitori & Sedi</a> 
+            
+            <small>Finanza & Analisi</small><hr>
+            <a href="05preventivi.html">Preventivi & Fatture</a> 
+            <a href="06stats.html">Statistiche & KPI</a> 
+            
+            <small>Interazioni</small><hr>
+            <a href="07iscrizioni.html">Iscrizioni Lab</a> 
+            <a href="08inventario.html" class="active">Inventario & Costificazione</a> <a href="#" style="color: #ff9999; margin-top: auto;">Logout</a>
+        </nav>
+
+        <main class="dashboard-content">
+            
+            <h1>Inventario e Costificazione Globale</h1>
+
+            <div class="data-section">
+                <p>Questa è la pagina dedicata alla gestione centralizzata dell'**Inventario Globale**.</p>
+                <p>Qui sarà possibile:</p>
+                <ul>
+                    <li>Gestire le voci di **Materiali** ($/UM).</li>
+                    <li>Gestire le voci di **Strumenti/Multimedia** ($/UM).</li>
+                    <li>Gestire le **Attività** (con un listino base) che poi vengono richiamate nei Lab.</li>
+                </ul>
+                <p style="color: red; font-weight: bold;">**LOGICA CRUD INVENTARIO ANCORA DA IMPLEMENTARE.**</p>
+                <p>Questo file è stato rinominato da `08fabbisogni.html` a `08inventario.html`.</p>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
