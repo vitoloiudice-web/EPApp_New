@@ -10,133 +10,79 @@
     <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-auth-compat.js"></script>
     
     <style>
-        /* BASE RESET */
+        /* [Stili CSS identici agli altri files] */
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
-        /* LAYOUT PRINCIPALE */
         .dashboard-container { display: flex; min-height: 100vh; }
-        /* NAVBAR / SIDEBAR */
-        .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+        .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px 0; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
         .logo-link { width: 100%; text-align: center; margin-bottom: 30px; }
-        .logo-link img { max-width: 80%; height: auto; border-radius: 5px; cursor: pointer; transition: transform 0.3s, opacity 0.3s; } 
-        .dashboard-nav small { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; align-self: flex-start; margin-left: 10px; margin-top: 15px; color: #909090; }
-        .dashboard-nav hr { width: 90%; border: 0; border-top: 1px solid #495057; margin: 5px 0 10px 0; }
-        .dashboard-nav a { color: #ccc; text-decoration: none; padding: 12px 15px; margin: 3px 0; display: block; width: 90%; text-align: left; border-radius: 4px; transition: background-color 0.3s, color 0.3s, padding-left 0.3s; }
+        .logo-link img { max-width: 80%; height: auto; border-radius: 5px; cursor: pointer; } 
+        .dashboard-nav small { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; align-self: flex-start; margin-left: 20px; margin-top: 15px; color: #909090; }
+        .dashboard-nav hr { width: 85%; border: 0; border-top: 1px solid #495057; margin: 5px 0 10px 0; }
+        .dashboard-nav a { color: #ccc; text-decoration: none; padding: 12px 15px; margin: 3px 0; display: block; width: 85%; text-align: left; border-radius: 4px; transition: background-color 0.3s, padding-left 0.3s; }
         .dashboard-nav a:hover, .dashboard-nav a.active { background-color: #A5DD2E; color: #343a40; font-weight: bold; padding-left: 20px; }
-        
-        /* CONTENUTO PRINCIPALE */
         .dashboard-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
         .data-section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
-        
-        /* BOTTONI */
-        button.primary { background-color: #A5DD2E; color: #343a40; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.3s, transform 0.2s; margin-left: 10px; }
+        button.primary { background-color: #A5DD2E; color: #343a40; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.3s; margin-left: 10px; }
         button.danger { background-color: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; transition: opacity 0.3s; }
-        button.danger:hover { opacity: 0.8; }
         .add-button-container { text-align: right; margin-bottom: 20px; }
-
-        /* TABELLA */
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .table-responsive { overflow-x: auto; }
+        .data-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
         .data-table th { background-color: #f8f9fa; font-weight: bold; color: #555; }
         .data-table tr.lab-row:hover { background-color: #f1f1f1; cursor: pointer; }
-        .azione-tabella { width: 180px; text-align: center; }
-
-        /* MODALE */
         .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
         .modal-content { background-color: #fefefe; margin: 3% auto; padding: 30px; border: 1px solid #888; width: 95%; max-width: 1000px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
-        .close-button:hover, .close-button:focus { color: #000; text-decoration: none; cursor: pointer; }
-
-        /* FORM GRIGLIA */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .form-grid.col-2 {
-            grid-template-columns: repeat(2, 1fr);
-        }
-        .form-group { margin-bottom: 0; }
+        .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
+        .form-grid.col-2 { grid-template-columns: repeat(2, 1fr); }
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        .form-group input, .form-group select, .form-group textarea { 
-            width: 100%; 
-            padding: 10px; 
-            border: 1px solid #ccc; 
-            border-radius: 4px; 
-            box-sizing: border-box; 
-        }
-        
-        /* Sezioni Attività/Costi */
-        .activity-section, .cost-section {
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 5px;
-            margin-top: 20px;
-            background-color: #fcfcfc;
-        }
-        .activity-item {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 10px;
-            align-items: center;
-        }
-        .activity-item > * {
-            flex-grow: 1;
-            min-width: 150px;
-        }
-        .activity-item button {
-            flex-grow: 0;
-            min-width: auto;
-        }
-
-        .modal-buttons { text-align: right; margin-top: 20px; }
-        .modal-buttons button { margin-left: 10px; }
-
-        /* Costi Dettaglio */
-        .cost-detail-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .cost-detail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .activity-item { display: grid; grid-template-columns: 1fr 1fr 50px; gap: 10px; margin-bottom: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .mobile-header { display: none; }
+        .hamburger-icon { font-size: 24px; cursor: pointer; color: #343a40; }
+        @media (max-width: 992px) { .form-grid { grid-template-columns: repeat(2, 1fr); } .cost-detail-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 768px) {
+            .dashboard-container { display: block; } .dashboard-content { padding: 15px; }
+            .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 500; }
+            .mobile-header h2 { margin: 0; font-size: 1.2em; color: #343a40; }
+            .dashboard-nav { position: fixed; top: 0; left: -250px; height: 100%; z-index: 1000; transition: left 0.3s ease; }
+            .dashboard-nav.open { left: 0; } .form-grid, .form-grid.col-2, .cost-detail-grid { grid-template-columns: 1fr; }
+            .activity-item { grid-template-columns: 1fr 1fr 40px; } .modal-content { margin: 10% 5%; width: 90%; max-width: 90%; padding: 15px; }
         }
     </style>
 </head>
 <body>
 
-    <div id="authScreen" style="display: none; height: 100vh; justify-content: center; align-items: center; background-color: #e0e0e0;">
-        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
-            <h2 style="text-align: center; color: #A5DD2E;">EPApp Login</h2>
-            <input type="email" id="loginEmail" placeholder="Email" required style="margin-bottom: 10px; padding: 10px; width: 100%;">
-            <input type="password" id="loginPassword" placeholder="Password" required style="margin-bottom: 20px; padding: 10px; width: 100%;">
-            <button class="primary" onclick="handleLogin()" style="width: 100%; background-color: #A5DD2E; border: none; padding: 10px;">Accedi</button>
-            <p id="authMessage" style="color: red; text-align: center; margin-top: 10px;"></p>
-        </div>
-    </div>
-
-    <div class="dashboard-container" style="display: none;">
+    <div class="dashboard-container" id="dashboardContainer" style="display: none;">
         
-        <nav class="dashboard-nav">
+        <div class="mobile-header">
+            <span class="hamburger-icon" onclick="toggleNav()">☰</span>
+            <h2>Labs & Attività</h2>
+            <a href="#" onclick="handleLogout()" style="text-decoration: none; color: #ff9999; font-weight: bold; font-size: 0.9em;">LOGOUT</a>
+        </div>
+
+        <nav class="dashboard-nav" id="dashboardNav">
             <a href="00index.html" class="logo-link"><img src="lemon_logo.png" alt="EPApp Logo"></a>
             
             <small>Dashboard</small><hr>
-            <a href="00index.html" class="tab-link">Dashboard</a> 
+            <a href="00index.html" class="tab-link">DASHBOARD</a> 
 
-            <small>Monitoraggio Labs</small><hr>
-            <a href="03labs.html" class="tab-link active">Labs & Attività</a> 
-            <a href="04logistica.html" class="tab-link">Costi Logistica</a> 
-            
             <small>Anagrafiche</small><hr>
-            <a href="01clienti.html" class="tab-link">Clienti & Iscrizioni</a> 
-            <a href="02fornitori.html" class="tab-link">Fornitori & Sedi</a> 
+            <a href="01clienti.html" class="tab-link">CLIENTI</a> 
+            <a href="02fornitori.html" class="tab-link">FORNITORI & SEDI</a> 
+            
+            <small>Labs & Logistica</small><hr>
+            <a href="03labs.html" class="tab-link active">LABS & ATTIVITÀ</a> 
+            <a href="07iscrizioni.html" class="tab-link">ISCRIZIONI & PAGAMENTI</a> 
+            <a href="08inventario.html" class="tab-link">INVENTARIO</a> 
+            <a href="04logistica.html" class="tab-link">LOGISTICA</a> 
             
             <small>Finanza & Analisi</small><hr>
-            <a href="05preventivi.html" class="tab-link">Preventivi & Fatture</a> 
-            <a href="06stats.html" class="tab-link">Statistiche & KPI</a> 
-            
-            <small>Interazioni</small><hr>
-            <a href="07iscrizioni.html" class="tab-link">Iscrizioni Lab</a> 
-            <a href="08inventario.html" class="tab-link">Inventario & Fabbisogni</a> 
+            <a href="05preventivi.html" class="tab-link">PREVENTIVI & FATTURE</a> 
+            <a href="06stats.html" class="tab-link">STATISTICHE & KPI</a> 
 
-            <a href="#" id="logoutLink" onclick="handleLogout()" style="color: #ff9999; margin-top: auto;">Logout</a>
+            <a href="#" id="logoutLink" onclick="handleLogout()" style="color: #ff9999; margin-top: auto; font-weight: bold; display: block;">LOGOUT</a>
         </nav>
 
         <main class="dashboard-content">
@@ -148,20 +94,22 @@
                     <button class="primary" onclick="apriModaleLab(null)">➕ Crea Nuovo Lab</button>
                 </div>
                 
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID Lab</th>
-                            <th>Nome Lab</th>
-                            <th>Sede</th>
-                            <th>Stato</th>
-                            <th>Data Fine</th>
-                            <th class="azione-tabella">Azioni</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabellaLabsBody">
-                        </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID Lab</th>
+                                <th>Nome Lab</th>
+                                <th>Sede</th>
+                                <th>Stato</th>
+                                <th>Data Fine</th>
+                                <th class="azione-tabella">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabellaLabsBody">
+                            </tbody>
+                    </table>
+                </div>
             </div>
         </main>
     </div>
@@ -200,6 +148,7 @@
                         <label for="durataOre">Durata Totale (ore)</label>
                         <input type="number" id="durataOre" step="0.5" value="1.0">
                     </div>
+                    <div class="form-group"></div> 
                 </div>
 
                 <h3>Sede & Logistica</h3>
@@ -208,20 +157,19 @@
                         <label for="sedeFornitoreId">Fornitore Sede</label>
                         <select id="sedeFornitoreId" required onchange="caricaSediFornitore()">
                             <option value="">Seleziona Fornitore...</option>
-                        </select>
+                            </select>
                     </div>
                     <div class="form-group">
                         <label for="sedeId">Sede Specifica</label>
                         <select id="sedeId" required>
                             <option value="">Seleziona Sede...</option>
-                        </select>
+                            </select>
                     </div>
                 </div>
 
                 <div class="activity-section">
-                    <h3>Attività, Materiali e Strumenti (Fabbisogno)</h3>
-                    <p>Le voci di inventario (Materiali, Strumenti, Multimedia) devono essere gestite in "Inventario & Fabbisogni" (08fabbisogni.html).</p>
-                    
+                    <h3>Attività (Fabbisogno)</h3>
+                    <p>Definisci qui le attività e i materiali/strumenti necessari per questo Lab.</p>
                     <div id="attivitaList">
                         </div>
                     <button type="button" class="primary" style="margin-top: 10px;" onclick="aggiungiAttivita()">➕ Aggiungi Attività</button>
@@ -231,19 +179,19 @@
                     <h3>Costi Vivi & Finanza</h3>
                     <div class="cost-detail-grid">
                         <div class="form-group">
-                            <label>Costo Noleggio Sede (Automatico)</label>
+                            <label>Costo Noleggio Sede (€)</label>
                             <input type="number" id="costoNolo" step="0.01" value="0.00" readonly>
                         </div>
                         <div class="form-group">
-                            <label>Costi Logistici (Carburante/Viaggi)</label>
+                            <label>Costi Logistici (€)</label>
                             <input type="number" id="costiLogistici" step="0.01" value="0.00">
                         </div>
                         <div class="form-group">
-                            <label>Costi Personale (Esterno)</label>
+                            <label>Costi Personale Esterno (€)</label>
                             <input type="number" id="costiPersonale" step="0.01" value="0.00">
                         </div>
                         <div class="form-group">
-                            <label>Costo Totale Fabbisogno (Stimato)</label>
+                            <label>Costo Totale Fabbisogno (€)</label>
                             <input type="number" id="costoTotaleFabbisogno" step="0.01" value="0.00" readonly>
                         </div>
                     </div>
@@ -256,7 +204,7 @@
                             <input type="number" id="profittoPercentuale" step="1" value="20">
                         </div>
                         <div class="form-group">
-                            <label>Preventivo Base (Costo Totale + Profitto)</label>
+                            <label>Preventivo Base (€)</label>
                             <input type="number" id="preventivoFinale" step="0.01" value="0.00" readonly>
                         </div>
                         <div class="form-group">
@@ -275,8 +223,8 @@
                     <button type="button" class="primary" onclick="calcolaCostiFinanza()">Calcola Costi & Preventivo 🧮</button>
                 </div>
 
-                <div class="modal-buttons">
-                    <button type="button" onclick="chiudiModaleLab()">Annulla</button>
+                <div class="modal-buttons" style="margin-top: 20px; text-align: right;">
+                    <button type="button" onclick="chiudiModaleLab()" style="background-color: #ccc;">Annulla</button>
                     <button type="submit" class="primary">Salva Lab</button>
                 </div>
             </form>
@@ -295,6 +243,7 @@
   	appId: "1:797675959163:web:30c077ce253990239d03de",
   	measurementId: "G-RN2896V58E"
 	};
+        // Inizializza Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const db = app.firestore();
         const auth = app.auth(); 
@@ -303,124 +252,43 @@
         const tabellaLabsBody = document.getElementById('tabellaLabsBody');
         const labModal = document.getElementById('labModal');
         const labForm = document.getElementById('labForm');
+        const dashboardNav = document.getElementById('dashboardNav');
+        const attivitaListDiv = document.getElementById('attivitaList');
         
-        const attivitaList = document.getElementById('attivitaList');
-        
-        let labAttivita = []; // Struttura per memorizzare le attività associate al Lab
+        let labAttivita = []; 
+        let fornitoriCache = [];
+        let sediCache = {};
 
-        // --- GESTIONE AUTENTICAZIONE (Stubs) ---
-        function handleLogin() { 
-            // Placeholder
+        // --- FUNZIONI NAVIGAZIONE MOBILE ---
+        function toggleNav() {
+            dashboardNav.classList.toggle('open');
         }
+
         function handleLogout() { 
-            auth.signOut().then(() => { window.location.reload(); }); 
+            auth.signOut().then(() => { 
+                window.location.href = '00index.html'; 
+            }).catch(error => {
+                console.error("Logout Error:", error);
+            });
         }
+        
+        // --- GESTIONE AUTENTICAZIONE E INIZIALIZZAZIONE ---
         auth.onAuthStateChanged((user) => {
-            const authScreen = document.getElementById('authScreen');
-            const dashboardContainer = document.querySelector('.dashboard-container');
+            const dashboardContainer = document.getElementById('dashboardContainer');
 
             if (user) {
-                authScreen.style.display = 'none';
                 dashboardContainer.style.display = 'flex';
+                if(window.innerWidth <= 768) { document.getElementById('logoutLink').style.display = 'none'; }
                 caricaLabs(); 
                 caricaAnagrafiche();
-                controllaParametriURL();
             } else {
-                authScreen.style.display = 'flex';
                 dashboardContainer.style.display = 'none';
+                window.location.href = '00index.html'; 
             }
         });
         
-        function controllaParametriURL() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const labId = urlParams.get('labId');
-            if (labId) {
-                db.collection("labs").doc(labId).get().then(doc => {
-                    if (doc.exists) {
-                        apriModaleLab(labId, doc.data());
-                    }
-                }).catch(err => {
-                    console.error("Errore nel caricamento Lab da URL:", err);
-                });
-            }
-        }
+        // --- FUNZIONI CRUD LABS ---
 
-        // =========================================================================
-        // === FUNZIONI DI CARICAMENTO ANAGRAFICHE (Fornitori/Sedi, Attività) ===
-        // =========================================================================
-
-        async function caricaAnagrafiche() {
-            // 1. Carica Fornitori Sede (per il <select> principale della Sede)
-            const fornitoriSelect = document.getElementById('sedeFornitoreId');
-            fornitoriSelect.innerHTML = '<option value="">Seleziona Fornitore...</option>';
-            db.collection("fornitori").get().then(snapshot => {
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const opt = document.createElement('option');
-                    opt.value = doc.id;
-                    opt.textContent = data.ragioneSociale;
-                    fornitoriSelect.appendChild(opt);
-                });
-            });
-
-            // 2. Carica Attività Globali (per le dropdowns Attività Lab)
-            await caricaAttivitaGlobali();
-        }
-
-        /**
-         * Carica le Sedi del Fornitore selezionato.
-         */
-        function caricaSediFornitore(selectedSedeId = null, selectedFornitoreId = null) {
-            const fornitoreId = selectedFornitoreId || document.getElementById('sedeFornitoreId').value;
-            const sediSelect = document.getElementById('sedeId');
-            sediSelect.innerHTML = '<option value="">Seleziona Sede...</option>';
-
-            if (!fornitoreId) return;
-
-            db.collection("fornitori").doc(fornitoreId).collection("sedi").get().then(snapshot => {
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const opt = document.createElement('option');
-                    opt.value = doc.id;
-                    opt.textContent = `${data.nomeSede} (${data.indirizzoSede})`;
-                    opt.setAttribute('data-costo-nolo', data.costoNolo || 0); // Cattura il costo nolo
-                    if (selectedSedeId && doc.id === selectedSedeId) {
-                        opt.selected = true;
-                    }
-                    sediSelect.appendChild(opt);
-                });
-            });
-        }
-        
-        /**
-         * Listener per l'aggiornamento automatico del costo di noleggio Lab.
-         */
-        document.getElementById('sedeId').addEventListener('change', (e) => {
-            const selectedOption = e.target.options[e.target.selectedIndex];
-            const costoNolo = parseFloat(selectedOption.getAttribute('data-costo-nolo')) || 0;
-            document.getElementById('costoNolo').value = costoNolo.toFixed(2);
-        });
-
-        /**
-         * Carica la lista di attività globali dalla collezione 'attivita'.
-         */
-        async function caricaAttivitaGlobali() {
-            const snapshot = await db.collection('attivita').get();
-            // Salva globalmente per le dropdowns
-            window.attivitaGlobali = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            if (window.attivitaGlobali.length === 0) {
-                 // Opzione rapida per creare attività se la lista è vuota
-                 alert("Attenzione: Nessuna attività trovata. Creale in 'Inventario & Fabbisogni'.");
-            }
-        }
-        
-        // =========================================================================
-        // === FUNZIONI CRUD LABS ===
-        // =========================================================================
-
-        /**
-         * READ: Carica la lista Labs reali.
-         */
         function caricaLabs() {
             tabellaLabsBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Caricamento Labs...</td></tr>';
             
@@ -430,274 +298,267 @@
                     tabellaLabsBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessun Lab trovato.</td></tr>';
                     return;
                 }
-
+                
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    const labId = doc.id;
+                    const dataFine = data.dataFine ? new Date(data.dataFine.toDate()).toLocaleDateString('it-IT') : 'N/D';
                     
                     const row = tabellaLabsBody.insertRow();
-                    row.classList.add('lab-row');
+                    row.className = 'lab-row';
+                    // Nota: JSON.stringify e replace sono necessari per passare l'oggetto data correttamente a una stringa HTML onclick
+                    row.onclick = () => apriModaleLab(doc.id, data);
                     
-                    row.onclick = () => apriModaleLab(labId, data); 
-
-                    row.insertCell().textContent = labId.substring(0, 6);
-                    row.insertCell().textContent = data.nomeLab || 'N/D';
-                    row.insertCell().textContent = data.sedeNome || 'N/D';
-                    row.insertCell().textContent = data.statoLab || 'N/D';
-                    
-                    const dataFine = data.dataFine ? new Date(data.dataFine.toDate()).toLocaleDateString('it-IT') : 'N/D';
-                    row.insertCell().textContent = dataFine;
-                    
-                    const actionCell = row.insertCell();
-                    actionCell.className = 'azione-tabella';
-                    
-                    actionCell.innerHTML = `
-                        <button class="primary" style="background-color: #ffc107; color: white; margin-right: 5px;" 
-                            onclick="event.stopPropagation(); apriModaleLab('${labId}', ${JSON.stringify(data).replace(/"/g, '&quot;')})">Modifica</button>
-                        <button class="danger" onclick="event.stopPropagation(); eliminaLab('${labId}')">Elimina</button>
+                    row.innerHTML = `
+                        <td>${doc.id.substring(0, 4)}...</td>
+                        <td>${data.nomeLab || 'N/D'}</td>
+                        <td>${data.sedeNome || 'N/D'}</td>
+                        <td>${data.statoLab || 'N/D'}</td>
+                        <td>${dataFine}</td>
+                        <td class="azione-tabella">
+                            <button class="primary" style="background-color: #ffc107; color: white; margin-right: 5px;" 
+                                onclick="event.stopPropagation(); apriModaleLab('${doc.id}', ${JSON.stringify(data).replace(/"/g, '&quot;')})">Modifica</button>
+                            <button class="danger" onclick="event.stopPropagation(); eliminaLab('${doc.id}')">Elimina</button>
+                        </td>
                     `;
                 });
             }).catch(error => {
-                console.error("Errore nel caricamento dei Labs: ", error);
-                tabellaLabsBody.innerHTML = '<tr><td colspan="6" style="color: red; text-align: center;">Errore nel caricamento dei dati Labs.</td></tr>';
+                 tabellaLabsBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Errore nel caricamento Labs.</td></tr>';
+                 console.error("Errore nel caricamento Labs:", error);
             });
         }
 
-        /**
-         * DELETE: Elimina un Lab reale.
-         */
-        function eliminaLab(id) {
-            if (confirm("Sei sicuro di voler eliminare definitivamente questo Lab?")) {
-                db.collection("labs").doc(id).delete().then(() => {
-                    alert("Lab eliminato con successo.");
-                    caricaLabs(); 
-                }).catch((error) => {
-                    console.error("Errore durante l'eliminazione del Lab: ", error);
-                    alert("Errore nell'eliminazione. Controlla la console.");
-                });
-            }
-        }
-        
-        /**
-         * CREATE/UPDATE: Salva un Lab.
-         */
-        labForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('labId').value;
-            
-            const sedeSelect = document.getElementById('sedeId');
-            const sedeNome = sedeSelect.options[sedeSelect.selectedIndex]?.textContent || 'N/D';
-
-            const labData = {
-                nomeLab: document.getElementById('nomeLab').value,
-                statoLab: document.getElementById('statoLab').value,
-                dataInizio: document.getElementById('dataInizio').value ? firebase.firestore.Timestamp.fromDate(new Date(document.getElementById('dataInizio').value)) : null,
-                dataFine: document.getElementById('dataFine').value ? firebase.firestore.Timestamp.fromDate(new Date(document.getElementById('dataFine').value)) : null,
-                durataOre: parseFloat(document.getElementById('durataOre').value),
-                
-                // Dati Sede
-                sedeFornitoreId: document.getElementById('sedeFornitoreId').value,
-                sedeId: document.getElementById('sedeId').value,
-                sedeNome: sedeNome,
-                
-                // Dati Attività (Nuova Logica)
-                attivita: labAttivita,
-
-                // Dati Finanza (Costi Vivi)
-                costoNolo: parseFloat(document.getElementById('costoNolo').value),
-                costiLogistici: parseFloat(document.getElementById('costiLogistici').value),
-                costiPersonale: parseFloat(document.getElementById('costiPersonale').value),
-                costoTotaleFabbisogno: parseFloat(document.getElementById('costoTotaleFabbisogno').value),
-                profittoPercentuale: parseFloat(document.getElementById('profittoPercentuale').value),
-                preventivoFinale: parseFloat(document.getElementById('preventivoFinale').value),
-                statoFattura: document.getElementById('statoFattura').value,
-                notePreventivo: document.getElementById('notePreventivo').value,
-                
-                ultimaModifica: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            const collectionRef = db.collection("labs");
-            
-            try {
-                if (id) {
-                    await collectionRef.doc(id).update(labData);
-                    alert("Lab aggiornato con successo!");
-                } else {
-                    await collectionRef.add(labData);
-                    alert("Lab aggiunto con successo!");
-                }
-                chiudiModaleLab();
-                caricaLabs();
-            } catch (error) {
-                console.error("Errore nel salvataggio Lab: ", error);
-                alert("Errore nel salvataggio. Controlla la console.");
-            }
-        });
-
-        // =========================================================================
-        // === GESTIONE MODALE E UI ===
-        // =========================================================================
-
-        /**
-         * Popola la modale con i dati del Lab esistente.
-         */
-        async function apriModaleLab(id = null, data = {}) {
+        function apriModaleLab(id = null, data = {}) {
+            labForm.reset();
+            labAttivita = [];
+            attivitaListDiv.innerHTML = '';
             document.getElementById('labId').value = id || '';
-            document.getElementById('labModalTitle').textContent = id ? 'Modifica Lab: ' + (data.nomeLab || 'N/D') : 'Crea Nuovo Lab';
-
-            labForm.reset(); 
-            labAttivita = data.attivita || [];
-
-            // Popola i campi
-            document.getElementById('nomeLab').value = data.nomeLab || '';
-            document.getElementById('statoLab').value = data.statoLab || 'in preparazione';
-            document.getElementById('durataOre').value = data.durataOre !== undefined ? data.durataOre : '1.0';
+            document.getElementById('labModalTitle').textContent = id ? 'Modifica Lab' : 'Crea Nuovo Lab';
             
-            // Popola le date
-            document.getElementById('dataInizio').value = data.dataInizio ? data.dataInizio.toDate().toISOString().substring(0, 10) : '';
-            document.getElementById('dataFine').value = data.dataFine ? data.dataFine.toDate().toISOString().substring(0, 10) : '';
+            if (id && data) {
+                document.getElementById('nomeLab').value = data.nomeLab || '';
+                document.getElementById('statoLab').value = data.statoLab || 'in preparazione';
+                // Conversione Firebase Timestamp in stringa Date
+                document.getElementById('dataInizio').value = data.dataInizio ? new Date(data.dataInizio.toDate()).toISOString().split('T')[0] : '';
+                document.getElementById('dataFine').value = data.dataFine ? new Date(data.dataFine.toDate()).toISOString().split('T')[0] : '';
+                document.getElementById('durataOre').value = data.durataOre || 1.0;
+                
+                document.getElementById('costoNolo').value = (data.costoNolo || 0.00).toFixed(2);
+                document.getElementById('costiLogistici').value = (data.costiLogistici || 0.00).toFixed(2);
+                document.getElementById('costiPersonale').value = (data.costiPersonale || 0.00).toFixed(2);
+                document.getElementById('costoTotaleFabbisogno').value = (data.costoTotaleFabbisogno || 0.00).toFixed(2);
+                document.getElementById('profittoPercentuale').value = data.profittoPercentuale || 20;
+                document.getElementById('preventivoFinale').value = (data.preventivoFinale || 0.00).toFixed(2);
+                document.getElementById('statoFattura').value = data.statoFattura || 'da emettere';
+                document.getElementById('notePreventivo').value = data.notePreventivo || '';
 
-            // Popola i campi Sede
-            document.getElementById('sedeFornitoreId').value = data.sedeFornitoreId || '';
-            if (data.sedeFornitoreId) {
-                // Ricarica le sedi relative al fornitore e seleziona la sede specifica
-                await caricaSediFornitore(data.sedeId, data.sedeFornitoreId); 
+                const selectedFornitoreId = data.sedeFornitoreId || '';
+                const selectedSedeId = data.sedeId || '';
+                
+                document.getElementById('sedeFornitoreId').value = selectedFornitoreId;
+                caricaSediFornitore(selectedSedeId); 
+                
+                labAttivita = data.attivita || [];
+                ricaricaListaAttivita();
+
+            } else {
+                 caricaSediFornitore();
+                 aggiungiAttivita(); // Aggiunge un'attività vuota di default
             }
-            
-            // Popola i campi Finanza 
-            document.getElementById('costoNolo').value = (data.costoNolo || 0).toFixed(2);
-            document.getElementById('costiLogistici').value = (data.costiLogistici || 0).toFixed(2);
-            document.getElementById('costiPersonale').value = (data.costiPersonale || 0).toFixed(2);
-            document.getElementById('costoTotaleFabbisogno').value = (data.costoTotaleFabbisogno || 0).toFixed(2);
-            document.getElementById('profittoPercentuale').value = data.profittoPercentuale || 20;
-            document.getElementById('preventivoFinale').value = (data.preventivoFinale || 0).toFixed(2);
-            document.getElementById('statoFattura').value = data.statoFattura || 'da emettere';
-            document.getElementById('notePreventivo').value = data.notePreventivo || '';
-            
-            // Ridisegna le liste di attività
-            disegnaAttivitaLabs();
 
             labModal.style.display = "block";
         }
 
         function chiudiModaleLab() {
             labModal.style.display = "none";
-            labForm.reset();
+        }
+        
+        labForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const labId = document.getElementById('labId').value;
+            const isEditing = !!labId;
+            
+            calcolaCostiFinanza(); // Aggiorna i totali finali prima di salvare
+
+            // Assicurati che il nome della Sede sia corretto
+            const selectedSedeElement = document.getElementById('sedeId');
+            let sedeNome = 'N/D';
+            if(selectedSedeElement.options[selectedSedeElement.selectedIndex]){
+                 sedeNome = selectedSedeElement.options[selectedSedeElement.selectedIndex].text.replace(/\(Nolo:.*?\)/, '').trim();
+            }
+
+            const labData = {
+                nomeLab: document.getElementById('nomeLab').value,
+                statoLab: document.getElementById('statoLab').value,
+                // Conversione da stringa data a Firebase Timestamp
+                dataInizio: document.getElementById('dataInizio').value ? firebase.firestore.Timestamp.fromDate(new Date(document.getElementById('dataInizio').value)) : null,
+                dataFine: document.getElementById('dataFine').value ? firebase.firestore.Timestamp.fromDate(new Date(document.getElementById('dataFine').value)) : null,
+                durataOre: parseFloat(document.getElementById('durataOre').value),
+                
+                sedeFornitoreId: document.getElementById('sedeFornitoreId').value,
+                sedeId: document.getElementById('sedeId').value,
+                sedeNome: sedeNome,
+                
+                costoNolo: parseFloat(document.getElementById('costoNolo').value) || 0,
+                costiLogistici: parseFloat(document.getElementById('costiLogistici').value) || 0,
+                costiPersonale: parseFloat(document.getElementById('costiPersonale').value) || 0,
+                costoTotaleFabbisogno: parseFloat(document.getElementById('costoTotaleFabbisogno').value) || 0,
+                profittoPercentuale: parseFloat(document.getElementById('profittoPercentuale').value) || 0,
+                preventivoFinale: parseFloat(document.getElementById('preventivoFinale').value) || 0,
+                statoFattura: document.getElementById('statoFattura').value,
+                notePreventivo: document.getElementById('notePreventivo').value,
+
+                attivita: labAttivita
+            };
+            
+            const collectionRef = db.collection("labs");
+            const operation = isEditing ? collectionRef.doc(labId).update(labData) : collectionRef.add(labData);
+            
+            operation.then(() => {
+                alert(`Lab ${isEditing ? 'aggiornato' : 'creato'} con successo!`);
+                chiudiModaleLab();
+                caricaLabs(); 
+            }).catch(error => {
+                alert(`Errore nel salvataggio: ${error.message}`);
+                console.error("Errore:", error);
+            });
+        });
+
+        function eliminaLab(id) {
+            if (confirm("Sei sicuro di voler eliminare questo Lab? L'operazione è irreversibile.")) {
+                db.collection("labs").doc(id).delete().then(() => {
+                    alert("Lab eliminato con successo!");
+                    caricaLabs();
+                }).catch(error => {
+                    alert(`Errore nell'eliminazione: ${error.message}`);
+                    console.error("Errore:", error);
+                });
+            }
         }
 
-        // =========================================================================
-        // === GESTIONE ATTIVITÀ LAB ===
-        // =========================================================================
+        // --- FUNZIONI ANAGRAFICHE E LOGICA CORRELATA ---
 
-        function disegnaAttivitaLabs() {
-            attivitaList.innerHTML = '';
-            const attivitaGlobale = window.attivitaGlobali || [];
+        function caricaAnagrafiche() {
+            fornitoriCache = [];
+            sediCache = {};
+            const selectFornitore = document.getElementById('sedeFornitoreId');
+            selectFornitore.innerHTML = '<option value="">Seleziona Fornitore...</option>';
 
-            labAttivita.forEach((item, index) => {
-                const div = document.createElement('div');
-                div.className = 'activity-item';
-                
-                // Dropdown di selezione Attività
-                const select = document.createElement('select');
-                select.innerHTML = `<option value="">Seleziona Attività...</option>`;
-                attivitaGlobale.forEach(attItem => {
-                    const opt = document.createElement('option');
-                    opt.value = attItem.id;
-                    opt.textContent = `${attItem.nome} (Listino: €${attItem.listino.toFixed(2)})`;
-                    if (attItem.id === item.attivitaId) {
-                        opt.selected = true;
-                    }
-                    select.appendChild(opt);
+            db.collection("fornitori").where("anagrafe.tipoFornitore", "==", "sede").get().then(fSnapshot => {
+                fSnapshot.forEach(fDoc => {
+                    const fData = fDoc.data();
+                    const nomeFornitore = fData.anagrafe.ragSoc || fData.anagrafe.nome + ' ' + fData.anagrafe.cognome;
+                    fornitoriCache.push({ id: fDoc.id, nome: nomeFornitore });
+                    
+                    const option = document.createElement('option');
+                    option.value = fDoc.id;
+                    option.textContent = nomeFornitore;
+                    selectFornitore.appendChild(option);
+
+                    sediCache[fDoc.id] = fData.sedi || [];
                 });
-                
-                select.onchange = (e) => {
-                    const selectedId = e.target.value;
-                    const selectedItem = attivitaGlobale.find(i => i.id === selectedId);
-                    if (selectedItem) {
-                        item.attivitaId = selectedId;
-                        item.nome = selectedItem.nome;
-                        item.costoBase = selectedItem.listino;
-                        item.ore = 1; // Default
-                    } else {
-                        item.attivitaId = null;
-                        item.nome = 'N/D';
-                        item.costoBase = 0;
-                        item.ore = 0;
-                    }
-                    item.costoTotale = item.costoBase * item.ore;
-                    document.getElementById(`attivita-${index}-costo`).textContent = `Totale: €${item.costoTotale.toFixed(2)}`;
-                };
-                div.appendChild(select);
+            }).catch(error => console.error("Errore nel caricamento Fornitori:", error));
+        }
 
-                // Input Ore
-                const inputOre = document.createElement('input');
-                inputOre.type = 'number';
-                inputOre.placeholder = 'Ore';
-                inputOre.value = item.ore;
-                inputOre.oninput = (e) => {
-                    item.ore = parseFloat(e.target.value) || 0;
-                    item.costoTotale = item.costoBase * item.ore;
-                    document.getElementById(`attivita-${index}-costo`).textContent = `Totale: €${item.costoTotale.toFixed(2)}`;
-                };
-                div.appendChild(inputOre);
+        function caricaSediFornitore(selectedSedeId = null) {
+            const fornitoreId = document.getElementById('sedeFornitoreId').value;
+            const selectSede = document.getElementById('sedeId');
+            const costoNoloInput = document.getElementById('costoNolo');
+            selectSede.innerHTML = '<option value="">Seleziona Sede...</option>';
+            costoNoloInput.value = '0.00';
+            
+            if (!fornitoreId) return;
 
-                // Etichetta Costo Totale
-                const spanCosto = document.createElement('span');
-                spanCosto.id = `attivita-${index}-costo`;
-                spanCosto.textContent = `Totale: €${item.costoTotale.toFixed(2)}`;
-                spanCosto.style.fontWeight = 'bold';
-                div.appendChild(spanCosto);
+            const sedi = sediCache[fornitoreId] || [];
 
-                // Pulsante Rimuovi
-                const btnRemove = document.createElement('button');
-                btnRemove.textContent = '— Rimuovi';
-                btnRemove.className = 'danger';
-                btnRemove.onclick = () => {
-                    labAttivita.splice(index, 1);
-                    disegnaAttivitaLabs();
-                };
-                div.appendChild(btnRemove);
+            sedi.forEach(sede => {
+                const option = document.createElement('option');
+                option.value = sede.id;
+                option.textContent = `${sede.nome} (Nolo: €${(sede.costoNolo || 0.00).toFixed(2)})`;
+                selectSede.appendChild(option);
+            });
+            
+            if (selectedSedeId) {
+                selectSede.value = selectedSedeId;
+                const selectedSede = sedi.find(s => s.id === selectedSedeId);
+                costoNoloInput.value = (selectedSede ? selectedSede.costoNolo : 0.00).toFixed(2);
+            }
 
-                attivitaList.appendChild(div);
+            selectSede.onchange = function() {
+                const sedeId = this.value;
+                const sede = sedi.find(s => s.id === sedeId);
+                costoNoloInput.value = (sede ? sede.costoNolo : 0.00).toFixed(2);
+                calcolaCostiFinanza();
+            };
+        }
+
+        // --- FUNZIONI GESTIONE ATTIVITÀ & COSTI ---
+
+        function ricaricaListaAttivita() {
+            attivitaListDiv.innerHTML = '';
+            labAttivita.forEach((att, index) => {
+                aggiungiAttivitaHTML(att.nome, att.costo, index);
             });
         }
 
         function aggiungiAttivita() {
-            labAttivita.push({ attivitaId: null, nome: 'Nuova Attività', costoBase: 0, ore: 1, costoTotale: 0 });
-            disegnaAttivitaLabs();
+            labAttivita.push({ nome: 'Nuova Attività/Materiale', costo: 0 });
+            ricaricaListaAttivita();
+            calcolaCostiFinanza();
         }
 
-        // =========================================================================
-        // === FUNZIONI DI CALCOLO FINANZA (Ora calcola solo costi vivi e preventivo base) ===
-        // =========================================================================
+        function aggiungiAttivitaHTML(nome = '', costo = 0, index) {
+            const div = document.createElement('div');
+            div.className = 'activity-item';
+            div.innerHTML = `
+                <div class="form-group">
+                    <input type="text" id="attNome${index}" value="${nome}" placeholder="Descrizione Attività" 
+                        onchange="aggiornaAttivita(${index}, 'nome', this.value)">
+                </div>
+                <div class="form-group">
+                    <input type="number" id="attCosto${index}" step="0.01" value="${costo.toFixed(2)}" placeholder="Costo stimato €" 
+                        onchange="aggiornaAttivita(${index}, 'costo', parseFloat(this.value) || 0)">
+                </div>
+                <button type="button" class="danger" onclick="rimuoviAttivita(${index})">X</button>
+            `;
+            attivitaListDiv.appendChild(div);
+        }
 
-        /**
-         * Calcola il costo totale vivo e il preventivo finale.
-         */
+        function aggiornaAttivita(index, field, value) {
+            if (labAttivita[index]) {
+                labAttivita[index][field] = value;
+                if (field === 'costo') {
+                    calcolaCostiFinanza();
+                }
+            }
+        }
+
+        function rimuoviAttivita(index) {
+            labAttivita.splice(index, 1);
+            ricaricaListaAttivita();
+            calcolaCostiFinanza();
+        }
+        
         function calcolaCostiFinanza() {
-            // 1. Leggi tutti i costi vivi
+            const costoAttivita = labAttivita.reduce((sum, att) => sum + (att.costo || 0), 0);
+            
             const costoNolo = parseFloat(document.getElementById('costoNolo').value) || 0;
             const costiLogistici = parseFloat(document.getElementById('costiLogistici').value) || 0;
             const costiPersonale = parseFloat(document.getElementById('costiPersonale').value) || 0;
-            const costoTotaleFabbisogno = parseFloat(document.getElementById('costoTotaleFabbisogno').value) || 0; // Usiamo questo campo come inserimento manuale/stimato per il momento
+
+            const costoTotaleFabbisogno = costoAttivita + costoNolo + costiLogistici + costiPersonale;
+            document.getElementById('costoTotaleFabbisogno').value = costoTotaleFabbisogno.toFixed(2);
+            
             const profittoPercentuale = parseFloat(document.getElementById('profittoPercentuale').value) || 0;
             
-            // 2. Calcolo Costo Totale Vivo
-            const costoTotaleVivo = costoNolo + costiLogistici + costiPersonale + costoTotaleFabbisogno;
-            
-            // 3. Calcolo Preventivo Base (Costo Totale + Profitto)
-            let preventivoBase = costoTotaleVivo;
-            if (profittoPercentuale > 0) {
-                 preventivoBase = costoTotaleVivo * (1 + (profittoPercentuale / 100));
+            if (costoTotaleFabbisogno >= 0 && profittoPercentuale > 0) {
+                const profittoEuro = costoTotaleFabbisogno * (profittoPercentuale / 100);
+                const preventivoFinale = costoTotaleFabbisogno + profittoEuro;
+                document.getElementById('preventivoFinale').value = preventivoFinale.toFixed(2);
+            } else {
+                document.getElementById('preventivoFinale').value = costoTotaleFabbisogno.toFixed(2);
             }
-            
-            // 4. Aggiorna i campi
-            document.getElementById('preventivoFinale').value = preventivoBase.toFixed(2);
-            
-            alert(`Costo Totale Vivo Stimato: €${costoTotaleVivo.toFixed(2)}. Preventivo Base calcolato con profitto del ${profittoPercentuale}%: €${preventivoBase.toFixed(2)}`);
         }
-        
     </script>
 </body>
 </html>
-
