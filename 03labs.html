@@ -12,10 +12,8 @@
     <style>
         /* BASE RESET */
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
-        
         /* LAYOUT PRINCIPALE */
         .dashboard-container { display: flex; min-height: 100vh; }
-        
         /* NAVBAR / SIDEBAR */
         .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
         .logo-link { width: 100%; text-align: center; margin-bottom: 30px; }
@@ -48,10 +46,10 @@
         .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
         .close-button:hover, .close-button:focus { color: #000; text-decoration: none; cursor: pointer; }
 
-        /* FORM GRIGLIA (Per Modale) */
+        /* FORM GRIGLIA */
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 colonne */
+            grid-template-columns: repeat(3, 1fr); 
             gap: 20px;
             margin-bottom: 20px;
         }
@@ -68,7 +66,7 @@
             box-sizing: border-box; 
         }
         
-        /* CORREZIONE PROBLEMA 5: Stili per Attività/Costi */
+        /* Sezioni Attività/Costi */
         .activity-section, .cost-section {
             border: 1px solid #ddd;
             padding: 15px;
@@ -94,13 +92,12 @@
         .modal-buttons { text-align: right; margin-top: 20px; }
         .modal-buttons button { margin-left: 10px; }
 
-        /* Costi Dettaglio (Problema 6) */
+        /* Costi Dettaglio */
         .cost-detail-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 20px;
         }
-
     </style>
 </head>
 <body>
@@ -135,6 +132,10 @@
             <a href="05preventivi.html" class="tab-link">Preventivi & Fatture</a> 
             <a href="06stats.html" class="tab-link">Statistiche & KPI</a> 
             
+            <small>Interazioni</small><hr>
+            <a href="07iscrizioni.html" class="tab-link">Iscrizioni Lab</a> 
+            <a href="08fabbisogni.html" class="tab-link">Inventario & Fabbisogni</a> 
+
             <a href="#" id="logoutLink" onclick="handleLogout()" style="color: #ff9999; margin-top: auto;">Logout</a>
         </nav>
 
@@ -152,7 +153,6 @@
                         <tr>
                             <th>ID Lab</th>
                             <th>Nome Lab</th>
-                            <th>Cliente</th>
                             <th>Sede</th>
                             <th>Stato</th>
                             <th>Data Fine</th>
@@ -174,16 +174,10 @@
                 <input type="hidden" id="labId" value="">
                 
                 <h3>Dati Lab</h3>
-                <div class="form-grid">
+                <div class="form-grid col-2">
                     <div class="form-group">
                         <label for="nomeLab">Nome Lab</label>
                         <input type="text" id="nomeLab" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="clienteId">Cliente</label>
-                        <select id="clienteId" required>
-                            <option value="">Caricamento Clienti...</option>
-                        </select>
                     </div>
                     <div class="form-group">
                         <label for="statoLab">Stato</label>
@@ -225,20 +219,16 @@
                 </div>
 
                 <div class="activity-section">
-                    <h3>Materiali e Strumenti Necessari</h3>
-                    <div id="materialiList">
-                        </div>
-                    <button type="button" class="primary" style="margin-top: 10px;" onclick="aggiungiMateriale()">➕ Aggiungi Materiale</button>
+                    <h3>Attività, Materiali e Strumenti (Fabbisogno)</h3>
+                    <p>Le voci di inventario (Materiali, Strumenti, Multimedia) devono essere gestite in "Inventario & Fabbisogni" (08fabbisogni.html).</p>
                     
-                    <hr style="margin: 15px 0;">
-                    
-                    <div id="strumentiList">
+                    <div id="attivitaList">
                         </div>
-                    <button type="button" class="primary" style="margin-top: 10px;" onclick="aggiungiStrumento()">➕ Aggiungi Strumento/Multimedia</button>
+                    <button type="button" class="primary" style="margin-top: 10px;" onclick="aggiungiAttivita()">➕ Aggiungi Attività</button>
                 </div>
 
                 <div class="cost-section">
-                    <h3>Costi e Finanza</h3>
+                    <h3>Costi Vivi & Finanza</h3>
                     <div class="cost-detail-grid">
                         <div class="form-group">
                             <label>Costo Noleggio Sede (Automatico)</label>
@@ -253,25 +243,21 @@
                             <input type="number" id="costiPersonale" step="0.01" value="0.00">
                         </div>
                         <div class="form-group">
-                            <label>Costo Totale Materiali/Strumenti</label>
-                            <input type="number" id="costoTotaleInventario" step="0.01" value="0.00" readonly>
+                            <label>Costo Totale Fabbisogno (Stimato)</label>
+                            <input type="number" id="costoTotaleFabbisogno" step="0.01" value="0.00" readonly>
                         </div>
                     </div>
                     
                     <hr style="margin: 15px 0;">
 
-                    <div class="cost-detail-grid">
-                        <div class="form-group">
-                            <label>Costo Iscrizione (€/Persona)</label>
-                            <input type="number" id="costoIscrizione" step="0.01" value="0.00">
-                        </div>
+                    <div class="form-grid col-2">
                         <div class="form-group">
                             <label>Profitto Desiderato (%)</label>
                             <input type="number" id="profittoPercentuale" step="1" value="20">
                         </div>
                         <div class="form-group">
-                            <label>Preventivo Finale</label>
-                            <input type="number" id="preventivoFinale" step="0.01" value="0.00">
+                            <label>Preventivo Base (Costo Totale + Profitto)</label>
+                            <input type="number" id="preventivoFinale" step="0.01" value="0.00" readonly>
                         </div>
                         <div class="form-group">
                             <label>Stato Preventivo/Fattura</label>
@@ -281,8 +267,12 @@
                                 <option value="pagato">Pagato</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label>Note Preventivo</label>
+                            <textarea id="notePreventivo"></textarea>
+                        </div>
                     </div>
-                    <button type="button" class="primary" onclick="calcolaPreventivo()">Calcola Preventivo 🧮</button>
+                    <button type="button" class="primary" onclick="calcolaCostiFinanza()">Calcola Costi & Preventivo 🧮</button>
                 </div>
 
                 <div class="modal-buttons">
@@ -290,35 +280,6 @@
                     <button type="submit" class="primary">Salva Lab</button>
                 </div>
             </form>
-        </div>
-    </div>
-    
-    <div id="inventarioModal" class="modal">
-        <div class="modal-content" style="max-width: 400px;">
-            <span class="close-button" onclick="chiudiInventarioModal()">&times;</span>
-            <h3 id="inventarioModalTitle">Gestione Inventario</h3>
-            <form id="inventarioForm">
-                <input type="hidden" id="inventarioTipo" value="">
-                <input type="hidden" id="inventarioId" value="">
-                <div class="form-group">
-                    <label for="inventarioDescrizione">Descrizione</label>
-                    <input type="text" id="inventarioDescrizione" required>
-                </div>
-                <div class="form-group">
-                    <label for="inventarioCostoUM">Costo Unitario (€)</label>
-                    <input type="number" id="inventarioCostoUM" step="0.01" required>
-                </div>
-                <div class="modal-buttons">
-                    <button type="button" onclick="chiudiInventarioModal()">Annulla</button>
-                    <button type="submit" class="primary">Salva Voce</button>
-                </div>
-            </form>
-
-            <h4 style="margin-top: 20px;">Lista Voci Salvate</h4>
-            <table class="data-table">
-                <thead><tr><th>Descrizione</th><th>Costo UM</th><th></th></tr></thead>
-                <tbody id="inventarioTableBody"></tbody>
-            </table>
         </div>
     </div>
 
@@ -343,20 +304,13 @@
         const labModal = document.getElementById('labModal');
         const labForm = document.getElementById('labForm');
         
-        const materialiList = document.getElementById('materialiList');
-        const strumentiList = document.getElementById('strumentiList');
+        const attivitaList = document.getElementById('attivitaList');
         
-        let labInventario = { materiali: [], strumenti: [] };
-        
-        // Elementi Modale Inventario
-        const inventarioModal = document.getElementById('inventarioModal');
-        const inventarioForm = document.getElementById('inventarioForm');
-        const inventarioTableBody = document.getElementById('inventarioTableBody');
-        let currentInventoryContext = ''; // 'materiali' o 'strumenti'
+        let labAttivita = []; // Struttura per memorizzare le attività associate al Lab
 
         // --- GESTIONE AUTENTICAZIONE (Stubs) ---
         function handleLogin() { 
-            // Implementazione login (come in 00index.html)
+            // Placeholder
         }
         function handleLogout() { 
             auth.signOut().then(() => { window.location.reload(); }); 
@@ -368,8 +322,8 @@
             if (user) {
                 authScreen.style.display = 'none';
                 dashboardContainer.style.display = 'flex';
-                caricaLabs(); // Avvia caricamento Labs
-                caricaAnagrafiche(); // Carica clienti e fornitori/sedi
+                caricaLabs(); 
+                caricaAnagrafiche();
                 controllaParametriURL();
             } else {
                 authScreen.style.display = 'flex';
@@ -377,14 +331,10 @@
             }
         });
         
-        /**
-         * Controlla se è stato passato un ID Lab dall'URL (es. dalla dashboard)
-         */
         function controllaParametriURL() {
             const urlParams = new URLSearchParams(window.location.search);
             const labId = urlParams.get('labId');
             if (labId) {
-                // Se è stato passato un labId, apriamo la modale in modalità modifica
                 db.collection("labs").doc(labId).get().then(doc => {
                     if (doc.exists) {
                         apriModaleLab(labId, doc.data());
@@ -396,24 +346,11 @@
         }
 
         // =========================================================================
-        // === FUNZIONI DI CARICAMENTO ANAGRAFICHE (Clienti, Sedi, Inventario) ===
+        // === FUNZIONI DI CARICAMENTO ANAGRAFICHE (Fornitori/Sedi, Attività) ===
         // =========================================================================
 
         async function caricaAnagrafiche() {
-            // 1. Carica Clienti (per il <select>)
-            const clientiSelect = document.getElementById('clienteId');
-            clientiSelect.innerHTML = '<option value="">Seleziona Cliente...</option>';
-            db.collection("clienti").get().then(snapshot => {
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const opt = document.createElement('option');
-                    opt.value = doc.id;
-                    opt.textContent = data.ragioneSociale || `${data.nome} ${data.cognome}`;
-                    clientiSelect.appendChild(opt);
-                });
-            });
-
-            // 2. Carica Fornitori Sede (per il <select> principale della Sede)
+            // 1. Carica Fornitori Sede (per il <select> principale della Sede)
             const fornitoriSelect = document.getElementById('sedeFornitoreId');
             fornitoriSelect.innerHTML = '<option value="">Seleziona Fornitore...</option>';
             db.collection("fornitori").get().then(snapshot => {
@@ -426,16 +363,15 @@
                 });
             });
 
-            // 3. Carica Inventario (Materiali e Strumenti) per le dropdowns
-            await caricaInventario('materiali');
-            await caricaInventario('strumenti');
+            // 2. Carica Attività Globali (per le dropdowns Attività Lab)
+            await caricaAttivitaGlobali();
         }
 
         /**
-         * Carica le Sedi del Fornitore selezionato. (Risolve Problema 3)
+         * Carica le Sedi del Fornitore selezionato.
          */
-        function caricaSediFornitore(selectedSedeId = null) {
-            const fornitoreId = document.getElementById('sedeFornitoreId').value;
+        function caricaSediFornitore(selectedSedeId = null, selectedFornitoreId = null) {
+            const fornitoreId = selectedFornitoreId || document.getElementById('sedeFornitoreId').value;
             const sediSelect = document.getElementById('sedeId');
             sediSelect.innerHTML = '<option value="">Seleziona Sede...</option>';
 
@@ -447,6 +383,7 @@
                     const opt = document.createElement('option');
                     opt.value = doc.id;
                     opt.textContent = `${data.nomeSede} (${data.indirizzoSede})`;
+                    opt.setAttribute('data-costo-nolo', data.costoNolo || 0); // Cattura il costo nolo
                     if (selectedSedeId && doc.id === selectedSedeId) {
                         opt.selected = true;
                     }
@@ -454,19 +391,26 @@
                 });
             });
         }
+        
+        /**
+         * Listener per l'aggiornamento automatico del costo di noleggio Lab.
+         */
+        document.getElementById('sedeId').addEventListener('change', (e) => {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            const costoNolo = parseFloat(selectedOption.getAttribute('data-costo-nolo')) || 0;
+            document.getElementById('costoNolo').value = costoNolo.toFixed(2);
+        });
 
         /**
-         * Carica l'Inventario (Materiali/Strumenti) dalla collezione globale. (Risolve Problema 4)
+         * Carica la lista di attività globali dalla collezione 'attivita'.
          */
-        async function caricaInventario(tipo) {
-            const collectionName = tipo === 'materiali' ? 'inventario_materiali' : 'inventario_strumenti';
-            const snapshot = await db.collection(collectionName).get();
-            
+        async function caricaAttivitaGlobali() {
+            const snapshot = await db.collection('attivita').get();
             // Salva globalmente per le dropdowns
-            if (tipo === 'materiali') {
-                window.inventarioMateriali = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            } else {
-                window.inventarioStrumenti = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            window.attivitaGlobali = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            if (window.attivitaGlobali.length === 0) {
+                 // Opzione rapida per creare attività se la lista è vuota
+                 alert("Attenzione: Nessuna attività trovata. Creale in 'Inventario & Fabbisogni'.");
             }
         }
         
@@ -475,15 +419,15 @@
         // =========================================================================
 
         /**
-         * READ: Carica la lista Labs reali. (Risolve Problema 1)
+         * READ: Carica la lista Labs reali.
          */
         function caricaLabs() {
-            tabellaLabsBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Caricamento Labs...</td></tr>';
+            tabellaLabsBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Caricamento Labs...</td></tr>';
             
             db.collection("labs").orderBy("dataFine", "desc").get().then(snapshot => {
                 tabellaLabsBody.innerHTML = '';
                 if (snapshot.empty) {
-                    tabellaLabsBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nessun Lab trovato.</td></tr>';
+                    tabellaLabsBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessun Lab trovato.</td></tr>';
                     return;
                 }
 
@@ -494,12 +438,10 @@
                     const row = tabellaLabsBody.insertRow();
                     row.classList.add('lab-row');
                     
-                    // Cliccando sulla riga, apriamo la modale in modifica
                     row.onclick = () => apriModaleLab(labId, data); 
 
                     row.insertCell().textContent = labId.substring(0, 6);
                     row.insertCell().textContent = data.nomeLab || 'N/D';
-                    row.insertCell().textContent = data.clienteNome || 'N/D';
                     row.insertCell().textContent = data.sedeNome || 'N/D';
                     row.insertCell().textContent = data.statoLab || 'N/D';
                     
@@ -509,7 +451,6 @@
                     const actionCell = row.insertCell();
                     actionCell.className = 'azione-tabella';
                     
-                    // Pulsanti di Azione (Risolve Problema 2: l'eliminazione è REALE)
                     actionCell.innerHTML = `
                         <button class="primary" style="background-color: #ffc107; color: white; margin-right: 5px;" 
                             onclick="event.stopPropagation(); apriModaleLab('${labId}', ${JSON.stringify(data).replace(/"/g, '&quot;')})">Modifica</button>
@@ -518,12 +459,12 @@
                 });
             }).catch(error => {
                 console.error("Errore nel caricamento dei Labs: ", error);
-                tabellaLabsBody.innerHTML = '<tr><td colspan="7" style="color: red; text-align: center;">Errore nel caricamento dei dati Labs.</td></tr>';
+                tabellaLabsBody.innerHTML = '<tr><td colspan="6" style="color: red; text-align: center;">Errore nel caricamento dei dati Labs.</td></tr>';
             });
         }
 
         /**
-         * DELETE: Elimina un Lab reale. (Risolve Problema 2)
+         * DELETE: Elimina un Lab reale.
          */
         function eliminaLab(id) {
             if (confirm("Sei sicuro di voler eliminare definitivamente questo Lab?")) {
@@ -544,17 +485,11 @@
             e.preventDefault();
             const id = document.getElementById('labId').value;
             
-            // Recupera nomi per visualizzazione (non ID)
-            const clienteSelect = document.getElementById('clienteId');
-            const clienteNome = clienteSelect.options[clienteSelect.selectedIndex].textContent;
-            
             const sedeSelect = document.getElementById('sedeId');
-            const sedeNome = sedeSelect.options[sedeSelect.selectedIndex].textContent;
+            const sedeNome = sedeSelect.options[sedeSelect.selectedIndex]?.textContent || 'N/D';
 
             const labData = {
                 nomeLab: document.getElementById('nomeLab').value,
-                clienteId: document.getElementById('clienteId').value,
-                clienteNome: clienteNome, 
                 statoLab: document.getElementById('statoLab').value,
                 dataInizio: document.getElementById('dataInizio').value ? firebase.firestore.Timestamp.fromDate(new Date(document.getElementById('dataInizio').value)) : null,
                 dataFine: document.getElementById('dataFine').value ? firebase.firestore.Timestamp.fromDate(new Date(document.getElementById('dataFine').value)) : null,
@@ -565,34 +500,38 @@
                 sedeId: document.getElementById('sedeId').value,
                 sedeNome: sedeNome,
                 
-                // Dati Inventario (Risolve Problema 4 - Salva la struttura dell'inventario)
-                materialiNecessari: labInventario.materiali,
-                strumentiNecessari: labInventario.strumenti,
+                // Dati Attività (Nuova Logica)
+                attivita: labAttivita,
 
-                // Dati Finanza (Risolve Problema 6)
+                // Dati Finanza (Costi Vivi)
                 costoNolo: parseFloat(document.getElementById('costoNolo').value),
                 costiLogistici: parseFloat(document.getElementById('costiLogistici').value),
                 costiPersonale: parseFloat(document.getElementById('costiPersonale').value),
-                costoTotaleInventario: parseFloat(document.getElementById('costoTotaleInventario').value),
-                costoIscrizione: parseFloat(document.getElementById('costoIscrizione').value),
+                costoTotaleFabbisogno: parseFloat(document.getElementById('costoTotaleFabbisogno').value),
                 profittoPercentuale: parseFloat(document.getElementById('profittoPercentuale').value),
                 preventivoFinale: parseFloat(document.getElementById('preventivoFinale').value),
                 statoFattura: document.getElementById('statoFattura').value,
+                notePreventivo: document.getElementById('notePreventivo').value,
+                
+                ultimaModifica: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             const collectionRef = db.collection("labs");
             
-            if (id) {
-                // UPDATE
-                await collectionRef.doc(id).update(labData);
-                alert("Lab aggiornato con successo!");
-            } else {
-                // CREATE
-                await collectionRef.add(labData);
-                alert("Lab aggiunto con successo!");
+            try {
+                if (id) {
+                    await collectionRef.doc(id).update(labData);
+                    alert("Lab aggiornato con successo!");
+                } else {
+                    await collectionRef.add(labData);
+                    alert("Lab aggiunto con successo!");
+                }
+                chiudiModaleLab();
+                caricaLabs();
+            } catch (error) {
+                console.error("Errore nel salvataggio Lab: ", error);
+                alert("Errore nel salvataggio. Controlla la console.");
             }
-            chiudiModaleLab();
-            caricaLabs();
         });
 
         // =========================================================================
@@ -606,16 +545,15 @@
             document.getElementById('labId').value = id || '';
             document.getElementById('labModalTitle').textContent = id ? 'Modifica Lab: ' + (data.nomeLab || 'N/D') : 'Crea Nuovo Lab';
 
-            labForm.reset(); // Reset iniziale
-            labInventario = { materiali: data.materialiNecessari || [], strumenti: data.strumentiNecessari || [] };
+            labForm.reset(); 
+            labAttivita = data.attivita || [];
 
             // Popola i campi
             document.getElementById('nomeLab').value = data.nomeLab || '';
             document.getElementById('statoLab').value = data.statoLab || 'in preparazione';
             document.getElementById('durataOre').value = data.durataOre !== undefined ? data.durataOre : '1.0';
-            document.getElementById('clienteId').value = data.clienteId || '';
             
-            // Popola le date (conversione da Timestamp)
+            // Popola le date
             document.getElementById('dataInizio').value = data.dataInizio ? data.dataInizio.toDate().toISOString().substring(0, 10) : '';
             document.getElementById('dataFine').value = data.dataFine ? data.dataFine.toDate().toISOString().substring(0, 10) : '';
 
@@ -623,21 +561,21 @@
             document.getElementById('sedeFornitoreId').value = data.sedeFornitoreId || '';
             if (data.sedeFornitoreId) {
                 // Ricarica le sedi relative al fornitore e seleziona la sede specifica
-                await caricaSediFornitore(data.sedeId); 
+                await caricaSediFornitore(data.sedeId, data.sedeFornitoreId); 
             }
             
-            // Popola i campi Finanza (Risolve Problema 6)
+            // Popola i campi Finanza 
             document.getElementById('costoNolo').value = (data.costoNolo || 0).toFixed(2);
             document.getElementById('costiLogistici').value = (data.costiLogistici || 0).toFixed(2);
             document.getElementById('costiPersonale').value = (data.costiPersonale || 0).toFixed(2);
-            document.getElementById('costoTotaleInventario').value = calcolaCostoTotaleInventario(labInventario).toFixed(2);
-            document.getElementById('costoIscrizione').value = (data.costoIscrizione || 0).toFixed(2);
+            document.getElementById('costoTotaleFabbisogno').value = (data.costoTotaleFabbisogno || 0).toFixed(2);
             document.getElementById('profittoPercentuale').value = data.profittoPercentuale || 20;
             document.getElementById('preventivoFinale').value = (data.preventivoFinale || 0).toFixed(2);
             document.getElementById('statoFattura').value = data.statoFattura || 'da emettere';
+            document.getElementById('notePreventivo').value = data.notePreventivo || '';
             
-            // Ridisegna le liste di materiali e strumenti
-            disegnaInventarioLabs();
+            // Ridisegna le liste di attività
+            disegnaAttivitaLabs();
 
             labModal.style.display = "block";
         }
@@ -648,221 +586,115 @@
         }
 
         // =========================================================================
-        // === GESTIONE INVENTARIO LAB (Materiali e Strumenti) ===
+        // === GESTIONE ATTIVITÀ LAB ===
         // =========================================================================
 
-        /**
-         * Disegna le liste di materiali/strumenti nel form del Lab. (Risolve Problemi 4, 5)
-         */
-        function disegnaInventarioLabs() {
-            materialiList.innerHTML = '';
-            strumentiList.innerHTML = '';
+        function disegnaAttivitaLabs() {
+            attivitaList.innerHTML = '';
+            const attivitaGlobale = window.attivitaGlobali || [];
 
-            // Materiali
-            labInventario.materiali.forEach((item, index) => {
-                const div = creaItemInventarioUI('materiali', item, index, window.inventarioMateriali);
-                materialiList.appendChild(div);
-            });
-
-            // Strumenti
-            labInventario.strumenti.forEach((item, index) => {
-                const div = creaItemInventarioUI('strumenti', item, index, window.inventarioStrumenti);
-                strumentiList.appendChild(div);
-            });
-            
-            // Aggiorna il costo totale dell'inventario dopo il disegno
-            document.getElementById('costoTotaleInventario').value = calcolaCostoTotaleInventario(labInventario).toFixed(2);
-        }
-
-        /**
-         * Crea un singolo elemento UI per l'inventario Lab (Materiale o Strumento). (Risolve Problema 5: layout)
-         */
-        function creaItemInventarioUI(tipo, item, index, inventarioGlobale) {
-            const div = document.createElement('div');
-            div.className = 'activity-item';
-            
-            const labelTipo = tipo === 'materiali' ? 'Materiale' : 'Strumento/Multi';
-
-            // Dropdown di selezione (Popolata dal globale)
-            const select = document.createElement('select');
-            select.innerHTML = `<option value="">Seleziona ${labelTipo}...</option>`;
-            inventarioGlobale.forEach(invItem => {
-                const opt = document.createElement('option');
-                opt.value = invItem.id;
-                opt.textContent = `${invItem.descrizione} (€${invItem.costoUM.toFixed(2)})`;
-                if (invItem.id === item.inventarioId) {
-                    opt.selected = true;
-                }
-                select.appendChild(opt);
-            });
-            
-            // Listener per aggiornare i dati interni quando la selezione cambia
-            select.onchange = (e) => {
-                const selectedId = e.target.value;
-                const selectedItem = inventarioGlobale.find(i => i.id === selectedId);
-                if (selectedItem) {
-                    item.inventarioId = selectedId;
-                    item.descrizione = selectedItem.descrizione;
-                    item.costoUM = selectedItem.costoUM;
-                    item.costoTotale = item.quantita * selectedItem.costoUM;
-                } else {
-                    item.inventarioId = null;
-                    item.descrizione = 'N/D';
-                    item.costoUM = 0;
-                    item.costoTotale = 0;
-                }
-                document.getElementById(`${tipo}-${index}-costo`).textContent = `Totale: €${item.costoTotale.toFixed(2)}`;
-                document.getElementById('costoTotaleInventario').value = calcolaCostoTotaleInventario(labInventario).toFixed(2);
-            };
-            div.appendChild(select);
-
-            // Input Quantità
-            const inputQta = document.createElement('input');
-            inputQta.type = 'number';
-            inputQta.placeholder = 'Quantità';
-            inputQta.value = item.quantita;
-            inputQta.oninput = (e) => {
-                item.quantita = parseFloat(e.target.value) || 0;
-                item.costoTotale = item.quantita * (item.costoUM || 0);
-                document.getElementById(`${tipo}-${index}-costo`).textContent = `Totale: €${item.costoTotale.toFixed(2)}`;
-                document.getElementById('costoTotaleInventario').value = calcolaCostoTotaleInventario(labInventario).toFixed(2);
-            };
-            div.appendChild(inputQta);
-
-            // Etichetta Costo Totale
-            const spanCosto = document.createElement('span');
-            spanCosto.id = `${tipo}-${index}-costo`;
-            spanCosto.textContent = `Totale: €${item.costoTotale.toFixed(2)}`;
-            spanCosto.style.fontWeight = 'bold';
-            div.appendChild(spanCosto);
-
-            // Pulsante Rimuovi
-            const btnRemove = document.createElement('button');
-            btnRemove.textContent = '— Rimuovi';
-            btnRemove.className = 'danger';
-            btnRemove.onclick = () => {
-                labInventario[tipo].splice(index, 1);
-                disegnaInventarioLabs();
-            };
-            div.appendChild(btnRemove);
-
-            return div;
-        }
-
-        function aggiungiMateriale() {
-            labInventario.materiali.push({ inventarioId: null, descrizione: 'Nuovo Materiale', costoUM: 0, quantita: 1, costoTotale: 0 });
-            disegnaInventarioLabs();
-        }
-
-        function aggiungiStrumento() {
-            labInventario.strumenti.push({ inventarioId: null, descrizione: 'Nuovo Strumento', costoUM: 0, quantita: 1, costoTotale: 0 });
-            disegnaInventarioLabs();
-        }
-
-        function calcolaCostoTotaleInventario(inventario) {
-            let total = 0;
-            inventario.materiali.forEach(item => total += item.costoTotale);
-            inventario.strumenti.forEach(item => total += item.costoTotale);
-            return total;
-        }
-
-
-        // =========================================================================
-        // === GESTIONE INVENTARIO GLOBALE (Modale per creare nuovi items) ===
-        // =========================================================================
-
-        function apriInventarioModal(tipo) {
-            currentInventoryContext = tipo;
-            const title = tipo === 'materiali' ? 'Gestione Materiali' : 'Gestione Strumenti/Multimedia';
-            document.getElementById('inventarioModalTitle').textContent = title;
-            document.getElementById('inventarioTipo').value = tipo;
-            document.getElementById('inventarioId').value = '';
-            inventarioForm.reset();
-            
-            caricaListaInventarioGlobale(tipo);
-            inventarioModal.style.display = 'block';
-        }
-
-        function chiudiInventarioModal() {
-            inventarioModal.style.display = 'none';
-            // Dopo aver chiuso, ricarica l'inventario per aggiornare le dropdowns del Lab
-            caricaInventario('materiali');
-            caricaInventario('strumenti');
-            disegnaInventarioLabs(); 
-        }
-
-        async function caricaListaInventarioGlobale(tipo) {
-            const collectionName = tipo === 'materiali' ? 'inventario_materiali' : 'inventario_strumenti';
-            inventarioTableBody.innerHTML = '<tr><td colspan="3">Caricamento...</td></tr>';
-
-            const snapshot = await db.collection(collectionName).get();
-            inventarioTableBody.innerHTML = '';
-            
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const row = inventarioTableBody.insertRow();
-                row.insertCell().textContent = data.descrizione;
-                row.insertCell().textContent = `€ ${data.costoUM.toFixed(2).replace('.', ',')}`;
+            labAttivita.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'activity-item';
                 
-                const actionCell = row.insertCell();
-                actionCell.innerHTML = `<button class="danger" style="padding: 5px 8px;" onclick="eliminaInventarioItem('${collectionName}', '${doc.id}')">X</button>`;
+                // Dropdown di selezione Attività
+                const select = document.createElement('select');
+                select.innerHTML = `<option value="">Seleziona Attività...</option>`;
+                attivitaGlobale.forEach(attItem => {
+                    const opt = document.createElement('option');
+                    opt.value = attItem.id;
+                    opt.textContent = `${attItem.nome} (Listino: €${attItem.listino.toFixed(2)})`;
+                    if (attItem.id === item.attivitaId) {
+                        opt.selected = true;
+                    }
+                    select.appendChild(opt);
+                });
+                
+                select.onchange = (e) => {
+                    const selectedId = e.target.value;
+                    const selectedItem = attivitaGlobale.find(i => i.id === selectedId);
+                    if (selectedItem) {
+                        item.attivitaId = selectedId;
+                        item.nome = selectedItem.nome;
+                        item.costoBase = selectedItem.listino;
+                        item.ore = 1; // Default
+                    } else {
+                        item.attivitaId = null;
+                        item.nome = 'N/D';
+                        item.costoBase = 0;
+                        item.ore = 0;
+                    }
+                    item.costoTotale = item.costoBase * item.ore;
+                    document.getElementById(`attivita-${index}-costo`).textContent = `Totale: €${item.costoTotale.toFixed(2)}`;
+                };
+                div.appendChild(select);
+
+                // Input Ore
+                const inputOre = document.createElement('input');
+                inputOre.type = 'number';
+                inputOre.placeholder = 'Ore';
+                inputOre.value = item.ore;
+                inputOre.oninput = (e) => {
+                    item.ore = parseFloat(e.target.value) || 0;
+                    item.costoTotale = item.costoBase * item.ore;
+                    document.getElementById(`attivita-${index}-costo`).textContent = `Totale: €${item.costoTotale.toFixed(2)}`;
+                };
+                div.appendChild(inputOre);
+
+                // Etichetta Costo Totale
+                const spanCosto = document.createElement('span');
+                spanCosto.id = `attivita-${index}-costo`;
+                spanCosto.textContent = `Totale: €${item.costoTotale.toFixed(2)}`;
+                spanCosto.style.fontWeight = 'bold';
+                div.appendChild(spanCosto);
+
+                // Pulsante Rimuovi
+                const btnRemove = document.createElement('button');
+                btnRemove.textContent = '— Rimuovi';
+                btnRemove.className = 'danger';
+                btnRemove.onclick = () => {
+                    labAttivita.splice(index, 1);
+                    disegnaAttivitaLabs();
+                };
+                div.appendChild(btnRemove);
+
+                attivitaList.appendChild(div);
             });
         }
-        
-        inventarioForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const tipo = document.getElementById('inventarioTipo').value;
-            const collectionName = tipo === 'materiali' ? 'inventario_materiali' : 'inventario_strumenti';
-            
-            const itemData = {
-                descrizione: document.getElementById('inventarioDescrizione').value,
-                costoUM: parseFloat(document.getElementById('inventarioCostoUM').value),
-            };
 
-            await db.collection(collectionName).add(itemData);
-            alert(`Nuovo ${tipo} salvato!`);
-            inventarioForm.reset();
-            caricaListaInventarioGlobale(tipo);
-        });
-
-        function eliminaInventarioItem(collectionName, id) {
-             if (confirm("Sei sicuro di voler eliminare questa voce dall'inventario?")) {
-                 db.collection(collectionName).doc(id).delete().then(() => {
-                     caricaListaInventarioGlobale(collectionName.includes('materiali') ? 'materiali' : 'strumenti');
-                 });
-             }
+        function aggiungiAttivita() {
+            labAttivita.push({ attivitaId: null, nome: 'Nuova Attività', costoBase: 0, ore: 1, costoTotale: 0 });
+            disegnaAttivitaLabs();
         }
-        
+
         // =========================================================================
-        // === FUNZIONI DI CALCOLO FINANZA (Risolve Problema 6) ===
+        // === FUNZIONI DI CALCOLO FINANZA (Ora calcola solo costi vivi e preventivo base) ===
         // =========================================================================
 
         /**
-         * Calcola il costo totale e il preventivo finale.
+         * Calcola il costo totale vivo e il preventivo finale.
          */
-        function calcolaPreventivo() {
-            // 1. Leggi tutti i costi
+        function calcolaCostiFinanza() {
+            // 1. Leggi tutti i costi vivi
             const costoNolo = parseFloat(document.getElementById('costoNolo').value) || 0;
             const costiLogistici = parseFloat(document.getElementById('costiLogistici').value) || 0;
             const costiPersonale = parseFloat(document.getElementById('costiPersonale').value) || 0;
-            const costoTotaleInventario = calcolaCostoTotaleInventario(labInventario);
+            const costoTotaleFabbisogno = parseFloat(document.getElementById('costoTotaleFabbisogno').value) || 0; // Usiamo questo campo come inserimento manuale/stimato per il momento
             const profittoPercentuale = parseFloat(document.getElementById('profittoPercentuale').value) || 0;
             
             // 2. Calcolo Costo Totale Vivo
-            const costoTotaleVivo = costoNolo + costiLogistici + costiPersonale + costoTotaleInventario;
+            const costoTotaleVivo = costoNolo + costiLogistici + costiPersonale + costoTotaleFabbisogno;
             
-            // 3. Calcolo Preventivo
-            let preventivo = costoTotaleVivo;
+            // 3. Calcolo Preventivo Base (Costo Totale + Profitto)
+            let preventivoBase = costoTotaleVivo;
             if (profittoPercentuale > 0) {
-                 // Aggiunge la percentuale di profitto al costo totale
-                 preventivo = costoTotaleVivo * (1 + (profittoPercentuale / 100));
+                 preventivoBase = costoTotaleVivo * (1 + (profittoPercentuale / 100));
             }
             
             // 4. Aggiorna i campi
-            document.getElementById('costoTotaleInventario').value = costoTotaleInventario.toFixed(2); // Aggiorna per sicurezza
-            document.getElementById('preventivoFinale').value = preventivo.toFixed(2);
+            document.getElementById('preventivoFinale').value = preventivoBase.toFixed(2);
             
-            alert(`Costo Totale Vivo: €${costoTotaleVivo.toFixed(2)}. Preventivo calcolato con profitto del ${profittoPercentuale}%: €${preventivo.toFixed(2)}`);
+            alert(`Costo Totale Vivo Stimato: €${costoTotaleVivo.toFixed(2)}. Preventivo Base calcolato con profitto del ${profittoPercentuale}%: €${preventivoBase.toFixed(2)}`);
         }
         
     </script>
