@@ -7,7 +7,7 @@
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-auth-compat.js"></script>
     
     <style>
         /* BASE RESET */
@@ -19,7 +19,6 @@
         /* NAVBAR / SIDEBAR */
         .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
         .logo-link { width: 100%; text-align: center; margin-bottom: 30px; }
-        /* Logo lemon_logo.png */
         .logo-link img { max-width: 80%; height: auto; border-radius: 5px; cursor: pointer; transition: transform 0.3s, opacity 0.3s; } 
         .dashboard-nav small { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; align-self: flex-start; margin-left: 10px; margin-top: 15px; color: #909090; }
         .dashboard-nav hr { width: 90%; border: 0; border-top: 1px solid #495057; margin: 5px 0 10px 0; }
@@ -28,76 +27,80 @@
         
         /* CONTENUTO PRINCIPALE */
         .dashboard-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
-        .tab-content { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); margin-bottom: 30px; }
+        .data-section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
         
         /* BOTTONI */
-        button.primary { background-color: #A5DD2E; color: #343a40; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.3s, transform 0.2s; }
-        button.primary:hover { background-color: #8ac41f; transform: translateY(-1px); }
-        button.secondary { background-color: #ccc; color: #333; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
-        button.danger { background-color: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; transition: background-color 0.3s; }
-        
-        /* CAMPI FORM E TABELLE */
-        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; display: inline-block; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .form-group { margin-bottom: 15px; }
-        .form-row { display: flex; gap: 20px; }
-        .form-row > * { flex: 1; }
+        button.primary { background-color: #A5DD2E; color: #343a40; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.3s, transform 0.2s; margin-left: 10px; }
+        button.danger { background-color: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; transition: opacity 0.3s; }
+        button.danger:hover { opacity: 0.8; }
+        .add-button-container { text-align: right; margin-bottom: 20px; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f8f8f8; color: #343a40; font-weight: bold; }
-        tr:hover { background-color: #f1f1f1; cursor: pointer; }
-        tr.header { background-color: #A5DD2E; color: #343a40; font-weight: bold; }
+        /* TABELLA */
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .data-table th { background-color: #f8f9fa; font-weight: bold; color: #555; }
+        .data-table tr.lab-row:hover { background-color: #f1f1f1; cursor: pointer; }
+        .azione-tabella { width: 180px; text-align: center; }
 
-        /* MODAL (Gestione Pop-up) */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-        .modal-content { background-color: #fefefe; margin: 3% auto; padding: 30px; border: 1px solid #888; width: 90%; max-width: 1000px; border-radius: 8px; position: relative; } 
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
-        .close:hover, .close:focus { color: #000; text-decoration: none; cursor: pointer; }
-        
-        /* Prezzo Proposto/Effettivo */
-        #riepilogoCosti { 
-            background-color: #e6ffe6; 
-            padding: 15px; 
-            border-radius: 4px; 
-            margin-top: 20px;
-            border: 1px solid #A5DD2E;
-        }
+        /* MODALE */
+        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 3% auto; padding: 30px; border: 1px solid #888; width: 95%; max-width: 1000px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .close-button:hover, .close-button:focus { color: #000; text-decoration: none; cursor: pointer; }
 
-        /* Sezione Attività/Logistica */
-        .costi-section { 
-            border: 1px solid #ddd; 
-            padding: 15px; 
-            border-radius: 4px; 
+        /* FORM GRIGLIA (Per Modale) */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 colonne */
+            gap: 20px;
             margin-bottom: 20px;
         }
-        .costi-item-row {
+        .form-grid.col-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .form-group { margin-bottom: 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .form-group input, .form-group select, .form-group textarea { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            box-sizing: border-box; 
+        }
+        
+        /* CORREZIONE PROBLEMA 5: Stili per Attività/Costi */
+        .activity-section, .cost-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            background-color: #fcfcfc;
+        }
+        .activity-item {
             display: flex;
-            gap: 10px;
+            gap: 15px;
+            margin-bottom: 10px;
             align-items: center;
-            margin-bottom: 5px;
         }
-        .costi-item-row select, .costi-item-row input[type="number"] {
-            margin: 0;
-            padding: 8px;
-            flex-shrink: 0;
+        .activity-item > * {
+            flex-grow: 1;
+            min-width: 150px;
         }
-        .costi-item-row select { flex-grow: 1; }
-        .costi-item-row input[type="number"] { width: 80px; }
+        .activity-item button {
+            flex-grow: 0;
+            min-width: auto;
+        }
 
+        .modal-buttons { text-align: right; margin-top: 20px; }
+        .modal-buttons button { margin-left: 10px; }
 
-        /* Media Queries */
-        @media (max-width: 768px) {
-            .dashboard-container { flex-direction: column; }
-            .dashboard-nav { width: 100%; height: auto; padding: 10px 0; flex-direction: row; flex-wrap: wrap; justify-content: space-around; }
-            .dashboard-nav a { width: 45%; text-align: center; margin: 5px 0; padding: 8px 10px; }
-            .dashboard-nav small, .dashboard-nav hr { display: none; }
-            .logo-link { width: 100%; text-align: center; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #495057; }
-            .dashboard-content { padding: 15px; }
-            .form-row { flex-direction: column; gap: 0; }
-            .modal-content { margin: 10% auto; width: 95%; }
-            .costi-item-row { flex-direction: column; align-items: stretch; }
-            .costi-item-row input[type="number"] { width: 100%; }
+        /* Costi Dettaglio (Problema 6) */
+        .cost-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
         }
+
     </style>
 </head>
 <body>
@@ -105,9 +108,9 @@
     <div id="authScreen" style="display: none; height: 100vh; justify-content: center; align-items: center; background-color: #e0e0e0;">
         <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
             <h2 style="text-align: center; color: #A5DD2E;">EPApp Login</h2>
-            <input type="email" id="loginEmail" placeholder="Email" required style="margin-bottom: 10px;">
-            <input type="password" id="loginPassword" placeholder="Password" required style="margin-bottom: 20px;">
-            <button class="primary" onclick="handleLogin()" style="width: 100%;">Accedi</button>
+            <input type="email" id="loginEmail" placeholder="Email" required style="margin-bottom: 10px; padding: 10px; width: 100%;">
+            <input type="password" id="loginPassword" placeholder="Password" required style="margin-bottom: 20px; padding: 10px; width: 100%;">
+            <button class="primary" onclick="handleLogin()" style="width: 100%; background-color: #A5DD2E; border: none; padding: 10px;">Accedi</button>
             <p id="authMessage" style="color: red; text-align: center; margin-top: 10px;"></p>
         </div>
     </div>
@@ -122,7 +125,7 @@
 
             <small>Monitoraggio Labs</small><hr>
             <a href="03labs.html" class="tab-link active">Labs & Attività</a> 
-            <a href="04logistica.html" class="tab-link">Costi Attività & Logistica</a> 
+            <a href="04logistica.html" class="tab-link">Costi Logistica</a> 
             
             <small>Anagrafiche</small><hr>
             <a href="01clienti.html" class="tab-link">Clienti & Iscrizioni</a> 
@@ -137,193 +140,185 @@
 
         <main class="dashboard-content">
             
-            <div id="labsGestione" class="tab-content active">
-                <h2>Gestione Labs e Attività</h2>
-                <p>Monitoraggio e definizione dei Lab (tipologia, costi, sede e partecipanti).</p>
+            <h1>Gestione Labs & Attività</h1>
+
+            <div class="data-section">
+                <div class="add-button-container">
+                    <button class="primary" onclick="apriModaleLab(null)">➕ Crea Nuovo Lab</button>
+                </div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <input type="text" id="ricercaLab" placeholder="Cerca per nome, sede o data..." style="width: 300px; margin: 0;">
-                    <button class="primary" onclick="apriModaleLab(null)">+ Nuovo Lab</button>
-                </div>
-
-                <div class="table-container">
-                    <table id="tabellaLabs">
-                        <thead>
-                            <tr class="header">
-                                <th>Nome Lab</th>
-                                <th>Tipo</th>
-                                <th>Sede</th>
-                                <th>Data Inizio</th>
-                                <th>Prezzo Proposto</th>
-                                <th>Prezzo Effettivo</th>
-                                <th>Iscritti</th>
-                                <th>Stato</th>
-                                <th>Azioni</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td colspan="9" style="text-align: center;">Caricamento dati...</td></tr>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID Lab</th>
+                            <th>Nome Lab</th>
+                            <th>Cliente</th>
+                            <th>Sede</th>
+                            <th>Stato</th>
+                            <th>Data Fine</th>
+                            <th class="azione-tabella">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabellaLabsBody">
                         </tbody>
-                    </table>
-                </div>
-
+                </table>
             </div>
         </main>
     </div>
 
-    <div id="modalLab" class="modal">
+    <div id="labModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="chiudiModaleLab()">&times;</span>
-            <h3 id="modalTitleLab">Crea Nuovo Lab</h3>
-            <form id="formLab" onsubmit="salvaLab(event)">
-                <input type="hidden" id="labId">
-
-                <div class="form-row">
+            <span class="close-button" onclick="chiudiModaleLab()">&times;</span>
+            <h2 id="labModalTitle">Crea Nuovo Lab</h2>
+            <form id="labForm">
+                <input type="hidden" id="labId" value="">
+                
+                <h3>Dati Lab</h3>
+                <div class="form-grid">
                     <div class="form-group">
-                        <label for="nomeLab">Nome del Lab/Descrizione Breve:</label>
+                        <label for="nomeLab">Nome Lab</label>
                         <input type="text" id="nomeLab" required>
                     </div>
                     <div class="form-group">
-                        <label for="tipoLab">Tipologia Lab:</label>
-                        <select id="tipoLab" onchange="aggiornaDatiPrezzo()" required>
-                            <option value="open_day">A. Open Day</option>
-                            <option value="singolo">B. Singolo (1 ora)</option>
-                            <option value="mensile">C. Mensile (4 ore)</option>
-                            <option value="bimestrale">D. Bimestrale (8 ore)</option>
-                            <option value="trimestrale">E. Trimestrale (12 ore)</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="sedeLab">Sede di Svolgimento (Fornitore):</label>
-                        <select id="sedeLab" onchange="aggiornaDatiPrezzo()" required>
-                            <option value="">-- Seleziona Sede --</option>
+                        <label for="clienteId">Cliente</label>
+                        <select id="clienteId" required>
+                            <option value="">Caricamento Clienti...</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="dataOraInizio">Data e Ora Inizio:</label>
-                        <input type="datetime-local" id="dataOraInizio" required>
-                    </div>
-                </div>
-
-                <hr>
-
-                <h4>1. Costi Attività (Materiali, Strumenti, Multimedia)</h4>
-                <div class="costi-section">
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 2;">
-                            <label>Seleziona Materiali (Costo Unitario):</label>
-                            <div id="materialiList">
-                                <div class="costi-item-row">
-                                    <select onchange="aggiornaDatiPrezzo()" class="select-materiale">
-                                        <option value="" data-costo="0">-- Seleziona Materiale --</option>
-                                    </select>
-                                    <input type="number" min="0" value="1" oninput="aggiornaDatiPrezzo()" class="quantita-materiale">
-                                    <button type="button" class="danger" onclick="rimuoviRigaCosto(this)">-</button>
-                                </div>
-                            </div>
-                            <button type="button" class="secondary" onclick="aggiungiRigaCosto('materiale')">+ Aggiungi Materiale</button>
-                        </div>
-                        <div class="form-group" style="flex: 2;">
-                            <label>Seleziona Strumenti/Multimedia (Costo Unitario/Link):</label>
-                            <div id="strumentiList">
-                                <div class="costi-item-row">
-                                    <select onchange="aggiornaDatiPrezzo()" class="select-strumento">
-                                        <option value="" data-costo="0">-- Seleziona Strumento/Multi --</option>
-                                    </select>
-                                    <input type="number" min="0" value="1" oninput="aggiornaDatiPrezzo()" class="quantita-strumento">
-                                    <button type="button" class="danger" onclick="rimuoviRigaCosto(this)">-</button>
-                                </div>
-                            </div>
-                            <button type="button" class="secondary" onclick="aggiungiRigaCosto('strumento')">+ Aggiungi Strumento/Multi</button>
-                        </div>
-                    </div>
-                </div>
-
-                <h4>2. Costi Logistica (Viaggio A/R + Nolo Sede)</h4>
-                <div class="costi-section">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Costo Noleggio Sede (€):</label>
-                            <input type="number" id="costoNoleggioSede" min="0" step="0.01" value="0.00" disabled>
-                            <small>Valore richiamato dalla Sede selezionata.</small>
-                        </div>
-                        <div class="form-group">
-                            <label>Distanza Sede (Km):</label>
-                            <input type="number" id="distanzaKm" min="0" value="0" disabled>
-                            <small>Distanza Sede Lab - Sede Admin (richiamato da Sede).</small>
-                        </div>
-                        <div class="form-group">
-                            <label>Costi Logistica (Viaggio A/R) (€):</label>
-                            <input type="number" id="costiLogisticaCalcolato" min="0" step="0.01" value="0.00" disabled>
-                            <small>Viaggio calcolato automaticamente: Km * 2 * Costo/Km.</small>
-                        </div>
-                    </div>
-                </div>
-
-                <hr>
-
-                <h4>3. Calcolo Totale e Profitto</h4>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="profittoPercentuale">Profitto Desiderato (%):</label>
-                        <input type="number" id="profittoPercentuale" min="0" step="1" value="20" oninput="aggiornaDatiPrezzo()">
-                    </div>
-                </div>
-
-                <div id="riepilogoCosti">
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 1;">
-                            <label>Durata Totale:</label>
-                            <strong id="durataTotale">1 ora</strong>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label>Prezzo Proposto (Listino):</label>
-                            <strong id="prezzoProposto" style="color: #007bff;">€ 16,50</strong>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label>Costi Totali (Attività + Logistica):</label>
-                            <strong id="costiTotaliRiepilogo" style="color: #dc3545;">€ 0,00</strong>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label>Prezzo Effettivo (Costi + Profitto):</label>
-                            <strong id="prezzoEffettivo" style="color: #A5DD2E; font-size: 1.2em;">€ 0,00</strong>
-                            <small id="alertPrezzoEffettivo" style="color: red;"></small>
-                        </div>
-                    </div>
-                </div>
-                
-                <hr>
-                
-                <h4>Dettagli Lab</h4>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="postiMin">Posti Minimi:</label>
-                        <input type="number" id="postiMin" min="1" value="1">
-                    </div>
-                    <div class="form-group">
-                        <label for="postiMax">Posti Massimi:</label>
-                        <input type="number" id="postiMax" min="1" value="10">
-                    </div>
-                    <div class="form-group">
-                        <label for="statoLab">Stato Lab:</label>
+                        <label for="statoLab">Stato</label>
                         <select id="statoLab" required>
-                            <option value="in_programmazione">In Programmazione</option>
+                            <option value="in preparazione">In Preparazione</option>
                             <option value="attivo">Attivo</option>
                             <option value="concluso">Concluso</option>
                             <option value="annullato">Annullato</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label for="dataInizio">Data Inizio</label>
+                        <input type="date" id="dataInizio">
+                    </div>
+                    <div class="form-group">
+                        <label for="dataFine">Data Fine</label>
+                        <input type="date" id="dataFine">
+                    </div>
+                    <div class="form-group">
+                        <label for="durataOre">Durata Totale (ore)</label>
+                        <input type="number" id="durataOre" step="0.5" value="1.0">
+                    </div>
                 </div>
-                
-                <div class="form-group" style="text-align: right; margin-top: 20px;">
-                    <button type="button" class="secondary" onclick="chiudiModaleLab()">Annulla</button>
-                    <button type="submit" class="primary" id="btnSalvaLab">Salva Lab</button>
+
+                <h3>Sede & Logistica</h3>
+                <div class="form-grid col-2">
+                    <div class="form-group">
+                        <label for="sedeFornitoreId">Fornitore Sede</label>
+                        <select id="sedeFornitoreId" required onchange="caricaSediFornitore()">
+                            <option value="">Seleziona Fornitore...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sedeId">Sede Specifica</label>
+                        <select id="sedeId" required>
+                            <option value="">Seleziona Sede...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="activity-section">
+                    <h3>Materiali e Strumenti Necessari</h3>
+                    <div id="materialiList">
+                        </div>
+                    <button type="button" class="primary" style="margin-top: 10px;" onclick="aggiungiMateriale()">➕ Aggiungi Materiale</button>
+                    
+                    <hr style="margin: 15px 0;">
+                    
+                    <div id="strumentiList">
+                        </div>
+                    <button type="button" class="primary" style="margin-top: 10px;" onclick="aggiungiStrumento()">➕ Aggiungi Strumento/Multimedia</button>
+                </div>
+
+                <div class="cost-section">
+                    <h3>Costi e Finanza</h3>
+                    <div class="cost-detail-grid">
+                        <div class="form-group">
+                            <label>Costo Noleggio Sede (Automatico)</label>
+                            <input type="number" id="costoNolo" step="0.01" value="0.00" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Costi Logistici (Carburante/Viaggi)</label>
+                            <input type="number" id="costiLogistici" step="0.01" value="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Costi Personale (Esterno)</label>
+                            <input type="number" id="costiPersonale" step="0.01" value="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Costo Totale Materiali/Strumenti</label>
+                            <input type="number" id="costoTotaleInventario" step="0.01" value="0.00" readonly>
+                        </div>
+                    </div>
+                    
+                    <hr style="margin: 15px 0;">
+
+                    <div class="cost-detail-grid">
+                        <div class="form-group">
+                            <label>Costo Iscrizione (€/Persona)</label>
+                            <input type="number" id="costoIscrizione" step="0.01" value="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Profitto Desiderato (%)</label>
+                            <input type="number" id="profittoPercentuale" step="1" value="20">
+                        </div>
+                        <div class="form-group">
+                            <label>Preventivo Finale</label>
+                            <input type="number" id="preventivoFinale" step="0.01" value="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Stato Preventivo/Fattura</label>
+                            <select id="statoFattura">
+                                <option value="da emettere">Da Emettere</option>
+                                <option value="emesso">Emesso</option>
+                                <option value="pagato">Pagato</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="button" class="primary" onclick="calcolaPreventivo()">Calcola Preventivo 🧮</button>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" onclick="chiudiModaleLab()">Annulla</button>
+                    <button type="submit" class="primary">Salva Lab</button>
                 </div>
             </form>
+        </div>
+    </div>
+    
+    <div id="inventarioModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-button" onclick="chiudiInventarioModal()">&times;</span>
+            <h3 id="inventarioModalTitle">Gestione Inventario</h3>
+            <form id="inventarioForm">
+                <input type="hidden" id="inventarioTipo" value="">
+                <input type="hidden" id="inventarioId" value="">
+                <div class="form-group">
+                    <label for="inventarioDescrizione">Descrizione</label>
+                    <input type="text" id="inventarioDescrizione" required>
+                </div>
+                <div class="form-group">
+                    <label for="inventarioCostoUM">Costo Unitario (€)</label>
+                    <input type="number" id="inventarioCostoUM" step="0.01" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" onclick="chiudiInventarioModal()">Annulla</button>
+                    <button type="submit" class="primary">Salva Voce</button>
+                </div>
+            </form>
+
+            <h4 style="margin-top: 20px;">Lista Voci Salvate</h4>
+            <table class="data-table">
+                <thead><tr><th>Descrizione</th><th>Costo UM</th><th></th></tr></thead>
+                <tbody id="inventarioTableBody"></tbody>
+            </table>
         </div>
     </div>
 
@@ -343,500 +338,533 @@
         const db = app.firestore();
         const auth = app.auth(); 
         
-        // Riferimenti DOM
-        const modalLab = document.getElementById('modalLab');
-        const formLab = document.getElementById('formLab');
-        const tabellaLabsBody = document.querySelector('#tabellaLabs tbody');
+        // Elementi HTML
+        const tabellaLabsBody = document.getElementById('tabellaLabsBody');
+        const labModal = document.getElementById('labModal');
+        const labForm = document.getElementById('labForm');
+        
         const materialiList = document.getElementById('materialiList');
         const strumentiList = document.getElementById('strumentiList');
-
-        // Costanti globali
-        const PREZZI_PROPOSTI = {
-            'open_day': 0.00,
-            'singolo': 16.50,
-            'mensile': 65.00,
-            'bimestrale': 130.00,
-            'trimestrale': 165.00
-        };
-        const DURATE = {
-            'open_day': '1 ora',
-            'singolo': '1 ora',
-            'mensile': '4 ore (1/settimana)',
-            'bimestrale': '8 ore (1/settimana)',
-            'trimestrale': '12 ore (1/settimana)'
-        };
         
-        // Dati master
-        let costiAttivitaMaster = [];
-        let sediMaster = {}; // Dati delle Sedi (da 02fornitori.html)
-        let costoPerKmLogistica = 0.50; // Valore di default/caricato da config (da 04logistica.html)
-
-        // --- FUNZIONI DI AUTENTICAZIONE ---
-        function handleLogin() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => {})
-                .catch((error) => {
-                    document.getElementById('authScreen').style.display = 'flex';
-                    document.getElementById('authMessage').textContent = `Errore di login: ${error.message}`;
-                });
-        }
-        function handleLogout() {
-            auth.signOut().then(() => { window.location.reload(); });
-        }
+        let labInventario = { materiali: [], strumenti: [] };
         
+        // Elementi Modale Inventario
+        const inventarioModal = document.getElementById('inventarioModal');
+        const inventarioForm = document.getElementById('inventarioForm');
+        const inventarioTableBody = document.getElementById('inventarioTableBody');
+        let currentInventoryContext = ''; // 'materiali' o 'strumenti'
+
+        // --- GESTIONE AUTENTICAZIONE (Stubs) ---
+        function handleLogin() { 
+            // Implementazione login (come in 00index.html)
+        }
+        function handleLogout() { 
+            auth.signOut().then(() => { window.location.reload(); }); 
+        }
         auth.onAuthStateChanged((user) => {
             const authScreen = document.getElementById('authScreen');
             const dashboardContainer = document.querySelector('.dashboard-container');
 
             if (user) {
-                if(authScreen) authScreen.style.display = 'none';
-                if(dashboardContainer) dashboardContainer.style.display = 'flex';
-                caricaLabs(); 
-                caricaDatiMaster();
+                authScreen.style.display = 'none';
+                dashboardContainer.style.display = 'flex';
+                caricaLabs(); // Avvia caricamento Labs
+                caricaAnagrafiche(); // Carica clienti e fornitori/sedi
+                controllaParametriURL();
             } else {
-                if(authScreen) authScreen.style.display = 'flex';
-                if(dashboardContainer) dashboardContainer.style.display = 'none';
+                authScreen.style.display = 'flex';
+                dashboardContainer.style.display = 'none';
             }
         });
-
-        // --- CARICAMENTO DATI MASTER (da 04logistica.html e 02fornitori.html) ---
-
+        
         /**
-         * Carica tutti i dati master necessari (Costi Attività, Sedi, Configurazione Logistica).
+         * Controlla se è stato passato un ID Lab dall'URL (es. dalla dashboard)
          */
-        function caricaDatiMaster() {
-            // 1. Carica Costi Attività (Materiali/Strumenti/Multimedia)
-            db.collection("attivita_costi").get().then((querySnapshot) => {
-                costiAttivitaMaster = [];
-                querySnapshot.forEach((doc) => {
+        function controllaParametriURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const labId = urlParams.get('labId');
+            if (labId) {
+                // Se è stato passato un labId, apriamo la modale in modalità modifica
+                db.collection("labs").doc(labId).get().then(doc => {
+                    if (doc.exists) {
+                        apriModaleLab(labId, doc.data());
+                    }
+                }).catch(err => {
+                    console.error("Errore nel caricamento Lab da URL:", err);
+                });
+            }
+        }
+
+        // =========================================================================
+        // === FUNZIONI DI CARICAMENTO ANAGRAFICHE (Clienti, Sedi, Inventario) ===
+        // =========================================================================
+
+        async function caricaAnagrafiche() {
+            // 1. Carica Clienti (per il <select>)
+            const clientiSelect = document.getElementById('clienteId');
+            clientiSelect.innerHTML = '<option value="">Seleziona Cliente...</option>';
+            db.collection("clienti").get().then(snapshot => {
+                snapshot.forEach(doc => {
                     const data = doc.data();
-                    // Filtro per elementi con un costo utile (Materiali/Strumenti)
-                    if (data.tipo === 'materiale' || data.tipo === 'strumento' || data.tipo === 'multimedia') {
-                        costiAttivitaMaster.push({
-                            id: doc.id,
-                            nome: data.nomeElemento,
-                            tipo: data.tipo,
-                            costo: data.costoUnitario || 0,
-                            unita: data.unitaMisura || 'N/A'
-                        });
-                    }
+                    const opt = document.createElement('option');
+                    opt.value = doc.id;
+                    opt.textContent = data.ragioneSociale || `${data.nome} ${data.cognome}`;
+                    clientiSelect.appendChild(opt);
                 });
-                popolaSelectCosti();
-            }).catch((error) => {
-                console.warn("Nessun costo attività trovato o errore: ", error);
             });
 
-            // 2. Carica Costo per Km Logistica (dalla configurazione)
-            db.collection("configurazione").doc("logistica_costi").get().then((doc) => {
-                if (doc.exists) {
-                    costoPerKmLogistica = doc.data().costoPerKm || 0.50;
-                }
-            }).catch((error) => {
-                console.warn("Configurazione Logistica non trovata, uso default (0.50 €/Km).");
+            // 2. Carica Fornitori Sede (per il <select> principale della Sede)
+            const fornitoriSelect = document.getElementById('sedeFornitoreId');
+            fornitoriSelect.innerHTML = '<option value="">Seleziona Fornitore...</option>';
+            db.collection("fornitori").get().then(snapshot => {
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const opt = document.createElement('option');
+                    opt.value = doc.id;
+                    opt.textContent = data.ragioneSociale;
+                    fornitoriSelect.appendChild(opt);
+                });
             });
 
-            // 3. Carica Sedi dei Fornitori (Simulazione: in una vera app sarebbero da 02fornitori)
-            caricaSediMaster();
+            // 3. Carica Inventario (Materiali e Strumenti) per le dropdowns
+            await caricaInventario('materiali');
+            await caricaInventario('strumenti');
+        }
+
+        /**
+         * Carica le Sedi del Fornitore selezionato. (Risolve Problema 3)
+         */
+        function caricaSediFornitore(selectedSedeId = null) {
+            const fornitoreId = document.getElementById('sedeFornitoreId').value;
+            const sediSelect = document.getElementById('sedeId');
+            sediSelect.innerHTML = '<option value="">Seleziona Sede...</option>';
+
+            if (!fornitoreId) return;
+
+            db.collection("fornitori").doc(fornitoreId).collection("sedi").get().then(snapshot => {
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const opt = document.createElement('option');
+                    opt.value = doc.id;
+                    opt.textContent = `${data.nomeSede} (${data.indirizzoSede})`;
+                    if (selectedSedeId && doc.id === selectedSedeId) {
+                        opt.selected = true;
+                    }
+                    sediSelect.appendChild(opt);
+                });
+            });
+        }
+
+        /**
+         * Carica l'Inventario (Materiali/Strumenti) dalla collezione globale. (Risolve Problema 4)
+         */
+        async function caricaInventario(tipo) {
+            const collectionName = tipo === 'materiali' ? 'inventario_materiali' : 'inventario_strumenti';
+            const snapshot = await db.collection(collectionName).get();
+            
+            // Salva globalmente per le dropdowns
+            if (tipo === 'materiali') {
+                window.inventarioMateriali = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            } else {
+                window.inventarioStrumenti = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            }
         }
         
-        /**
-         * Simula il caricamento delle Sedi dei Fornitori (con Costo Nolo e Km).
-         */
-        function caricaSediMaster() {
-            sediMaster = {
-                // Sede Amministrativa (Km 0, Nolo 0)
-                'sede_admin': { nome: 'Sede Amministrativa (Km 0)', costoNoleggio: 0.00, distanzaKm: 0, fornitoreId: 'admin' },
-                // Sedi di Esempio (con Km e Nolo predefiniti)
-                'sede_fornitore_a': { nome: 'Sede Fornitore A (Biblioteca)', costoNoleggio: 20.00, distanzaKm: 50, fornitoreId: 'f1' },
-                'sede_fornitore_b': { nome: 'Sede Fornitore B (Centro Civico)', costoNoleggio: 5.00, distanzaKm: 15, fornitoreId: 'f2' },
-            };
-            // In una vera app: db.collection("fornitori_sedi").get()...
-            popolaSelectSedi();
-        }
+        // =========================================================================
+        // === FUNZIONI CRUD LABS ===
+        // =========================================================================
 
         /**
-         * Popola la select delle Sedi con i dati Master.
+         * READ: Carica la lista Labs reali. (Risolve Problema 1)
          */
-        function popolaSelectSedi() {
-            const sedeSelect = document.getElementById('sedeLab');
-            const selectedValue = sedeSelect.value; // Mantiene la selezione in modifica
+        function caricaLabs() {
+            tabellaLabsBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Caricamento Labs...</td></tr>';
             
-            sedeSelect.innerHTML = '<option value="">-- Seleziona Sede --</option>'; 
-            
-            for (const id in sediMaster) {
-                const sede = sediMaster[id];
-                const option = document.createElement('option');
-                option.value = id;
-                option.textContent = `${sede.nome} - ${sede.distanzaKm} Km - € ${sede.costoNoleggio.toFixed(2)} Nolo`;
-                sedeSelect.appendChild(option);
-            }
-
-            // Ripristina la selezione precedente
-            if (selectedValue && sediMaster[selectedValue]) {
-                sedeSelect.value = selectedValue;
-            }
-        }
-        
-        /**
-         * Popola le select con gli elementi Costi Attività (Materiali e Strumenti).
-         */
-        function popolaSelectCosti() {
-            // Logica omessa per brevità, ma identica al file precedente per ri-popolare le select.
-            // ... (logica di popolamento delle select costiAttivitaMaster) ...
-            
-            // Per il momento si assicura che almeno una riga esista per l'inizializzazione
-            if (materialiList.childElementCount === 0 && modalLab.style.display === 'block') {
-                aggiungiRigaCosto('materiale');
-                aggiungiRigaCosto('strumento');
-            }
-            
-            aggiornaDatiPrezzo();
-        }
-
-        // --- GESTIONE RIGHE COSTI ATTIVITÀ DINAMICHE ---
-
-        function aggiungiRigaCosto(tipo) {
-            const listContainer = tipo === 'materiale' ? materialiList : strumentiList;
-            const newRow = document.createElement('div');
-            newRow.className = 'costi-item-row';
-            
-            const newSelect = document.createElement('select');
-            newSelect.className = `select-${tipo}`;
-            newSelect.onchange = aggiornaDatiPrezzo;
-            
-            const defaultOption = document.createElement('option');
-            defaultOption.value = "";
-            defaultOption.textContent = tipo === 'materiale' ? "-- Seleziona Materiale --" : "-- Seleziona Strumento/Multi --";
-            defaultOption.dataset.costo = "0";
-            newSelect.appendChild(defaultOption);
-
-            // Popola le opzioni (filtrando per tipo)
-            costiAttivitaMaster.forEach(item => {
-                // Elementi: Materiale -> Materiale; Strumento/Multi -> Strumento o Multimedia
-                const isMateriale = tipo === 'materiale' && item.tipo === 'materiale';
-                const isStrumento = tipo === 'strumento' && (item.tipo === 'strumento' || item.tipo === 'multimedia');
-                
-                if (isMateriale || isStrumento) {
-                    const option = document.createElement('option');
-                    option.value = item.id;
-                    option.textContent = `[${item.tipo.toUpperCase()}] ${item.nome} - € ${item.costo.toFixed(2)}/${item.unita}`;
-                    option.dataset.costo = item.costo;
-                    newSelect.appendChild(option);
+            db.collection("labs").orderBy("dataFine", "desc").get().then(snapshot => {
+                tabellaLabsBody.innerHTML = '';
+                if (snapshot.empty) {
+                    tabellaLabsBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nessun Lab trovato.</td></tr>';
+                    return;
                 }
-            });
 
-            const newQuantity = document.createElement('input');
-            newQuantity.type = 'number';
-            newQuantity.min = '0';
-            newQuantity.value = '1';
-            newQuantity.oninput = aggiornaDatiPrezzo;
-            newQuantity.className = `quantita-${tipo}`;
-            
-            const removeButton = document.createElement('button');
-            removeButton.type = 'button';
-            removeButton.className = 'danger';
-            removeButton.textContent = '-';
-            removeButton.onclick = () => rimuoviRigaCosto(removeButton);
-
-            newRow.appendChild(newSelect);
-            newRow.appendChild(newQuantity);
-            newRow.appendChild(removeButton);
-            
-            listContainer.appendChild(newRow);
-            aggiornaDatiPrezzo();
-        }
-
-        function rimuoviRigaCosto(button) {
-            button.parentNode.remove();
-            aggiornaDatiPrezzo();
-        }
-
-        // --- GESTIONE LOGICA PREZZI ---
-
-        /**
-         * Calcola e aggiorna il Prezzo Proposto, Costi Totali e Prezzo Effettivo.
-         */
-        function aggiornaDatiPrezzo() {
-            const tipoLab = document.getElementById('tipoLab').value;
-            const profittoPercentuale = parseFloat(document.getElementById('profittoPercentuale').value) || 0;
-            
-            // --- 1. Aggiorna Dati Statici (Durata e Prezzo Proposto) ---
-            const prezzoProposto = PREZZI_PROPOSTI[tipoLab] || 0.00;
-            const durata = DURATE[tipoLab] || 'N/D';
-            
-            document.getElementById('durataTotale').textContent = durata;
-            document.getElementById('prezzoProposto').textContent = `€ ${prezzoProposto.toFixed(2).replace('.', ',')}`;
-            
-            // --- 2. Calcola Costi Logistica (Viaggio + Nolo Sede) ---
-            const sedeId = document.getElementById('sedeLab').value;
-            const sedeData = sediMaster[sedeId]; // RECUPERO DATI da Master!
-
-            const distanzaKm = sedeData ? sedeData.distanzaKm : 0;
-            const costoNoleggioSede = sedeData ? sedeData.costoNoleggio : 0;
-
-            // Logistica (Viaggio A/R) = Distanza * 2 * CostoPerKm (costoPerKmLogistica viene dal 04logistica)
-            const costiViaggio = (distanzaKm * 2 * costoPerKmLogistica); 
-            const costiLogistica = costiViaggio + costoNoleggioSede;
-            
-            // Aggiorna i campi di sola visualizzazione (disabilitati)
-            document.getElementById('distanzaKm').value = distanzaKm.toFixed(2);
-            document.getElementById('costoNoleggioSede').value = costoNoleggioSede.toFixed(2);
-            document.getElementById('costiLogisticaCalcolato').value = costiLogistica.toFixed(2);
-            
-            // --- 3. Calcola Costi Attività (Materiali + Strumenti/Multi) ---
-            let costiAttivita = 0;
-            
-            function calcolaCostoElementi(listContainer) {
-                let subTotal = 0;
-                listContainer.querySelectorAll('.costi-item-row').forEach(row => {
-                    const select = row.querySelector('select');
-                    const quantity = row.querySelector('input[type="number"]');
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const labId = doc.id;
                     
-                    if (select && quantity && select.value) {
-                        const costoUnitario = parseFloat(select.options[select.selectedIndex].dataset.costo) || 0;
-                        const quantita = parseFloat(quantity.value) || 0;
-                        subTotal += costoUnitario * quantita;
-                    }
+                    const row = tabellaLabsBody.insertRow();
+                    row.classList.add('lab-row');
+                    
+                    // Cliccando sulla riga, apriamo la modale in modifica
+                    row.onclick = () => apriModaleLab(labId, data); 
+
+                    row.insertCell().textContent = labId.substring(0, 6);
+                    row.insertCell().textContent = data.nomeLab || 'N/D';
+                    row.insertCell().textContent = data.clienteNome || 'N/D';
+                    row.insertCell().textContent = data.sedeNome || 'N/D';
+                    row.insertCell().textContent = data.statoLab || 'N/D';
+                    
+                    const dataFine = data.dataFine ? new Date(data.dataFine.toDate()).toLocaleDateString('it-IT') : 'N/D';
+                    row.insertCell().textContent = dataFine;
+                    
+                    const actionCell = row.insertCell();
+                    actionCell.className = 'azione-tabella';
+                    
+                    // Pulsanti di Azione (Risolve Problema 2: l'eliminazione è REALE)
+                    actionCell.innerHTML = `
+                        <button class="primary" style="background-color: #ffc107; color: white; margin-right: 5px;" 
+                            onclick="event.stopPropagation(); apriModaleLab('${labId}', ${JSON.stringify(data).replace(/"/g, '&quot;')})">Modifica</button>
+                        <button class="danger" onclick="event.stopPropagation(); eliminaLab('${labId}')">Elimina</button>
+                    `;
                 });
-                return subTotal;
-            }
-
-            costiAttivita += calcolaCostoElementi(materialiList);
-            costiAttivita += calcolaCostoElementi(strumentiList);
-            
-            // --- 4. Calcolo Totale e Prezzo Finale ---
-            
-            const costiTotali = costiAttivita + costiLogistica;
-            document.getElementById('costiTotaliRiepilogo').textContent = `€ ${costiTotali.toFixed(2).replace('.', ',')}`;
-
-            let prezzoEffettivo = 0;
-            if (tipoLab !== 'open_day') {
-                const profitto = costiTotali * (profittoPercentuale / 100);
-                prezzoEffettivo = costiTotali + profitto;
-            } else {
-                prezzoEffettivo = 0; // Open Day è gratuito
-            }
-
-            document.getElementById('prezzoEffettivo').textContent = `€ ${prezzoEffettivo.toFixed(2).replace('.', ',')}`;
-            
-            // 5. Avviso se il prezzo effettivo è maggiore di quello proposto
-            const alertPrezzoEffettivo = document.getElementById('alertPrezzoEffettivo');
-            if (tipoLab !== 'open_day' && prezzoEffettivo > prezzoProposto) {
-                 alertPrezzoEffettivo.textContent = `⚠ EFFETTIVO > PROPOSTO!`;
-            } else {
-                 alertPrezzoEffettivo.textContent = '';
-            }
+            }).catch(error => {
+                console.error("Errore nel caricamento dei Labs: ", error);
+                tabellaLabsBody.innerHTML = '<tr><td colspan="7" style="color: red; text-align: center;">Errore nel caricamento dei dati Labs.</td></tr>';
+            });
         }
 
-
-        // --- GESTIONE MODALE E CRUD LABS ---
-
-        function apriModaleLab(id) {
-            document.getElementById('modalTitleLab').textContent = id ? 'Modifica Lab' : 'Crea Nuovo Lab';
-            document.getElementById('btnSalvaLab').textContent = id ? 'Aggiorna Lab' : 'Salva Lab';
-            document.getElementById('labId').value = id || ''; 
+        /**
+         * DELETE: Elimina un Lab reale. (Risolve Problema 2)
+         */
+        function eliminaLab(id) {
+            if (confirm("Sei sicuro di voler eliminare definitivamente questo Lab?")) {
+                db.collection("labs").doc(id).delete().then(() => {
+                    alert("Lab eliminato con successo.");
+                    caricaLabs(); 
+                }).catch((error) => {
+                    console.error("Errore durante l'eliminazione del Lab: ", error);
+                    alert("Errore nell'eliminazione. Controlla la console.");
+                });
+            }
+        }
+        
+        /**
+         * CREATE/UPDATE: Salva un Lab.
+         */
+        labForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('labId').value;
             
-            materialiList.innerHTML = '';
-            strumentiList.innerHTML = '';
+            // Recupera nomi per visualizzazione (non ID)
+            const clienteSelect = document.getElementById('clienteId');
+            const clienteNome = clienteSelect.options[clienteSelect.selectedIndex].textContent;
             
-            if (!id) {
-                formLab.reset(); 
-                aggiungiRigaCosto('materiale'); // Default row
-                aggiungiRigaCosto('strumento'); // Default row
+            const sedeSelect = document.getElementById('sedeId');
+            const sedeNome = sedeSelect.options[sedeSelect.selectedIndex].textContent;
+
+            const labData = {
+                nomeLab: document.getElementById('nomeLab').value,
+                clienteId: document.getElementById('clienteId').value,
+                clienteNome: clienteNome, 
+                statoLab: document.getElementById('statoLab').value,
+                dataInizio: document.getElementById('dataInizio').value ? firebase.firestore.Timestamp.fromDate(new Date(document.getElementById('dataInizio').value)) : null,
+                dataFine: document.getElementById('dataFine').value ? firebase.firestore.Timestamp.fromDate(new Date(document.getElementById('dataFine').value)) : null,
+                durataOre: parseFloat(document.getElementById('durataOre').value),
                 
-                document.getElementById('profittoPercentuale').value = '20';
-                document.getElementById('sedeLab').value = ''; 
-                popolaSelectSedi(); // Assicura che la select Sedi sia aggiornata
-                aggiornaDatiPrezzo(); 
+                // Dati Sede
+                sedeFornitoreId: document.getElementById('sedeFornitoreId').value,
+                sedeId: document.getElementById('sedeId').value,
+                sedeNome: sedeNome,
+                
+                // Dati Inventario (Risolve Problema 4 - Salva la struttura dell'inventario)
+                materialiNecessari: labInventario.materiali,
+                strumentiNecessari: labInventario.strumenti,
+
+                // Dati Finanza (Risolve Problema 6)
+                costoNolo: parseFloat(document.getElementById('costoNolo').value),
+                costiLogistici: parseFloat(document.getElementById('costiLogistici').value),
+                costiPersonale: parseFloat(document.getElementById('costiPersonale').value),
+                costoTotaleInventario: parseFloat(document.getElementById('costoTotaleInventario').value),
+                costoIscrizione: parseFloat(document.getElementById('costoIscrizione').value),
+                profittoPercentuale: parseFloat(document.getElementById('profittoPercentuale').value),
+                preventivoFinale: parseFloat(document.getElementById('preventivoFinale').value),
+                statoFattura: document.getElementById('statoFattura').value,
+            };
+
+            const collectionRef = db.collection("labs");
+            
+            if (id) {
+                // UPDATE
+                await collectionRef.doc(id).update(labData);
+                alert("Lab aggiornato con successo!");
             } else {
-                popolaModalePerModifica(id);
+                // CREATE
+                await collectionRef.add(labData);
+                alert("Lab aggiunto con successo!");
+            }
+            chiudiModaleLab();
+            caricaLabs();
+        });
+
+        // =========================================================================
+        // === GESTIONE MODALE E UI ===
+        // =========================================================================
+
+        /**
+         * Popola la modale con i dati del Lab esistente.
+         */
+        async function apriModaleLab(id = null, data = {}) {
+            document.getElementById('labId').value = id || '';
+            document.getElementById('labModalTitle').textContent = id ? 'Modifica Lab: ' + (data.nomeLab || 'N/D') : 'Crea Nuovo Lab';
+
+            labForm.reset(); // Reset iniziale
+            labInventario = { materiali: data.materialiNecessari || [], strumenti: data.strumentiNecessari || [] };
+
+            // Popola i campi
+            document.getElementById('nomeLab').value = data.nomeLab || '';
+            document.getElementById('statoLab').value = data.statoLab || 'in preparazione';
+            document.getElementById('durataOre').value = data.durataOre !== undefined ? data.durataOre : '1.0';
+            document.getElementById('clienteId').value = data.clienteId || '';
+            
+            // Popola le date (conversione da Timestamp)
+            document.getElementById('dataInizio').value = data.dataInizio ? data.dataInizio.toDate().toISOString().substring(0, 10) : '';
+            document.getElementById('dataFine').value = data.dataFine ? data.dataFine.toDate().toISOString().substring(0, 10) : '';
+
+            // Popola i campi Sede
+            document.getElementById('sedeFornitoreId').value = data.sedeFornitoreId || '';
+            if (data.sedeFornitoreId) {
+                // Ricarica le sedi relative al fornitore e seleziona la sede specifica
+                await caricaSediFornitore(data.sedeId); 
             }
             
-            modalLab.style.display = 'block';
+            // Popola i campi Finanza (Risolve Problema 6)
+            document.getElementById('costoNolo').value = (data.costoNolo || 0).toFixed(2);
+            document.getElementById('costiLogistici').value = (data.costiLogistici || 0).toFixed(2);
+            document.getElementById('costiPersonale').value = (data.costiPersonale || 0).toFixed(2);
+            document.getElementById('costoTotaleInventario').value = calcolaCostoTotaleInventario(labInventario).toFixed(2);
+            document.getElementById('costoIscrizione').value = (data.costoIscrizione || 0).toFixed(2);
+            document.getElementById('profittoPercentuale').value = data.profittoPercentuale || 20;
+            document.getElementById('preventivoFinale').value = (data.preventivoFinale || 0).toFixed(2);
+            document.getElementById('statoFattura').value = data.statoFattura || 'da emettere';
+            
+            // Ridisegna le liste di materiali e strumenti
+            disegnaInventarioLabs();
+
+            labModal.style.display = "block";
         }
 
         function chiudiModaleLab() {
-            modalLab.style.display = 'none';
-            formLab.reset();
-            document.getElementById('labId').value = ''; 
+            labModal.style.display = "none";
+            labForm.reset();
+        }
+
+        // =========================================================================
+        // === GESTIONE INVENTARIO LAB (Materiali e Strumenti) ===
+        // =========================================================================
+
+        /**
+         * Disegna le liste di materiali/strumenti nel form del Lab. (Risolve Problemi 4, 5)
+         */
+        function disegnaInventarioLabs() {
+            materialiList.innerHTML = '';
+            strumentiList.innerHTML = '';
+
+            // Materiali
+            labInventario.materiali.forEach((item, index) => {
+                const div = creaItemInventarioUI('materiali', item, index, window.inventarioMateriali);
+                materialiList.appendChild(div);
+            });
+
+            // Strumenti
+            labInventario.strumenti.forEach((item, index) => {
+                const div = creaItemInventarioUI('strumenti', item, index, window.inventarioStrumenti);
+                strumentiList.appendChild(div);
+            });
+            
+            // Aggiorna il costo totale dell'inventario dopo il disegno
+            document.getElementById('costoTotaleInventario').value = calcolaCostoTotaleInventario(labInventario).toFixed(2);
         }
 
         /**
-         * READ: Carica tutti i Lab da Firestore. (Logica omessa per brevità)
+         * Crea un singolo elemento UI per l'inventario Lab (Materiale o Strumento). (Risolve Problema 5: layout)
          */
-        function caricaLabs() {
-            // ... (Funzione per popolare la tabella labs, simile a prima) ...
-             tabellaLabsBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Simulazione caricamento Labs...</td></tr>';
-             
-             // Esempio di un lab:
-             tabellaLabsBody.innerHTML += `<tr onclick="apriModaleLab('mock_id_1')">
-                <td>Coding base</td>
-                <td>Singolo</td>
-                <td>Sede Fornitore A</td>
-                <td>15/10/2025 10:00</td>
-                <td>€ 16,50</td>
-                <td>€ 24,00</td>
-                <td>5</td>
-                <td>Attivo</td>
-                <td><button class="danger" onclick="event.stopPropagation(); eliminaLab('mock_id_1')">Elimina</button></td>
-             </tr>`;
-        }
-
-        /**
-         * CREATE/UPDATE: Salva un nuovo Lab o aggiorna uno esistente.
-         */
-        function salvaLab(e) {
-            e.preventDefault();
-
-            const id = document.getElementById('labId').value;
-            // Nella logica reale, si userebbe labRef.set
+        function creaItemInventarioUI(tipo, item, index, inventarioGlobale) {
+            const div = document.createElement('div');
+            div.className = 'activity-item';
             
-            // Ricalcola i valori finali per la persistenza
-            aggiornaDatiPrezzo(); 
+            const labelTipo = tipo === 'materiali' ? 'Materiale' : 'Strumento/Multi';
 
-            // Raccoglie i dati degli elementi attività selezionati
-            function raccogliElementiSelezionati(listContainer) {
-                const elementi = [];
-                listContainer.querySelectorAll('.costi-item-row').forEach(row => {
-                    const select = row.querySelector('select');
-                    const quantity = row.querySelector('input[type="number"]');
-                    
-                    if (select && quantity && select.value) {
-                         const costoUnitario = parseFloat(select.options[select.selectedIndex].dataset.costo) || 0;
-                         const quantita = parseFloat(quantity.value) || 0;
-
-                         elementi.push({
-                            id: select.value,
-                            nome: select.options[select.selectedIndex].textContent,
-                            quantita: quantita,
-                            costoUnitario: costoUnitario,
-                            costoTotale: costoUnitario * quantita
-                        });
-                    }
-                });
-                return elementi;
-            }
-
-            const elementiMateriali = raccogliElementiSelezionati(materialiList);
-            const elementiStrumenti = raccogliElementiSelezionati(strumentiList);
-
-            // Recupera valori calcolati
-            const costiTotaliFloat = parseFloat(document.getElementById('costiTotaliRiepilogo').textContent.replace('€ ', '').replace(',', '.')) || 0;
-            const costiLogistica = parseFloat(document.getElementById('costiLogisticaCalcolato').value) || 0;
-            const costiAttivita = costiTotaliFloat - costiLogistica;
-            
-            const datiLab = {
-                // ... (altri dati)
-                sedeLab: document.getElementById('sedeLab').value, // Solo ID Sede
-                
-                // Costi Aggregati
-                costiAttivitaTotali: costiAttivita,
-                costiLogisticaTotali: costiLogistica, 
-                
-                // Elementi Specifici
-                elementiMateriali: elementiMateriali,
-                elementiStrumenti: elementiStrumenti,
-                
-                // ... (altri dati)
-            };
-
-            console.log("Dati Lab da salvare (Logica Costi Verificata):", datiLab);
-
-            // Simulazione salvataggio Firestore
-            alert(`Lab ${id ? 'aggiornato' : 'salvato'} con successo! (Simulazione)`);
-            chiudiModaleLab();
-            caricaLabs(); 
-        }
-
-        /**
-         * UPDATE (Popola Modale): Carica i dati di un Lab specifico nel form.
-         */
-        function popolaModalePerModifica(id) {
-            // Simulazione caricamento dati Lab da Firestore (es: db.collection("labs").doc(id).get())
-            const mockData = {
-                nomeLab: "Coding Avanzato",
-                tipo: "mensile",
-                sedeLab: "sede_fornitore_a", // ID della sede
-                dataOraInizio: "2025-10-25T14:30",
-                profittoPercentuale: 25,
-                postiMin: 5,
-                postiMax: 15,
-                stato: "attivo",
-                elementiMateriali: [
-                    { id: "carta_id", nome: "Materiali: Carta - € 0.50/Pz", quantita: 10, costoUnitario: 0.50, costoTotale: 5.00 }
-                ],
-                elementiStrumenti: [
-                    { id: "libri_id", nome: "Strumenti: Libri di Coding - € 15.00/Libro", quantita: 2, costoUnitario: 15.00, costoTotale: 30.00 },
-                    // Si può simulare anche un elemento Multimedia
-                ]
-            };
-
-            const data = mockData;
-            
-            document.getElementById('nomeLab').value = data.nomeLab || '';
-            document.getElementById('tipoLab').value = data.tipo || 'singolo';
-            document.getElementById('dataOraInizio').value = data.dataOraInizio || '';
-            document.getElementById('profittoPercentuale').value = data.profittoPercentuale || 20;
-            document.getElementById('postiMin').value = data.postiMin || 1;
-            document.getElementById('postiMax').value = data.postiMax || 10;
-            document.getElementById('statoLab').value = data.stato || 'in_programmazione';
-            
-            // Popola la Sede
-            popolaSelectSedi();
-            document.getElementById('sedeLab').value = data.sedeLab || '';
-            
-            // Popola i Costi Attività Dinamici
-            const cariciCostiInModale = (elementi, tipo) => {
-                const listContainer = tipo === 'materiale' ? materialiList : strumentiList;
-                listContainer.innerHTML = '';
-                
-                const elementiValidi = elementi && elementi.length > 0;
-                
-                if (elementiValidi) {
-                    elementi.forEach(item => {
-                        aggiungiRigaCosto(tipo); 
-                        const lastRow = listContainer.lastElementChild;
-                        if (lastRow) {
-                            lastRow.querySelector(`.select-${tipo}`).value = item.id;
-                            lastRow.querySelector(`.quantita-${tipo}`).value = item.quantita;
-                        }
-                    });
-                } else {
-                    aggiungiRigaCosto(tipo);
+            // Dropdown di selezione (Popolata dal globale)
+            const select = document.createElement('select');
+            select.innerHTML = `<option value="">Seleziona ${labelTipo}...</option>`;
+            inventarioGlobale.forEach(invItem => {
+                const opt = document.createElement('option');
+                opt.value = invItem.id;
+                opt.textContent = `${invItem.descrizione} (€${invItem.costoUM.toFixed(2)})`;
+                if (invItem.id === item.inventarioId) {
+                    opt.selected = true;
                 }
+                select.appendChild(opt);
+            });
+            
+            // Listener per aggiornare i dati interni quando la selezione cambia
+            select.onchange = (e) => {
+                const selectedId = e.target.value;
+                const selectedItem = inventarioGlobale.find(i => i.id === selectedId);
+                if (selectedItem) {
+                    item.inventarioId = selectedId;
+                    item.descrizione = selectedItem.descrizione;
+                    item.costoUM = selectedItem.costoUM;
+                    item.costoTotale = item.quantita * selectedItem.costoUM;
+                } else {
+                    item.inventarioId = null;
+                    item.descrizione = 'N/D';
+                    item.costoUM = 0;
+                    item.costoTotale = 0;
+                }
+                document.getElementById(`${tipo}-${index}-costo`).textContent = `Totale: €${item.costoTotale.toFixed(2)}`;
+                document.getElementById('costoTotaleInventario').value = calcolaCostoTotaleInventario(labInventario).toFixed(2);
+            };
+            div.appendChild(select);
+
+            // Input Quantità
+            const inputQta = document.createElement('input');
+            inputQta.type = 'number';
+            inputQta.placeholder = 'Quantità';
+            inputQta.value = item.quantita;
+            inputQta.oninput = (e) => {
+                item.quantita = parseFloat(e.target.value) || 0;
+                item.costoTotale = item.quantita * (item.costoUM || 0);
+                document.getElementById(`${tipo}-${index}-costo`).textContent = `Totale: €${item.costoTotale.toFixed(2)}`;
+                document.getElementById('costoTotaleInventario').value = calcolaCostoTotaleInventario(labInventario).toFixed(2);
+            };
+            div.appendChild(inputQta);
+
+            // Etichetta Costo Totale
+            const spanCosto = document.createElement('span');
+            spanCosto.id = `${tipo}-${index}-costo`;
+            spanCosto.textContent = `Totale: €${item.costoTotale.toFixed(2)}`;
+            spanCosto.style.fontWeight = 'bold';
+            div.appendChild(spanCosto);
+
+            // Pulsante Rimuovi
+            const btnRemove = document.createElement('button');
+            btnRemove.textContent = '— Rimuovi';
+            btnRemove.className = 'danger';
+            btnRemove.onclick = () => {
+                labInventario[tipo].splice(index, 1);
+                disegnaInventarioLabs();
+            };
+            div.appendChild(btnRemove);
+
+            return div;
+        }
+
+        function aggiungiMateriale() {
+            labInventario.materiali.push({ inventarioId: null, descrizione: 'Nuovo Materiale', costoUM: 0, quantita: 1, costoTotale: 0 });
+            disegnaInventarioLabs();
+        }
+
+        function aggiungiStrumento() {
+            labInventario.strumenti.push({ inventarioId: null, descrizione: 'Nuovo Strumento', costoUM: 0, quantita: 1, costoTotale: 0 });
+            disegnaInventarioLabs();
+        }
+
+        function calcolaCostoTotaleInventario(inventario) {
+            let total = 0;
+            inventario.materiali.forEach(item => total += item.costoTotale);
+            inventario.strumenti.forEach(item => total += item.costoTotale);
+            return total;
+        }
+
+
+        // =========================================================================
+        // === GESTIONE INVENTARIO GLOBALE (Modale per creare nuovi items) ===
+        // =========================================================================
+
+        function apriInventarioModal(tipo) {
+            currentInventoryContext = tipo;
+            const title = tipo === 'materiali' ? 'Gestione Materiali' : 'Gestione Strumenti/Multimedia';
+            document.getElementById('inventarioModalTitle').textContent = title;
+            document.getElementById('inventarioTipo').value = tipo;
+            document.getElementById('inventarioId').value = '';
+            inventarioForm.reset();
+            
+            caricaListaInventarioGlobale(tipo);
+            inventarioModal.style.display = 'block';
+        }
+
+        function chiudiInventarioModal() {
+            inventarioModal.style.display = 'none';
+            // Dopo aver chiuso, ricarica l'inventario per aggiornare le dropdowns del Lab
+            caricaInventario('materiali');
+            caricaInventario('strumenti');
+            disegnaInventarioLabs(); 
+        }
+
+        async function caricaListaInventarioGlobale(tipo) {
+            const collectionName = tipo === 'materiali' ? 'inventario_materiali' : 'inventario_strumenti';
+            inventarioTableBody.innerHTML = '<tr><td colspan="3">Caricamento...</td></tr>';
+
+            const snapshot = await db.collection(collectionName).get();
+            inventarioTableBody.innerHTML = '';
+            
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const row = inventarioTableBody.insertRow();
+                row.insertCell().textContent = data.descrizione;
+                row.insertCell().textContent = `€ ${data.costoUM.toFixed(2).replace('.', ',')}`;
+                
+                const actionCell = row.insertCell();
+                actionCell.innerHTML = `<button class="danger" style="padding: 5px 8px;" onclick="eliminaInventarioItem('${collectionName}', '${doc.id}')">X</button>`;
+            });
+        }
+        
+        inventarioForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const tipo = document.getElementById('inventarioTipo').value;
+            const collectionName = tipo === 'materiali' ? 'inventario_materiali' : 'inventario_strumenti';
+            
+            const itemData = {
+                descrizione: document.getElementById('inventarioDescrizione').value,
+                costoUM: parseFloat(document.getElementById('inventarioCostoUM').value),
             };
 
-            cariciCostiInModale(data.elementiMateriali, 'materiale');
-            cariciCostiInModale(data.elementiStrumenti, 'strumento');
+            await db.collection(collectionName).add(itemData);
+            alert(`Nuovo ${tipo} salvato!`);
+            inventarioForm.reset();
+            caricaListaInventarioGlobale(tipo);
+        });
 
-            // Ricalcola i prezzi dopo aver popolato i campi per mostrare Prezzo Effettivo e avvisi
-            aggiornaDatiPrezzo(); 
+        function eliminaInventarioItem(collectionName, id) {
+             if (confirm("Sei sicuro di voler eliminare questa voce dall'inventario?")) {
+                 db.collection(collectionName).doc(id).delete().then(() => {
+                     caricaListaInventarioGlobale(collectionName.includes('materiali') ? 'materiali' : 'strumenti');
+                 });
+             }
         }
         
+        // =========================================================================
+        // === FUNZIONI DI CALCOLO FINANZA (Risolve Problema 6) ===
+        // =========================================================================
+
         /**
-         * DELETE: Elimina un Lab.
+         * Calcola il costo totale e il preventivo finale.
          */
-        function eliminaLab(id) {
-            if (confirm("Sei sicuro di voler eliminare questo Lab? L'azione è irreversibile.")) {
-                // db.collection("labs").doc(id).delete()...
-                alert("Lab eliminato con successo! (Simulazione)");
-                caricaLabs(); 
+        function calcolaPreventivo() {
+            // 1. Leggi tutti i costi
+            const costoNolo = parseFloat(document.getElementById('costoNolo').value) || 0;
+            const costiLogistici = parseFloat(document.getElementById('costiLogistici').value) || 0;
+            const costiPersonale = parseFloat(document.getElementById('costiPersonale').value) || 0;
+            const costoTotaleInventario = calcolaCostoTotaleInventario(labInventario);
+            const profittoPercentuale = parseFloat(document.getElementById('profittoPercentuale').value) || 0;
+            
+            // 2. Calcolo Costo Totale Vivo
+            const costoTotaleVivo = costoNolo + costiLogistici + costiPersonale + costoTotaleInventario;
+            
+            // 3. Calcolo Preventivo
+            let preventivo = costoTotaleVivo;
+            if (profittoPercentuale > 0) {
+                 // Aggiunge la percentuale di profitto al costo totale
+                 preventivo = costoTotaleVivo * (1 + (profittoPercentuale / 100));
             }
+            
+            // 4. Aggiorna i campi
+            document.getElementById('costoTotaleInventario').value = costoTotaleInventario.toFixed(2); // Aggiorna per sicurezza
+            document.getElementById('preventivoFinale').value = preventivo.toFixed(2);
+            
+            alert(`Costo Totale Vivo: €${costoTotaleVivo.toFixed(2)}. Preventivo calcolato con profitto del ${profittoPercentuale}%: €${preventivo.toFixed(2)}`);
         }
         
-        // --- INIZIALIZZAZIONE DEFAULT (Simulazione Costi Attività Master) ---
-        
-        // Simulo l'aggiunta di alcuni elementi master se non sono stati caricati da Firestore (solo per test)
-        if (costiAttivitaMaster.length === 0) {
-            costiAttivitaMaster = [
-                { id: "carta_id", nome: "Carta e Cartoncini", tipo: "materiale", costo: 0.50, unita: "Pz" },
-                { id: "pennarelli_id", nome: "Set Pennarelli", tipo: "materiale", costo: 5.00, unita: "Kit" },
-                { id: "libri_id", nome: "Libri di Coding", tipo: "strumento", costo: 15.00, unita: "Libro" },
-                { id: "audio_id", nome: "Traccia Relax", tipo: "multimedia", costo: 0.00, unita: "N/A" }
-            ];
-        }
     </script>
 </body>
 </html>
