@@ -346,7 +346,6 @@
         const dashboardNav = document.getElementById('dashboardNav');
         const attivitaListDiv = document.getElementById('attivitaList');
         const pdfContainer = document.getElementById('pdfContent'); 
-        // NUOVO ELEMENTO
         const masterAttivitaSelect = document.getElementById('masterAttivitaSelect'); 
 
         
@@ -597,7 +596,8 @@
 
                     const row = tabellaLabsBody.insertRow();
                     row.className = 'row';
-                    row.onclick = () => apriModaleLab(doc.id, data);
+                    // Nota: rimosso l'onclick sulla riga per non interferire con i bottoni interni
+                    // row.onclick = () => apriModaleLab(doc.id, data); 
 
                     row.innerHTML = `
                         <td>${data.nomeLab || 'N/D'}</td>
@@ -617,6 +617,20 @@
                  console.error("Errore nel caricamento Labs:", error);
             });
         }
+        
+        // **NUOVA FUNZIONE: ELIMINA LAB**
+        function eliminaLab(id) {
+            if (confirm("Sei sicuro di voler eliminare questo Lab? L'operazione è irreversibile.")) {
+                db.collection("labs").doc(id).delete().then(() => {
+                    alert("Lab eliminato con successo.");
+                    caricaLabs(); // Ricarica la tabella dopo l'eliminazione
+                }).catch(error => {
+                    alert("Errore durante l'eliminazione del Lab: " + error.message);
+                    console.error("Errore eliminazione:", error);
+                });
+            }
+        }
+        // **FINE NUOVA FUNZIONE**
 
         async function apriModaleLab(id = null, data = {}) {
             labForm.reset();
@@ -838,7 +852,7 @@
                 heightLeft -= pageHeight;
 
                 while (heightLeft >= 0) {
-                    position = heightLeft - imgHeight + 5;
+                    position = heightLeft - imgWidth * (pageHeight / imgWidth) + 5; // Corregge il calcolo della posizione
                     pdf.addPage();
                     pdf.addImage(imgData, 'PNG', 5, position, imgWidth, imgHeight);
                     heightLeft -= pageHeight;
