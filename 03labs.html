@@ -262,6 +262,17 @@
                 <h3>Attività (Fabbisogno)</h3>
                 <p>Definisci qui le attività e i **materiali/strumenti necessari** per questo Lab. Il costo è calcolato automaticamente. **Usa il campo Descrizione Materiale anche per URL/Link.**</p>
                 
+                <div style="margin-bottom: 15px; border: 1px dashed #A5DD2E; padding: 15px; border-radius: 4px; background-color: #e6ffe6;">
+                    <label for="masterAttivitaSelect" style="font-weight: bold; margin-bottom: 5px; display: block;">Seleziona Attività da Importare:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="masterAttivitaSelect" style="flex-grow: 1; padding: 10px; border: 1px solid #A5DD2E;">
+                            <option value="">-- Caricamento attività salvate --</option>
+                        </select>
+                        <button type="button" class="primary" onclick="importaAttivitaSelezionata()" style="white-space: nowrap; padding: 10px 15px;">
+                            ➡️ Importa Attività
+                        </button>
+                    </div>
+                </div>
                 <div id="attivitaList">
                     </div>
 
@@ -334,12 +345,15 @@
         const labForm = document.getElementById('labForm');
         const dashboardNav = document.getElementById('dashboardNav');
         const attivitaListDiv = document.getElementById('attivitaList');
-        const pdfContainer = document.getElementById('pdfContent'); // Riferimento al container PDF
+        const pdfContainer = document.getElementById('pdfContent'); 
+        // NUOVO ELEMENTO
+        const masterAttivitaSelect = document.getElementById('masterAttivitaSelect'); 
 
         
         // Array per gestire le Attività temporaneamente nella Modale
         let labAttivita = []; 
         let logisticaOptions = []; // Array per i dati Logistica
+        let masterAttivitaList = []; // NEW: Array per le attività riutilizzabili
         
         // --- FUNZIONI UTILITY e FIREBASE ---
 
@@ -367,6 +381,93 @@
             }
         });
 
+        // --- NUOVE FUNZIONI MASTER ATTIVITÀ ---
+
+        /**
+         * Carica le attività uniche da tutti i Labs salvati per riutilizzo.
+         */
+        async function caricaMasterAttivita() {
+            masterAttivitaList = [];
+            const uniqueActivitiesMap = new Map();
+            
+            try {
+                // Leggi tutti i documenti Lab
+                const snapshot = await db.collection("labs").get();
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.attivita && Array.isArray(data.attivita)) {
+                        data.attivita.forEach(att => {
+                            // Normalizza il nome per evitare duplicati per nomi simili/vuoti
+                            if (!att.nome || att.nome.trim() === '') return;
+                            const key = att.nome.trim().toLowerCase();
+                            
+                            // Aggiunge solo se il nome non è già stato inserito
+                            if (!uniqueActivitiesMap.has(key)) {
+                                uniqueActivitiesMap.set(key, att);
+                            }
+                        });
+                    }
+                });
+                
+                masterAttivitaList = Array.from(uniqueActivitiesMap.values());
+                console.log(`Caricate ${masterAttivitaList.length} attività master.`);
+            } catch (error) {
+                console.error("Errore nel caricamento Master Attività:", error);
+            }
+        }
+
+        /**
+         * Popola il dropdown con le attività master caricate.
+         */
+        function popolaMasterAttivitaSelect() {
+            masterAttivitaSelect.innerHTML = '<option value="">-- Seleziona Attività da Importare --</option>';
+            
+            if (masterAttivitaList.length === 0) {
+                 masterAttivitaSelect.innerHTML = '<option value="" disabled>-- Nessuna attività salvata --</option>';
+                 return;
+            }
+
+            masterAttivitaList.forEach((att, index) => {
+                const option = document.createElement('option');
+                option.value = index; // Usa l'indice nell'array masterAttivitaList come valore
+                option.textContent = att.nome;
+                masterAttivitaSelect.appendChild(option);
+            });
+        }
+
+        /**
+         * Importa l'attività selezionata nel Lab corrente.
+         */
+        function importaAttivitaSelezionata() {
+            const selectedIndex = masterAttivitaSelect.value;
+            
+            if (selectedIndex === "" || isNaN(selectedIndex)) {
+                alert("Per favore, seleziona un'attività da importare.");
+                return;
+            }
+            
+            const index = parseInt(selectedIndex);
+            const masterAttivita = masterAttivitaList[index];
+            
+            if (masterAttivita) {
+                // Clona l'oggetto per evitare modifiche all'attività master e dare un nuovo ID logico
+                const nuovaAttivita = JSON.parse(JSON.stringify(masterAttivita)); 
+                
+                // Aggiungi l'attività clonata all'array del Lab
+                labAttivita.push(nuovaAttivita);
+                
+                // Aggiorna l'interfaccia utente
+                ricaricaListaAttivita();
+                
+                // Resetta la selezione dopo l'importazione
+                masterAttivitaSelect.value = "";
+                alert(`Attività "${nuovaAttivita.nome}" importata con successo!`);
+            } else {
+                 alert("Attività non trovata. Riprova.");
+            }
+        }
+        
         // --- FUNZIONI GESTIONE LOGISTICA (SIMULATA) ---
 
         /**
@@ -525,6 +626,9 @@
             document.getElementById('labModalTitle').textContent = id ? 'Modifica Lab' : 'Crea Nuovo Lab';
 
             await caricaLogisticaOptions(); 
+            // Carica le attività master e popola il selettore
+            await caricaMasterAttivita();
+            popolaMasterAttivitaSelect(); 
 
             let logisticaIdSelezionata = '';
             
@@ -604,12 +708,10 @@
             });
         });
 
-        // --- FUNZIONI: ESPORTAZIONE PDF (FIXED & IMPROVED) ---
+        // --- FUNZIONI: ESPORTAZIONE PDF ---
 
         /**
          * Genera un PDF strutturato con i dati del Lab prendendoli in tempo reale dal form.
-         * FIX: Rende temporaneamente visibile l'elemento fuori schermo per consentire a html2canvas
-         * di calcolare il layout correttamente.
          */
         function esportaLabInPDF() {
             
@@ -709,12 +811,12 @@
 
             pdfContainer.innerHTML = htmlContent;
             
-            // 2. APPLICA IL FIX: Rende il container visibile ma off-screen
+            // APPLICA IL FIX: Rende il container visibile ma off-screen
             pdfContainer.style.position = 'absolute';
             pdfContainer.style.left = '-9999px';
             pdfContainer.style.display = 'block';
 
-            // 3. Generazione e salvataggio PDF con gestore di errore
+            // Generazione e salvataggio PDF con gestore di errore
             html2canvas(pdfContainer, { scale: 2 }).then(canvas => {
                 
                 // Rimuove il fix dopo aver generato il canvas
@@ -760,7 +862,6 @@
         }
         
         // --- FUNZIONI GESTIONE ATTIVITÀ E MATERIALI ---
-        // (Le funzioni seguenti non sono state modificate)
 
         function ricaricaListaAttivita() {
             attivitaListDiv.innerHTML = '';
