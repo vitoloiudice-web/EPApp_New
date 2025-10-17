@@ -38,14 +38,30 @@
         .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .sede-item { display: grid; grid-template-columns: 2fr 1fr 50px; gap: 10px; margin-bottom: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        
+        /* AGGIORNAMENTO CSS per includere la Distanza: 4 colonne */
+        .sede-item { 
+            display: grid; 
+            /* Nome/Indirizzo (1.5fr) | Costo Nolo (1fr) | Distanza Km (1fr) | Bottone (50px) */
+            grid-template-columns: 1.5fr 1fr 1fr 50px; 
+            gap: 10px; 
+            margin-bottom: 10px; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px;
+            align-items: end; /* Allineamento migliorato */
+        }
+        .sede-item .form-group { margin-bottom: 0; }
+        .sede-item button { height: 40px; }
+
         @media (max-width: 768px) {
             .dashboard-container { display: block; } .dashboard-content { padding: 15px; }
             .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 500; }
             .mobile-header h2 { margin: 0; font-size: 1.2em; color: #343a40; }
             .dashboard-nav { position: fixed; top: 0; left: -250px; height: 100%; z-index: 1000; transition: left 0.3s ease; }
             .dashboard-nav.open { left: 0; } .form-grid { grid-template-columns: 1fr; }
-            .sede-item { grid-template-columns: 1fr 1fr 40px; }
+            .sede-item { grid-template-columns: 1fr; } /* Stacked columns on mobile */
+            .sede-item button { width: 100%; margin-top: 10px; }
             .modal-content { margin: 10% 5%; width: 90%; max-width: 90%; padding: 15px; }
         }
     </style>
@@ -217,7 +233,7 @@
             }
         });
         
-        // --- FUNZIONI CRUD FORNITORI ---
+        // --- FUNZIONI CRUD FORNITORI (Nessuna modifica necessaria qui) ---
 
         function caricaFornitori() {
             tabellaFornitoriBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Caricamento Fornitori...</td></tr>';
@@ -257,6 +273,7 @@
             });
         }
 
+        // --- FUNZIONE MODIFICATA: APRIMODALEFORNITORE ---
         function apriModaleFornitore(id = null, data = {}) {
             fornitoreForm.reset();
             fornitoreSedi = [];
@@ -272,7 +289,12 @@
                 document.getElementById('telefono').value = anagrafe.telefono || '';
                 document.getElementById('tipoFornitore').value = anagrafe.tipoFornitore || 'altro';
                 
-                fornitoreSedi = data.sedi || [];
+                // Mappa i dati delle sedi assicurando che esista il campo distanzaKm (utile per vecchi record)
+                fornitoreSedi = (data.sedi || []).map(sede => ({
+                    ...sede,
+                    distanzaKm: sede.distanzaKm !== undefined ? parseFloat(sede.distanzaKm) : 0
+                }));
+                
                 ricaricaListaSedi();
             }
 
@@ -297,6 +319,7 @@
                     telefono: document.getElementById('telefono').value,
                     tipoFornitore: document.getElementById('tipoFornitore').value
                 },
+                // L'array fornitoreSedi (che ora include distanzaKm) viene salvato
                 sedi: fornitoreSedi
             };
             
@@ -325,26 +348,32 @@
             }
         }
 
-        // --- FUNZIONI GESTIONE SEDI ---
+        // --- FUNZIONI GESTIONE SEDI MODIFICATE ---
 
+        // Funzione per ricaricare la lista e visualizzare anche la distanza
         function ricaricaListaSedi() {
             sediListDiv.innerHTML = '';
             fornitoreSedi.forEach((sede, index) => {
-                aggiungiSedeHTML(sede.nome, sede.costoNolo, index);
+                // Passa il valore distanzaKm a aggiungiSedeHTML
+                aggiungiSedeHTML(sede.nome, sede.costoNolo, sede.distanzaKm || 0, index); 
             });
         }
 
+        // Funzione per aggiungere una nuova sede e inizializzare la distanza
         function aggiungiSede() {
             const newId = 'sede_' + Date.now(); 
-            fornitoreSedi.push({ id: newId, nome: 'Nuova Sede', costoNolo: 0.00 });
+            // Inizializza il nuovo campo distanzaKm a 0
+            fornitoreSedi.push({ id: newId, nome: 'Nuova Sede', costoNolo: 0.00, distanzaKm: 0 }); 
             ricaricaListaSedi();
         }
 
-        function aggiungiSedeHTML(nome = '', costo = 0, index) {
+        // Funzione per creare l'HTML di una singola sede (Ora include Distanza)
+        function aggiungiSedeHTML(nome = '', costo = 0, distanza = 0, index) { // AGGIUNTO 'distanza'
             const div = document.createElement('div');
             div.className = 'sede-item';
             div.innerHTML = `
                 <div class="form-group">
+                    <label>Nome Sede / Indirizzo Completo</label>
                     <input type="text" id="sedeNome${index}" value="${nome}" placeholder="Nome Sede/Indirizzo" 
                         onchange="aggiornaSede(${index}, 'nome', this.value)">
                 </div>
@@ -352,6 +381,11 @@
                     <label>Costo Noleggio Giornaliero (€)</label>
                     <input type="number" id="sedeCosto${index}" step="0.01" value="${costo.toFixed(2)}" placeholder="Costo €" 
                         onchange="aggiornaSede(${index}, 'costoNolo', parseFloat(this.value) || 0)">
+                </div>
+                <div class="form-group">
+                    <label>Distanza da HQ (Km)</label>
+                    <input type="number" id="sedeDistanza${index}" min="0" step="0.1" value="${distanza}" placeholder="Km" 
+                        onchange="aggiornaSede(${index}, 'distanzaKm', parseFloat(this.value) || 0)">
                 </div>
                 <button type="button" class="danger" onclick="rimuoviSede(${index})">X</button>
             `;
