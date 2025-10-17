@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPApp - Clienti</title>
+    <title>EPApp - Clienti & Iscrizioni</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-auth-compat.js"></script>
 
     <style>
-        /* [Stili CSS identici agli altri files] */
+        /* [Stili CSS copiati da 02fornitori.html per coerenza] */
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
         .dashboard-container { display: flex; min-height: 100vh; }
         .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px 0; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
@@ -26,16 +26,30 @@
         .hamburger-icon { font-size: 24px; cursor: pointer; color: #343a40; }
         .add-button-container { text-align: right; margin-bottom: 20px; }
         button.primary { background-color: #A5DD2E; color: #343a40; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.3s; margin-left: 10px; }
+        button.danger { background-color: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; transition: opacity 0.3s; }
         .table-responsive { overflow-x: auto; }
-        .data-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        .data-table { width: 100%; border-collapse: collapse; min-width: 800px; }
         .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
         .data-table th { background-color: #f8f9fa; font-weight: bold; color: #555; }
+        .data-table tr.row:hover { background-color: #f1f1f1; cursor: pointer; }
+        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 3% auto; padding: 30px; border: 1px solid #888; width: 95%; max-width: 900px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        /* Stile specifico per i campi Figlio */
+        .figlio-item { display: grid; grid-template-columns: 2fr 1fr 50px; gap: 10px; margin-bottom: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; align-items: end; }
+        .figlio-item input { margin-top: 5px; }
+        
         @media (max-width: 768px) {
             .dashboard-container { display: block; } .dashboard-content { padding: 15px; }
             .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 500; }
             .mobile-header h2 { margin: 0; font-size: 1.2em; color: #343a40; }
             .dashboard-nav { position: fixed; top: 0; left: -250px; height: 100%; z-index: 1000; transition: left 0.3s ease; }
-            .dashboard-nav.open { left: 0; } .dashboard-nav a { width: 90%; }
+            .dashboard-nav.open { left: 0; } .form-grid { grid-template-columns: 1fr; }
+            .figlio-item { grid-template-columns: 1fr 1fr 40px; }
+            .modal-content { margin: 10% 5%; width: 90%; max-width: 90%; padding: 15px; }
         }
     </style>
 </head>
@@ -45,7 +59,7 @@
         
         <div class="mobile-header">
             <span class="hamburger-icon" onclick="toggleNav()">☰</span>
-            <h2>Clienti</h2>
+            <h2>Clienti & Iscrizioni</h2>
             <a href="#" onclick="handleLogout()" style="text-decoration: none; color: #ff9999; font-weight: bold; font-size: 0.9em;">LOGOUT</a>
         </div>
 
@@ -56,7 +70,7 @@
             <a href="00index.html" class="tab-link">DASHBOARD</a> 
 
             <small>Anagrafiche</small><hr>
-            <a href="01clienti.html" class="tab-link active">CLIENTI</a> 
+            <a href="01clienti.html" class="tab-link active">CLIENTI & ISCRIZIONI</a> 
             <a href="02fornitori.html" class="tab-link">FORNITORI & SEDI</a> 
             
             <small>Labs & Logistica</small><hr>
@@ -74,44 +88,89 @@
 
         <main class="dashboard-content">
             
-            <h1>Gestione Clienti</h1>
+            <h1>Gestione Anagrafica Clienti</h1>
 
             <div class="data-section">
                 <div class="add-button-container">
-                    <button class="primary" onclick="apriModaleCliente(null)">➕ Nuovo Cliente</button>
+                    <button class="primary" onclick="apriModaleCliente(null)">➕ Crea Nuovo Cliente</button>
                 </div>
                 
                 <div class="table-responsive">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Nome Cliente</th>
-                                <th>Email</th>
-                                <th>Bambini Registrati</th>
-                                <th>Ultima Iscrizione</th>
+                                <th>Nome e Cognome</th>
+                                <th>Email Contatto</th>
+                                <th>Contatto Tel.</th>
+                                <th>Iscritti Associati</th>
                                 <th>Azioni</th>
                             </tr>
                         </thead>
                         <tbody id="tabellaClientiBody">
-                            <tr><td colspan="5" style="text-align: center;">Caricamento clienti in attesa di implementazione logica.</td></tr>
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
-            
-            <div id="clienteModal" class="modal" style="display: none;">
-                <div class="modal-content">
-                    <span class="close-button" onclick="chiudiModaleCliente()">&times;</span>
-                    <h2 id="clienteModalTitle">Dettagli Cliente</h2>
-                    <p>Form e logica per la gestione completa dell'anagrafica cliente e dei partecipanti associati andranno qui.</p>
-                </div>
-            </div>
-
         </main>
     </div>
 
+    <div id="clienteModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="chiudiModaleCliente()">&times;</span>
+            <h2 id="clienteModalTitle">Crea Nuovo Cliente</h2>
+            <form id="clienteForm">
+                <input type="hidden" id="clienteId" value="">
+                
+                <h3>Dati di Contatto (Genitore/Responsabile)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="nome">Nome</label>
+                        <input type="text" id="nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cognome">Cognome</label>
+                        <input type="text" id="cognome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="telefono">Contatto Telefonico</label>
+                        <input type="tel" id="telefono">
+                    </div>
+                    <div class="form-group">
+                        <label for="cf">Codice Fiscale</label>
+                        <input type="text" id="cf">
+                    </div>
+                    <div class="form-group">
+                        <label for="categoria">Categoria Cliente</label>
+                        <select id="categoria">
+                            <option value="privato">Privato</option>
+                            <option value="scuola">Scuola / Ente</option>
+                            <option value="partner">Partner</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="figli-section">
+                    <h3>Figli/Iscritti Associati (Nome ed Età)</h3>
+                    <div id="figliList">
+                        </div>
+                    <button type="button" class="primary" style="margin-top: 10px;" onclick="aggiungiFiglio()">➕ Aggiungi Figlio</button>
+                </div>
+
+                <div class="modal-buttons" style="margin-top: 20px; text-align: right;">
+                    <button type="button" onclick="chiudiModaleCliente()" style="background-color: #ccc;">Annulla</button>
+                    <button type="submit" class="primary">Salva Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <script>
-        // ⚠️ SOSTITUISCI QUESTO OGGETTO CON LA TUA CONFIGURAZIONE REALE DI FIREBASE ⚠️
+        // CONFIGURAZIONE FIREBASE
         const firebaseConfig = {
   	apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY",
   	authDomain: "epapp-bb953.firebaseapp.com",
@@ -121,15 +180,21 @@
   	appId: "1:797675959163:web:30c077ce253990239d03de",
   	measurementId: "G-RN2896V58E"
 	};
-        // Inizializza Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const db = app.firestore();
         const auth = app.auth(); 
         
         // Elementi HTML
-        const dashboardNav = document.getElementById('dashboardNav');
+        const tabellaClientiBody = document.getElementById('tabellaClientiBody');
         const clienteModal = document.getElementById('clienteModal');
+        const clienteForm = document.getElementById('clienteForm');
+        const dashboardNav = document.getElementById('dashboardNav');
+        const figliListDiv = document.getElementById('figliList');
+        
+        // Array per gestire i Figli temporaneamente nella Modale
+        let clienteFigli = []; 
 
+        // --- FUNZIONI NAVIGAZIONE E AUTENTICAZIONE (Copiati da 02fornitori.html) ---
         function toggleNav() {
             dashboardNav.classList.toggle('open');
         }
@@ -142,21 +207,177 @@
             });
         }
         
-        // Protezione Pagina
         auth.onAuthStateChanged((user) => {
+            const dashboardContainer = document.getElementById('dashboardContainer');
+
             if (user) {
-                document.getElementById('dashboardContainer').style.display = 'flex';
+                dashboardContainer.style.display = 'flex';
                 if(window.innerWidth <= 768) { document.getElementById('logoutLink').style.display = 'none'; }
-                // Inizializzazione dati Clienti
-                // caricaClienti(); // <--- Implementazione logica da aggiungere qui
+                caricaClienti(); 
             } else {
-                window.location.href = '00index.html'; 
+                dashboardContainer.style.display = 'none';
+                window.location.href = '00index.html'; // Reindirizza al login principale
             }
         });
+        
+        // --- FUNZIONI CRUD CLIENTI ---
 
-        // Funzioni Placeholder
-        function apriModaleCliente(id) { clienteModal.style.display = "block"; console.log("Apertura modale cliente per ID:", id); }
-        function chiudiModaleCliente() { clienteModal.style.display = "none"; }
+        function caricaClienti() {
+            tabellaClientiBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Caricamento Clienti...</td></tr>';
+            
+            db.collection("clienti").orderBy("anagrafe.cognome").get().then(snapshot => {
+                tabellaClientiBody.innerHTML = '';
+                if (snapshot.empty) {
+                    tabellaClientiBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nessun Cliente trovato.</td></tr>';
+                    return;
+                }
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const anagrafe = data.anagrafe || {};
+                    const figliCount = data.figli ? data.figli.length : 0;
+                    
+                    const row = tabellaClientiBody.insertRow();
+                    row.className = 'row';
+                    // Nota: Invece di passare data come stringa JSON, è meglio passarlo come riferimento se possibile, ma per semplicità usiamo un ID.
+                    row.onclick = () => apriModaleCliente(doc.id, data);
+                    
+                    row.innerHTML = `
+                        <td>${anagrafe.nome || 'N/D'} ${anagrafe.cognome || ''}</td>
+                        <td>${anagrafe.email || 'N/D'}</td>
+                        <td>${anagrafe.telefono || 'N/D'}</td>
+                        <td>${figliCount}</td>
+                        <td>
+                            <button class="primary" style="background-color: #ffc107; color: white; margin-right: 5px; padding: 5px 10px; font-size: 0.8em;" 
+                                onclick="event.stopPropagation(); apriModaleCliente('${doc.id}', ${JSON.stringify(data).replace(/"/g, '&quot;')})">Modifica</button>
+                            <button class="danger" style="padding: 5px 10px; font-size: 0.8em;" onclick="event.stopPropagation(); eliminaCliente('${doc.id}')">Elimina</button>
+                        </td>
+                    `;
+                });
+            }).catch(error => {
+                 tabellaClientiBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Errore nel caricamento Clienti.</td></tr>';
+                 console.error("Errore nel caricamento Clienti:", error);
+            });
+        }
+
+        function apriModaleCliente(id = null, data = {}) {
+            clienteForm.reset();
+            clienteFigli = [];
+            figliListDiv.innerHTML = '';
+            document.getElementById('clienteId').value = id || '';
+            document.getElementById('clienteModalTitle').textContent = id ? 'Modifica Cliente' : 'Crea Nuovo Cliente';
+            
+            if (id && data.anagrafe) {
+                const anagrafe = data.anagrafe;
+                document.getElementById('nome').value = anagrafe.nome || '';
+                document.getElementById('cognome').value = anagrafe.cognome || '';
+                document.getElementById('email').value = anagrafe.email || '';
+                document.getElementById('telefono').value = anagrafe.telefono || '';
+                document.getElementById('cf').value = anagrafe.cf || '';
+                document.getElementById('categoria').value = anagrafe.categoria || 'privato';
+                
+                clienteFigli = data.figli || [];
+                ricaricaListaFigli();
+            }
+
+            clienteModal.style.display = "block";
+        }
+
+        function chiudiModaleCliente() {
+            clienteModal.style.display = "none";
+        }
+        
+        clienteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const clienteId = document.getElementById('clienteId').value;
+            const isEditing = !!clienteId;
+            
+            const clienteData = {
+                anagrafe: {
+                    nome: document.getElementById('nome').value,
+                    cognome: document.getElementById('cognome').value,
+                    email: document.getElementById('email').value,
+                    telefono: document.getElementById('telefono').value,
+                    cf: document.getElementById('cf').value,
+                    categoria: document.getElementById('categoria').value
+                },
+                // Salviamo l'array dei figli
+                figli: clienteFigli 
+            };
+            
+            const collectionRef = db.collection("clienti");
+            const operation = isEditing ? collectionRef.doc(clienteId).update(clienteData) : collectionRef.add(clienteData);
+            
+            operation.then(() => {
+                alert(`Cliente ${isEditing ? 'aggiornato' : 'creato'} con successo!`);
+                chiudiModaleCliente();
+                caricaClienti(); 
+            }).catch(error => {
+                alert(`Errore nel salvataggio: ${error.message}`);
+                console.error("Errore:", error);
+            });
+        });
+
+        function eliminaCliente(id) {
+            if (confirm("Sei sicuro di voler eliminare questo Cliente e tutti i suoi dati associati? L'operazione è irreversibile.")) {
+                db.collection("clienti").doc(id).delete().then(() => {
+                    alert("Cliente eliminato con successo!");
+                    caricaClienti();
+                }).catch(error => {
+                    alert(`Errore nell'eliminazione: ${error.message}`);
+                    console.error("Errore:", error);
+                });
+            }
+        }
+
+        // --- NUOVE FUNZIONI GESTIONE FIGLI (Simili a quelle delle Sedi) ---
+
+        function ricaricaListaFigli() {
+            figliListDiv.innerHTML = '';
+            // Passiamo nome, età e l'indice
+            clienteFigli.forEach((figlio, index) => {
+                aggiungiFiglioHTML(figlio.nome, figlio.eta, index);
+            });
+        }
+
+        function aggiungiFiglio() {
+            // Aggiunge un nuovo oggetto figlio all'array con valori predefiniti
+            clienteFigli.push({ nome: 'Nuovo Iscritto', eta: 0 }); 
+            ricaricaListaFigli();
+        }
+
+        function aggiungiFiglioHTML(nome = '', eta = 0, index) {
+            const div = document.createElement('div');
+            div.className = 'figlio-item';
+            div.innerHTML = `
+                <div class="form-group">
+                    <label>Nome Figlio</label>
+                    <input type="text" value="${nome}" placeholder="Nome" 
+                        onchange="aggiornaFiglio(${index}, 'nome', this.value)" required>
+                </div>
+                <div class="form-group">
+                    <label>Età</label>
+                    <input type="number" min="0" max="100" value="${eta}" placeholder="Età" 
+                        onchange="aggiornaFiglio(${index}, 'eta', parseInt(this.value) || 0)" required>
+                </div>
+                <button type="button" class="danger" onclick="rimuoviFiglio(${index})">X</button>
+            `;
+            figliListDiv.appendChild(div);
+        }
+
+        function aggiornaFiglio(index, field, value) {
+            if (clienteFigli[index]) {
+                clienteFigli[index][field] = value;
+            }
+        }
+
+        function rimuoviFiglio(index) {
+            if (confirm("Sei sicuro di voler rimuovere questo iscritto dall'elenco?")) {
+                clienteFigli.splice(index, 1);
+                ricaricaListaFigli();
+            }
+        }
     </script>
 </body>
 </html>
