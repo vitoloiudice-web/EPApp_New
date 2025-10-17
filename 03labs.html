@@ -86,7 +86,7 @@
         #prezzoSuggerito { color: #A5DD2E; font-size: 1.2em; }
         #moltiplicatoreMinimo { color: #dc3545; }
         
-        /* Stili specifici per il PDF (Da nascondere) */
+        /* Stili specifici per il PDF */
         .pdf-export-content {
             padding: 30px;
             font-family: Arial, sans-serif;
@@ -221,16 +221,33 @@
                     <div class="form-group">
                         <label for="tipoLab">Tipologia</label>
                         <select id="tipoLab">
-                            <option value="scuola">Scuola</option>
-                            <option value="estivo">Campus Estivo</option>
-                            <option value="eventi">Evento/Fiera</option>
+                            <option value="openDay">OpenDay</option>
+                            <option value="lab1Mese">Lab 1 Mese</option>
+                            <option value="lab2Mesi">Lab 2 Mesi</option>
+                            <option value="lab3Mesi">Lab 3 Mesi</option>
+                            <option value="labEvento">Lab Evento</option>
+                            <option value="campusEstivo">Campus Estivo</option>
                             <option value="altro">Altro</option>
                         </select>
                     </div>
                     <div class="form-group">
+                        <label for="descrizione">Descrizione Breve</label>
+                        <textarea id="descrizione" rows="1" style="resize: none;"></textarea>
+                    </div>
+
+                    <div class="form-group">
                         <label for="dataInizio">Data Inizio</label>
                         <input type="date" id="dataInizio">
                     </div>
+                    <div class="form-group">
+                        <label for="dataFine">Data Fine</label>
+                        <input type="date" id="dataFine">
+                    </div>
+                    <div class="form-group">
+                        <label for="durataOre">Durata in ore</label>
+                        <input type="number" id="durataOre" step="0.5" min="0" placeholder="0.0">
+                    </div>
+
                     <div class="form-group">
                         <label for="stato">Stato</label>
                         <select id="stato">
@@ -239,10 +256,6 @@
                             <option value="attivo">Attivo</option>
                             <option value="archiviato">Archiviato</option>
                         </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="descrizione">Descrizione Breve</label>
-                        <textarea id="descrizione" rows="1" style="resize: none;"></textarea>
                     </div>
                 </div>
 
@@ -463,7 +476,6 @@
         // --- FUNZIONI CRUD LABS ---
 
         function caricaLabs() {
-            // ... (Funzione caricaLabs invariata)
              tabellaLabsBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Caricamento Labs...</td></tr>';
             
             db.collection("labs").orderBy("dataInizio", "desc").get().then(snapshot => {
@@ -520,15 +532,19 @@
             
             if (id) {
                 document.getElementById('nomeLab').value = data.nomeLab || '';
-                document.getElementById('tipoLab').value = data.tipoLab || 'scuola';
+                document.getElementById('tipoLab').value = data.tipoLab || 'altro'; // Tipologia aggiornata
                 document.getElementById('dataInizio').value = data.dataInizio || '';
+                
+                // NUOVI CAMPI
+                document.getElementById('dataFine').value = data.dataFine || ''; 
+                document.getElementById('durataOre').value = data.durataOre || 0; 
+                
                 document.getElementById('stato').value = data.stato || 'bozza';
                 document.getElementById('descrizione').value = data.descrizione || '';
                 
                 document.getElementById('profittoDesiderato').value = data.profittoDesideratoPerc || 125;
                 logisticaIdSelezionata = data.logisticaId || '';
                 
-                // Imposta il costo logistico salvato (in attesa del vero caricamento)
                 document.getElementById('costoLogisticoInputHidden').value = data.costoLogistico || 0;
 
                 labAttivita = data.attivita || [];
@@ -562,13 +578,18 @@
                 nomeLab: document.getElementById('nomeLab').value,
                 tipoLab: document.getElementById('tipoLab').value,
                 dataInizio: document.getElementById('dataInizio').value,
+                
+                // NUOVI CAMPI
+                dataFine: document.getElementById('dataFine').value,
+                durataOre: parseFloat(document.getElementById('durataOre').value) || 0,
+                
                 stato: document.getElementById('stato').value,
                 descrizione: document.getElementById('descrizione').value,
                 
                 // CAMPI FINANZIARI SALVATI
                 logisticaId: logisticaSelect.value || null, 
                 costoLogistico: risultatiFinanziari.costoLogistico, 
-                costoMateriali: risultatiFinanziari.costoMaterialiTotale, // Aggiunto per tracciamento storico
+                costoMateriali: risultatiFinanziari.costoMaterialiTotale, 
                 profittoDesideratoPerc: risultatiFinanziari.profittoDesideratoPerc,
 
                 attivita: labAttivita 
@@ -592,20 +613,22 @@
             });
         });
 
-        // --- NUOVA FUNZIONE: ESPORTAZIONE PDF ---
+        // --- FUNZIONI: ESPORTAZIONE PDF ---
 
         /**
          * Genera un PDF strutturato con i dati del Lab e forza il download.
-         * @param {object} labData - L'oggetto dati Lab appena salvato o visualizzato.
          */
         function esportaLabInPDF(labData = null) {
-            // Se la funzione è chiamata dopo un salvataggio, usa i dati passati.
-            // Altrimenti, recupera i dati attuali dalla Modale (utile se l'utente modifica ma non salva subito)
             if (!labData) {
                 labData = {
                     nomeLab: document.getElementById('nomeLab').value || 'Lab Senza Nome',
                     tipoLab: document.getElementById('tipoLab').value,
                     dataInizio: document.getElementById('dataInizio').value,
+                    
+                    // Recupero NUOVI CAMPI
+                    dataFine: document.getElementById('dataFine').value,
+                    durataOre: parseFloat(document.getElementById('durataOre').value) || 0,
+
                     stato: document.getElementById('stato').value,
                     descrizione: document.getElementById('descrizione').value,
                     attivita: labAttivita,
@@ -615,8 +638,8 @@
                 };
             }
 
-            const risultatiFinanziari = calcolaRiepilogoFinanziario(); // Recalcolo per sicurezza
-            const labName = labData.nomeLab.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'Scheda_Lab'; // Pulisce il nome per il file
+            const risultatiFinanziari = calcolaRiepilogoFinanziario(); 
+            const labName = labData.nomeLab.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'Scheda_Lab'; 
             
             const pdfContainer = document.getElementById('pdfContent');
             
@@ -629,21 +652,23 @@
             `;
 
             // SEZIONE 1: DATI PRINCIPALI
+            const tipoLabText = document.querySelector(`#tipoLab option[value="${labData.tipoLab}"]`)?.textContent || labData.tipoLab;
+            const logisticaNome = logisticaOptions.find(opt => opt.id === labData.logisticaId)?.nome || 'Nessuna Logistica Associata';
+
             htmlContent += `
                 <div class="pdf-section-title">DATI PRINCIPALI</div>
                 <div class="pdf-data-grid">
                     <div class="pdf-label">Nome Lab</div><div class="pdf-value">${labData.nomeLab}</div>
-                    <div class="pdf-label">Tipologia</div><div class="pdf-value">${labData.tipoLab}</div>
+                    <div class="pdf-label">Tipologia</div><div class="pdf-value">${tipoLabText}</div>
+                    <div class="pdf-label">Descrizione Breve</div><div class="pdf-value">${labData.descrizione || 'N/D'}</div>
                     <div class="pdf-label">Data Inizio</div><div class="pdf-value">${labData.dataInizio}</div>
+                    <div class="pdf-label">Data Fine</div><div class="pdf-value">${labData.dataFine || 'N/D'}</div>
+                    <div class="pdf-label">Durata (Ore)</div><div class="pdf-value">${labData.durataOre}</div>
                     <div class="pdf-label">Stato</div><div class="pdf-value">${labData.stato}</div>
-                    <div class="pdf-label">Descrizione</div><div class="pdf-value">${labData.descrizione || 'N/D'}</div>
                 </div>
             `;
 
             // SEZIONE 2: RIEPILOGO FINANZIARIO
-            // Trovo il nome della Logistica
-            const logisticaNome = logisticaOptions.find(opt => opt.id === labData.logisticaId)?.nome || 'Nessuna Logistica Associata';
-
             htmlContent += `
                 <div class="pdf-section-title">RIEPILOGO FINANZIARIO</div>
                 <div class="pdf-data-grid">
@@ -697,20 +722,18 @@
 
             pdfContainer.innerHTML = htmlContent;
 
-            // 4. Genera il file PDF e 5. Popola il file
-            // Si usa html2canvas per rendere l'HTML in una tela, che jsPDF converte in PDF.
+            // 4-8. Generazione e salvataggio PDF
             html2canvas(pdfContainer, { scale: 2 }).then(canvas => {
                 const { jsPDF } = window.jspdf;
                 const imgData = canvas.toDataURL('image/png');
-                const imgWidth = 200; // Larghezza A4 in mm (-10mm margini)
-                const pageHeight = 295; // Altezza A4 in mm
+                const imgWidth = 200; 
+                const pageHeight = 295; 
                 const imgHeight = canvas.height * imgWidth / canvas.width;
                 let heightLeft = imgHeight;
 
                 const pdf = new jsPDF('p', 'mm', 'a4');
-                let position = 5; // Margine superiore
+                let position = 5; 
 
-                // Se l'immagine è troppo grande, la divido su più pagine
                 pdf.addImage(imgData, 'PNG', 5, position, imgWidth, imgHeight);
                 heightLeft -= pageHeight;
 
@@ -721,14 +744,10 @@
                     heightLeft -= pageHeight;
                 }
 
-                // 6. Rinomina in automatico il pdf con il nome del Lab
                 const nomeFile = `SCHEDA_LAB_${labName}_${labData.dataInizio || 'Data_Sconosciuta'}.pdf`;
                 
-                // 7. e 8. Salva il pdf (il browser chiederà la directory)
                 pdf.save(nomeFile);
                 
-                // 5. Elimina il csv (Non necessario, dato che non usiamo un CSV intermedio)
-                // Pulisce il contenitore nascosto dopo il salvataggio
                 pdfContainer.innerHTML = '';
             });
         }
