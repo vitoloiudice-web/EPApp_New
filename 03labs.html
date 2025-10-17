@@ -334,6 +334,8 @@
         const labForm = document.getElementById('labForm');
         const dashboardNav = document.getElementById('dashboardNav');
         const attivitaListDiv = document.getElementById('attivitaList');
+        const pdfContainer = document.getElementById('pdfContent'); // Riferimento al container PDF
+
         
         // Array per gestire le Attività temporaneamente nella Modale
         let labAttivita = []; 
@@ -606,13 +608,13 @@
 
         /**
          * Genera un PDF strutturato con i dati del Lab prendendoli in tempo reale dal form.
+         * FIX: Rende temporaneamente visibile l'elemento fuori schermo per consentire a html2canvas
+         * di calcolare il layout correttamente.
          */
         function esportaLabInPDF() {
             
-            // 1. Assicura che i calcoli finanziari siano aggiornati.
             const risultatiFinanziari = calcolaRiepilogoFinanziario(); 
             
-            // 2. Legge tutti i dati correnti dal DOM per l'esportazione.
             const labData = {
                 nomeLab: document.getElementById('nomeLab').value || 'Lab Senza Nome',
                 tipoLab: document.getElementById('tipoLab').value,
@@ -621,16 +623,14 @@
                 durataOre: parseFloat(document.getElementById('durataOre').value) || 0,
                 stato: document.getElementById('stato').value,
                 descrizione: document.getElementById('descrizione').value,
-                attivita: labAttivita, // Usa l'array globale aggiornato
+                attivita: labAttivita, 
                 logisticaId: document.getElementById('logisticaSelezionata').value,
-                ...risultatiFinanziari // Aggiunge tutti i risultati finanziari calcolati
+                ...risultatiFinanziari 
             };
 
             const labName = labData.nomeLab.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'Scheda_Lab'; 
             
-            const pdfContainer = document.getElementById('pdfContent');
-            
-            // 3. Struttura i Valori in HTML (per la conversione in PDF)
+            // 1. Struttura i Valori in HTML
             let htmlContent = `
                 <div style="text-align: center; margin-bottom: 20px;">
                     <h1 style="color: #343a40;">SCHEDA LAB - ${labData.nomeLab.toUpperCase()}</h1>
@@ -708,9 +708,20 @@
             }
 
             pdfContainer.innerHTML = htmlContent;
+            
+            // 2. APPLICA IL FIX: Rende il container visibile ma off-screen
+            pdfContainer.style.position = 'absolute';
+            pdfContainer.style.left = '-9999px';
+            pdfContainer.style.display = 'block';
 
-            // 4-8. Generazione e salvataggio PDF
+            // 3. Generazione e salvataggio PDF con gestore di errore
             html2canvas(pdfContainer, { scale: 2 }).then(canvas => {
+                
+                // Rimuove il fix dopo aver generato il canvas
+                pdfContainer.style.display = 'none';
+                pdfContainer.style.position = '';
+                pdfContainer.style.left = '';
+
                 const { jsPDF } = window.jspdf;
                 const imgData = canvas.toDataURL('image/png');
                 const imgWidth = 200; 
@@ -736,10 +747,20 @@
                 pdf.save(nomeFile);
                 
                 pdfContainer.innerHTML = '';
+            }).catch(error => {
+                // Gestione dell'errore
+                console.error("Errore nella generazione del PDF:", error);
+                alert("Si è verificato un errore durante la generazione del PDF. Controlla la console per i dettagli.");
+                
+                // Pulisce gli stili anche in caso di errore
+                pdfContainer.style.display = 'none';
+                pdfContainer.style.position = '';
+                pdfContainer.style.left = '';
             });
         }
         
         // --- FUNZIONI GESTIONE ATTIVITÀ E MATERIALI ---
+        // (Le funzioni seguenti non sono state modificate)
 
         function ricaricaListaAttivita() {
             attivitaListDiv.innerHTML = '';
