@@ -31,7 +31,7 @@
         button.primary { background-color: #A5DD2E; color: #343a40; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.3s; margin-left: 10px; }
         button.danger { background-color: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; transition: opacity 0.3s; }
         .table-responsive { overflow-x: auto; }
-        .data-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        .data-table { width: 100%; border-collapse: collapse; min-width: 950px; /* Aumentato per 6 colonne */ }
         .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
         .data-table th { background-color: #f8f9fa; font-weight: bold; color: #555; }
         .data-table tr.row:hover { background-color: #f1f1f1; cursor: pointer; }
@@ -83,11 +83,11 @@
         }
         /* Stili per la sezione Finanza/Riepilogo */
         #riepilogoFinanziario p {
-            font-size: 1.1em;
+            font-size: 1em; /* Leggermente più piccolo per stare nella cella */
             padding: 5px 0;
             border-bottom: 1px dotted #eee;
         }
-        #prezzoSuggerito { color: #A5DD2E; font-size: 1.2em; }
+        #prezzoSuggerito, #prezzoListinoSummary { color: #A5DD2E; font-size: 1.1em; } /* Aggiornato id e stile */
         #moltiplicatoreMinimo { color: #dc3545; }
         
         /* Stili per Listino/Delta */
@@ -150,6 +150,7 @@
             .dashboard-container { display: block; } .dashboard-content { padding: 15px; }
             .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 500; }
             .mobile-header h2 { margin: 0; font-size: 1.2em; color: #343a40; }
+            .hamburger-icon { font-size: 24px; cursor: pointer; color: #343a40; }
             .dashboard-nav { position: fixed; top: 0; left: -250px; height: 100%; z-index: 1000; transition: left 0.3s ease; }
             .dashboard-nav.open { left: 0; } .form-grid { grid-template-columns: 1fr; }
             .financial-grid { grid-template-columns: 1fr; }
@@ -209,6 +210,7 @@
                                 <th>Data Inizio</th>
                                 <th>Stato</th>
                                 <th>Costo Totale Stimato</th>
+                                <th>Listino (€)</th>
                                 <th>Azioni</th>
                             </tr>
                         </thead>
@@ -298,51 +300,51 @@
                 <div class="financial-grid">
                     <div>
                         <div class="form-group">
-                            <label for="costoMaterialiTotale">1. Costi Materiali & Attività (Auto-calcolato)</label>
+                            <label for="costoMaterialiTotale">Costo Materiali & Attività (Auto-calcolato)</label>
                             <input type="text" id="costoMaterialiTotale" value="€ 0.00" disabled style="background-color: #eee;">
                         </div>
 
                         <div class="form-group">
-                            <label for="logisticaSelezionata">2. Logistica Associata (da 04logistica.html)</label>
+                            <label for="logisticaSelezionata">Logistica Associata (da 04logistica.html)</label>
                             <select id="logisticaSelezionata" onchange="handleLogisticaChange()">
                                 <option value="">-- Seleziona Logistica --</option>
                             </select>
                         </div>
                         
                         <div class="form-group">
-                            <label for="costoLogisticoDisplay">3. Costi Logistici (€) [Solo Visualizzazione]</label>
+                            <label for="costoLogisticoDisplay">Costi Logistici (€) [Solo Visualizzazione]</label>
                             <strong id="costoLogisticoDisplay" class="highlight-value">€ 0.00</strong>
                         </div>
 
                         <div class="form-group">
-                            <label for="profittoDesiderato">4. Profitto Desiderato (%) <span style="color: #dc3545;">(Min. 125%)</span></label>
+                            <label for="profittoDesiderato">Profitto Desiderato (%) <span style="color: #dc3545;">(Min. 125%)</span></label>
                             <input type="number" id="profittoDesiderato" step="1" min="125" value="125" onchange="calcolaRiepilogoFinanziario()">
                         </div>
                     </div>
                     
                     <div>
                         <div class="form-group">
-                            <label for="listinoPrezzo">6. Prezzo di **LISTINO** (€) (Personalizzabile)</label>
+                            <label for="listinoPrezzo">Prezzo di **LISTINO** (€) (Personalizzabile)</label>
                             <input type="number" id="listinoPrezzo" step="0.01" min="0" value="0.00" onchange="calcolaRiepilogoFinanziario()" style="font-size: 1.2em; font-weight: bold; border-color: #007bff;">
                         </div>
                         
                         <div class="form-group">
-                            <label for="differenzaValore">7. Differenza (€) [Listino - Suggerito]</label>
+                            <label for="differenzaValore">Differenza (€) [Listino - Suggerito]</label>
                             <strong id="differenzaValore" class="highlight-value">€ 0.00</strong>
                         </div>
 
                         <div class="form-group">
-                            <label for="deltaValore">8. Delta (%) [Listino vs Suggerito]</label>
+                            <label for="deltaValore">Delta (%) [Listino vs Suggerito]</label>
                             <strong id="deltaValore" class="highlight-value">0.00 %</strong>
                         </div>
-                    </div>
-                </div>
+                        
+                        <div class="form-group" id="riepilogoGridGroup" style="border: 1px solid #ccc; padding: 10px; border-radius: 4px; background-color: #f8f8f8;">
+                            <label style="font-size: 1.1em; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Riepilogo Lab (Valori chiave)</label>
+                            <div id="riepilogoFinanziario">
+                                </div>
+                        </div>
 
-                <h4>5. Riepilogo Lab (Prezzo Suggerito)</h4>
-                <div id="riepilogoFinanziario">
-                    <p>Costo Totale Lab (Materiali + Logistica): <strong id="costoTotaleLab">€ 0.00</strong></p>
-                    <p>Moltiplicatore Minimo (225% - Tasse/Admin): <strong id="moltiplicatoreMinimo">€ 0.00</strong></p>
-                    <p>Prezzo Suggerito (con % Profitto): <strong id="prezzoSuggerito">€ 0.00</strong></p>
+                    </div>
                 </div>
                 <div class="modal-buttons" style="margin-top: 30px; text-align: right;">
                     <button type="button" onclick="chiudiModaleLab()" style="background-color: #ccc;">Annulla</button>
@@ -442,6 +444,7 @@
                             }
                         });
                     }
+                    // Aggiungere qui la logica di salvataggio/aggiornamento (se necessario)
                 });
                 
                 masterAttivitaList = Array.from(uniqueActivitiesMap.values());
@@ -586,30 +589,37 @@
 
             const costoTotaleLab = costoMaterialiTotale + costoLogistico;
 
-            // 5. Riepilogo Lab (Prezzo Suggerito)
+            // Calcoli finanziari
             const moltiplicatoreMinimo = costoTotaleLab * 2.25;
             const moltiplicatoreUtente = 1 + (profittoDesideratoPerc / 100);
             const prezzoSuggerito = costoTotaleLab * moltiplicatoreUtente;
 
-            document.getElementById('costoMaterialiTotale').value = `€ ${costoMaterialiTotale.toFixed(2)}`;
-            document.getElementById('costoTotaleLab').textContent = `€ ${costoTotaleLab.toFixed(2)}`;
-            document.getElementById('moltiplicatoreMinimo').textContent = `€ ${moltiplicatoreMinimo.toFixed(2)}`;
-            document.getElementById('prezzoSuggerito').textContent = `€ ${prezzoSuggerito.toFixed(2)}`;
-            
-            // 6. Prezzo Listino (Input utente)
+            // Prezzo Listino (Input utente)
             const listinoPrezzo = parseFloat(document.getElementById('listinoPrezzo').value) || 0;
 
-            // 7. Differenza (€)
+            // Aggiorna Input/Display Costi
+            document.getElementById('costoMaterialiTotale').value = `€ ${costoMaterialiTotale.toFixed(2)}`;
+            
+            // Aggiorna Riepilogo Finanziario (Colonna Destra, riga 4)
+            const riepilogoHTML = `
+                <p>Costo Totale Lab: <strong id="costoTotaleLab">€ ${costoTotaleLab.toFixed(2)}</strong></p>
+                <p>Moltiplicatore Minimo (225%): <strong id="moltiplicatoreMinimo">€ ${moltiplicatoreMinimo.toFixed(2)}</strong></p>
+                <p style="border-top: 1px dotted #ccc; padding-top: 5px;">Prezzo Suggerito: <strong id="prezzoSuggerito" style="color: #A5DD2E; font-size: 1.1em;">€ ${prezzoSuggerito.toFixed(2)}</strong></p>
+                <p>Prezzo Listino: <strong id="prezzoListinoSummary" style="color: #007bff; font-size: 1.1em;">€ ${listinoPrezzo.toFixed(2)}</strong></p>
+            `;
+            document.getElementById('riepilogoFinanziario').innerHTML = riepilogoHTML;
+
+
+            // Differenza (€)
             const differenza = listinoPrezzo - prezzoSuggerito;
             document.getElementById('differenzaValore').textContent = `€ ${differenza.toFixed(2)}`;
             document.getElementById('differenzaValore').style.color = differenza >= 0 ? '#28a745' : '#dc3545';
             
-            // 8. Delta (%)
+            // Delta (%)
             let deltaPerc = 0;
             if (prezzoSuggerito > 0) {
                 deltaPerc = (differenza / prezzoSuggerito) * 100;
             } else if (listinoPrezzo > 0) {
-                // Se il costo suggerito è 0 ma il listino è > 0, considera 100% rispetto al costo vivo minimo o un valore predefinito
                 deltaPerc = 100; 
             }
             
@@ -624,7 +634,7 @@
                 costoTotaleLab: costoTotaleLab,
                 moltiplicatoreMinimo: moltiplicatoreMinimo,
                 prezzoSuggerito: prezzoSuggerito,
-                listinoPrezzo: listinoPrezzo, // Salviamo anche questo
+                listinoPrezzo: listinoPrezzo,
                 differenzaEuro: differenza,
                 deltaPercentuale: deltaPerc
             };
@@ -633,12 +643,12 @@
         // --- FUNZIONI CRUD LABS ---
 
         function caricaLabs() {
-             tabellaLabsBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Caricamento Labs...</td></tr>';
+             tabellaLabsBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Caricamento Labs...</td></tr>';
             
             db.collection("labs").orderBy("dataInizio", "desc").get().then(snapshot => {
                 tabellaLabsBody.innerHTML = '';
                 if (snapshot.empty) {
-                    tabellaLabsBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessun Lab trovato.</td></tr>';
+                    tabellaLabsBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nessun Lab trovato.</td></tr>';
                     return;
                 }
                 
@@ -652,6 +662,11 @@
 
                     const costoLogistico = data.costoLogistico || 0;
                     const costoStimatoTotale = costoMateriali + costoLogistico;
+                    
+                    // Recupera il prezzo di listino
+                    const listinoPrezzo = data.listinoPrezzo || 0; 
+                    
+                    const listinoColore = listinoPrezzo > costoStimatoTotale * 2.25 ? '#28a745' : '#dc3545'; // Evidenzia se copre il moltiplicatore min (225%)
 
                     const row = tabellaLabsBody.insertRow();
                     row.className = 'row';
@@ -662,6 +677,7 @@
                         <td>${data.dataInizio || 'N/D'}</td>
                         <td>${data.stato || 'bozza'}</td>
                         <td>€ ${costoStimatoTotale.toFixed(2)}</td>
+                        <td style="font-weight: bold; color: ${listinoColore};">€ ${listinoPrezzo.toFixed(2)}</td>
                         <td>
                             <button class="primary" style="background-color: #ffc107; color: white; margin-right: 5px; padding: 5px 10px; font-size: 0.8em;" 
                                 onclick="event.stopPropagation(); apriModaleLab('${doc.id}', ${JSON.stringify(data).replace(/"/g, '&quot;')})">Modifica</button>
@@ -670,7 +686,7 @@
                     `;
                 });
             }).catch(error => {
-                 tabellaLabsBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Errore nel caricamento Labs.</td></tr>';
+                 tabellaLabsBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Errore nel caricamento Labs.</td></tr>';
                  console.error("Errore nel caricamento Labs:", error);
             });
         }
@@ -835,12 +851,12 @@
             htmlContent += `
                 <div class="pdf-section-title">RIEPILOGO FINANZIARIO</div>
                 <div class="pdf-data-grid">
+                    <div class="pdf-label">Costi Materiali & Attività</div><div class="pdf-value">€ ${risultatiFinanziari.costoMaterialiTotale.toFixed(2)}</div>
                     <div class="pdf-label">Logistica Associata</div><div class="pdf-value">${logisticaNome}</div>
                     <div class="pdf-label">Costi Logistici (€)</div><div class="pdf-value">€ ${risultatiFinanziari.costoLogistico.toFixed(2)}</div>
-                    <div class="pdf-label">Costi Materiali & Attività</div><div class="pdf-value">€ ${risultatiFinanziari.costoMaterialiTotale.toFixed(2)}</div>
-                    <div class="pdf-label" style="background-color: #A5DD2E;">COSTO TOTALE LAB (VIVO)</div><div class="pdf-value" style="font-weight: bold; background-color: #A5DD2E;">€ ${risultatiFinanziari.costoTotaleLab.toFixed(2)}</div>
-                    
                     <div class="pdf-label">Profitto Desiderato (%)</div><div class="pdf-value">${risultatiFinanziari.profittoDesideratoPerc}%</div>
+                    
+                    <div class="pdf-label" style="background-color: #A5DD2E;">COSTO TOTALE LAB (VIVO)</div><div class="pdf-value" style="font-weight: bold; background-color: #A5DD2E;">€ ${risultatiFinanziari.costoTotaleLab.toFixed(2)}</div>
                     <div class="pdf-label" style="color: #dc3545;">MOLTIPLICATORE MINIMO (225%)</div><div class="pdf-value" style="color: #dc3545; font-weight: bold;">€ ${risultatiFinanziari.moltiplicatoreMinimo.toFixed(2)}</div>
                     <div class="pdf-label">PREZZO SUGGERITO</div><div class="pdf-value" style="font-weight: bold;">€ ${risultatiFinanziari.prezzoSuggerito.toFixed(2)}</div>
                     
