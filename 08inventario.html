@@ -271,20 +271,25 @@
         
         /**
          * Carica l'elenco dei fornitori dalla collection "fornitori" e popola il campo select.
+         * CORREZIONE: Ora legge anagrafe.ragSoc, come salvato da 02fornitori.html.
          */
         function caricaFornitoriPerSelect() {
             const selectFornitore = document.getElementById('fornitorePreferito');
             selectFornitore.innerHTML = '<option value="">-- Caricamento... --</option>';
             
-            db.collection("fornitori").orderBy("nomeAzienda", "asc").get().then(snapshot => {
+            // Ordina per il campo annidato anagrafe.ragSoc
+            db.collection("fornitori").orderBy("anagrafe.ragSoc", "asc").get().then(snapshot => {
                 
                 selectFornitore.innerHTML = '<option value="">-- Seleziona Fornitore --</option>';
 
                 snapshot.forEach(doc => {
                     const data = doc.data();
+                    // 💡 CORREZIONE: Leggiamo da data.anagrafe.ragSoc 
+                    const nomeFornitore = data.anagrafe && data.anagrafe.ragSoc ? data.anagrafe.ragSoc : 'Fornitore Senza Nome';
+                    
                     const option = document.createElement('option');
-                    option.value = data.nomeAzienda;
-                    option.textContent = data.nomeAzienda;
+                    option.value = nomeFornitore;
+                    option.textContent = nomeFornitore;
                     selectFornitore.appendChild(option);
                 });
 
@@ -298,12 +303,13 @@
             });
         }
 
+
         auth.onAuthStateChanged((user) => {
             const dashboardContainer = document.getElementById('dashboardContainer');
             if (user) {
                 dashboardContainer.style.display = 'flex';
                 if(window.innerWidth <= 768) { document.getElementById('logoutLink').style.display = 'none'; }
-                caricaFornitoriPerSelect(); 
+                caricaFornitoriPerSelect(); // Carica i fornitori all'avvio
                 caricaInventario(); 
             } else {
                 dashboardContainer.style.display = 'none';
