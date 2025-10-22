@@ -10,7 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-auth-compat.js"></script>
 
     <style>
-        /* Stili CSS - Identici alla versione precedente per coerenza */
+        /* [Stili CSS identici] */
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
         .dashboard-container { display: flex; min-height: 100vh; }
         .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px 0; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
@@ -325,7 +325,7 @@
 
             } catch (e) {
                 console.error("Errore nel salvataggio dei parametri:", e);
-                alert("Errore nel salvataggio. Controlla che tutti i campi siano numeri validi.");
+                alert("Errore durante il salvataggio. Controlla che tutti i campi siano numeri validi.");
             }
         }
 
@@ -337,19 +337,26 @@
             
             // Resetta la cache globale
             fornitoriSediCache = []; 
+            
+            console.log("[DEBUG-LOGISTICA] Tentativo di caricamento fornitori avviato...");
 
             try {
                 const snapshot = await colFornitoriSedi.get(); // Legge la collezione 'fornitori'
 
                 if (snapshot.empty) {
+                    console.log("[DEBUG-LOGISTICA] Snapshot vuoto, Collection 'fornitori' non trovata o vuota.");
                     selectFornitore.innerHTML += '<option value="" disabled>Nessun fornitore trovato in Firebase</option>';
                     return;
                 }
+                
+                console.log(`[DEBUG-LOGISTICA] Trovati ${snapshot.size} documenti in 'fornitori'. Inizio iterazione.`);
 
                 // 💡 ITERA DIRETTAMENTE I DOCUMENTI (STRUTTURA BASE: Documento = Sede) 💡
                 snapshot.forEach(doc => {
                     const sede = doc.data(); // Il documento stesso è la sede
                     
+                    console.log("[DEBUG-LOGISTICA] Documento fornitore letto:", doc.id, sede);
+
                     const option = document.createElement('option');
                     
                     // Nomi dei campi verificati: 'azienda' e 'distanza'
@@ -377,9 +384,11 @@
                         distanza: distanzaNumber
                     });
                 });
+                
+                console.log("[DEBUG-LOGISTICA] Caricamento dropdown completato.");
 
             } catch (error) {
-                console.error("Errore critico nel caricamento delle sedi fornitore:", error);
+                console.error("[DEBUG-LOGISTICA] Errore CRITICO nel caricamento delle sedi fornitore:", error);
                 selectFornitore.innerHTML += '<option value="" disabled>Errore di caricamento: Controlla la console.</option>';
             }
         }
