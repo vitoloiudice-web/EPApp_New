@@ -235,11 +235,11 @@
         // COLLEZIONI FIREBASE
         const colLogisticaParams = db.collection('logisticaParams').doc('global');
         const colLogisticaTrips = db.collection('logisticaTrips');
-        const colFornitoriSedi = db.collection('fornitori'); // PUNTIAMO ALLA COLLEZIONE PADRE 'fornitori'
+        const colFornitoriSedi = db.collection('fornitori'); // PUNTIAMO ALLA COLLEZIONE 'fornitori'
         const colLabs = db.collection('labs');
 
         // Variabili per la cache dei dati letti
-        let fornitoriSediCache = []; // Conterrà la lista "piatta" di tutte le sedi (non i documenti fornitori)
+        let fornitoriSediCache = []; // Conterrà la lista piatta dei fornitori/sedi
         let labsCache = [];
         let selectedSedeInfo = null;
 
@@ -264,7 +264,7 @@
                 if(window.innerWidth <= 768) { document.getElementById('logoutLink').style.display = 'none'; }
                 
                 await caricaParametriLogistica(); // Carica i parametri globali
-                await caricaSediFornitore();      // Carica il dropdown dei fornitori (Corretto per array)
+                await caricaSediFornitore();      // Carica il dropdown dei fornitori (Corretto)
                 await caricaLabsRiferimento();    // Carica il dropdown dei Labs
                 fetchLogisticaTrips();            // Carica la tabella dei viaggi registrati
             } else {
@@ -335,7 +335,7 @@
             const selectFornitore = document.getElementById('selectFornitore');
             selectFornitore.innerHTML = '<option value="">Seleziona Sede Fornitore</option>'; // Reset
             
-            // Resetta la cache globale in un formato piatto (lista di tutte le sedi)
+            // Resetta la cache globale
             fornitoriSediCache = []; 
 
             try {
@@ -346,52 +346,36 @@
                     return;
                 }
 
+                // 💡 ITERA DIRETTAMENTE I DOCUMENTI (STRUTTURA BASE: Documento = Sede) 💡
                 snapshot.forEach(doc => {
-                    const fornitore = doc.data();
-                    const fornitoreId = doc.id;
+                    const sede = doc.data(); // Il documento stesso è la sede
                     
-                    // 1. Recupera il nome del Fornitore (usando il campo 'azienda' come analizzato)
-                    const nomeAzienda = fornitore.azienda || `Fornitore ${fornitoreId.substring(0, 4)}`;
+                    const option = document.createElement('option');
+                    
+                    // Nomi dei campi verificati: 'azienda' e 'distanza'
+                    const nomeFornitoreDisplay = sede.azienda 
+                                                || `Fornitore ID: ${doc.id.substring(0, 4)}...`;
+                    
+                    // Usa il campo 'distanza' verificato nell'ultima analisi
+                    const distanza = sede.distanza || 0; 
+                    const distanzaNumber = parseFloat(distanza) || 0;
 
-                    // 2. Controlla se il campo 'sedi' esiste ed è un array
-                    if (Array.isArray(fornitore.sedi) && fornitore.sedi.length > 0) {
-                        
-                        // 3. Itera su ogni sede all'interno dell'array 'sedi'
-                        fornitore.sedi.forEach((sede, index) => {
-                            const option = document.createElement('option');
-                            
-                            // Nomi dei campi della sede: 'nomeSede' o 'citta' per etichetta, 'distanza' per km
-                            const nomeSede = sede.nomeSede || sede.citta || 'Sede N/A';
-                            // Assumiamo che 'distanza' sia il nome del campo km (number)
-                            const distanzaNumber = parseFloat(sede.distanza) || 0; 
-                            
-                            // Costruisce l'etichetta visualizzata: "Nome Azienda - Nome Sede (150 Km)"
-                            const displayLabel = `${nomeAzienda} - ${nomeSede} (${distanzaNumber} Km)`;
-                            
-                            // Crea un ID composito per il valore (ID_FORNITORE:INDICE_ARRAY)
-                            const optionValue = `${fornitoreId}:${index}`; 
+                    // Costruisci l'etichetta completa per il salvataggio
+                    const nomeSedeCompleto = `${nomeFornitoreDisplay} (${distanzaNumber} Km)`;
 
-                            // Costruisce l'opzione
-                            option.value = optionValue;
-                            option.textContent = displayLabel; 
-                            option.setAttribute('data-dist', distanzaNumber); // Memorizza la distanza numerica
-                            
-                            selectFornitore.appendChild(option);
+                    // Costruisci l'opzione
+                    option.value = doc.id; // L'ID del documento fornitore è il valore
+                    option.textContent = nomeSedeCompleto; 
+                    option.setAttribute('data-dist', distanzaNumber); // Memorizza la distanza numerica
+                    
+                    selectFornitore.appendChild(option);
 
-                            // Aggiunge la sede alla cache (in formato piatto) per uso futuro
-                            fornitoriSediCache.push({
-                                id: optionValue, // ID composito
-                                fornitoreId: fornitoreId,
-                                nomeAzienda: nomeAzienda,
-                                nomeSedeCompleto: displayLabel, // Memorizza l'etichetta completa per il salvataggio
-                                distanza: distanzaNumber
-                            });
-                        });
-
-                    } else {
-                         // Caso: Fornitore senza campo 'sedi' (o vuoto)
-                         console.warn(`Fornitore ${nomeAzienda} (${fornitoreId}) non ha sedi definite (manca array 'sedi').`);
-                    }
+                    // Aggiunge la sede alla cache
+                    fornitoriSediCache.push({
+                        id: doc.id,
+                        nomeSedeCompleto: nomeSedeCompleto, 
+                        distanza: distanzaNumber
+                    });
                 });
 
             } catch (error) {
@@ -437,10 +421,10 @@
             const distanzaSolaAndata = parseFloat(selectedOption.getAttribute('data-dist')) || 0;
             const distanzaKm = distanzaSolaAndata; 
             
-            const distanzaA_R = distanzaKm * 2;
+            const distanzaA_R = distanzaKm * 2; // Distanza A/R
             document.getElementById('distanzaKm').value = distanzaA_R.toFixed(2);
             
-            // Trova le info della sede/fornitore nella cache usando l'ID composito
+            // Trova le info della sede/fornitore nella cache usando l'ID del documento
             selectedSedeInfo = fornitoriSediCache.find(s => s.id === selectFornitore.value);
             
             if (distanzaKm <= 0) {
@@ -516,11 +500,11 @@
             const labSelect = document.getElementById('selectLab');
             const dataInput = document.getElementById('inputData');
             
-            const sedeOptionValue = sedeSelect.value; // ID composito: ID_FORNITORE:INDICE_SEDE
+            const sedeId = sedeSelect.value; // ID del documento fornitore
             const labId = labSelect.value;
             const dataSpesa = dataInput.value;
             
-            if (!sedeOptionValue || !labId || !dataSpesa) {
+            if (!sedeId || !labId || !dataSpesa) {
                 alert("Seleziona una sede fornitore, un Lab di riferimento e una data.");
                 return;
             }
@@ -532,8 +516,8 @@
                  return;
             }
 
-            // Ottiene le informazioni della sede dalla cache (dove sono memorizzate in formato piatto)
-            const selectedSede = fornitoriSediCache.find(s => s.id === sedeOptionValue);
+            // Ottiene le informazioni della sede dalla cache usando l'ID del documento
+            const selectedSede = fornitoriSediCache.find(s => s.id === sedeId);
             
             if (!selectedSede) {
                 alert("Errore interno: Dati sede non trovati in cache. Riprova.");
@@ -543,10 +527,9 @@
             const labInfo = labsCache.find(l => l.id === labId);
 
             const newTrip = {
-                // Memorizza sia l'ID del documento che il nome visualizzato
-                sedeFornitoreId: selectedSede.fornitoreId, // ID del documento Fornitore
-                sedeIdComposito: sedeOptionValue, // ID_FORNITORE:INDICE_SEDE
-                nomeSede: selectedSede.nomeSedeCompleto, // Nome Azienda - Nome Sede (Km)
+                // Ora salviamo solo l'ID del documento fornitore come sede ID
+                sedeFornitoreId: sedeId, 
+                nomeSede: selectedSede.nomeSedeCompleto, // Nome Azienda (Km)
                 
                 labId: labId,
                 nomeLab: labInfo ? (labInfo.nome || labInfo.titolo) : 'Lab Sconosciuto', 
@@ -556,14 +539,14 @@
                 costoCarburante: costi.costoViaggio,
                 costiAccessori: costi.costiAccessori,
                 costoTotale: costi.costoTotale,
-                parametriUsati: globalParams, // Salva i parametri usati per la tracciabilità
+                parametriUsati: globalParams, 
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             try {
                 // Questo crea la collezione 'logisticaTrips' se non esiste
                 await colLogisticaTrips.add(newTrip); 
-                alert("Tragitto logistico registrato con successo! (Questo creerà la collezione 'logisticaTrips' su Firebase).");
+                alert("Tragitto logistico registrato con successo!");
                 chiudiModaleLogistica();
                 // fetchLogisticaTrips() viene chiamata automaticamente grazie a onSnapshot
             } catch (e) {
