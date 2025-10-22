@@ -62,7 +62,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="selectFornitore">Sede Fornitore (Origine / Destinazione)</label>
-                    <select id="selectFornitore" onchange="calcolaCosti()"></select>
+                    <select id="selectFornitore" onchange="calcolaCosti()"></select> 
                 </div>
                 <div class="form-group">
                     <label for="selectLab">Lab di Riferimento</label>
@@ -232,17 +232,16 @@
             kmAnnuali: 15000            // km
         };
 
-        // COLLEZIONI FIREBASE
+        // COLLEZIONI FIREBASE (COLLEZIONE FORNITORI AGGIORNATA)
         const colLogisticaParams = db.collection('logisticaParams').doc('global');
         const colLogisticaTrips = db.collection('logisticaTrips');
-        const colFornitoriSedi = db.collection('fornitori'); 
+        const colFornitoriSedi = db.collection('fornitori'); // ⭐ CORREZIONE: PUNTIAMO A 'fornitori'
         const colLabs = db.collection('labs');
 
         // Variabili per la cache dei dati letti
         let fornitoriSediCache = [];
         let labsCache = [];
         let selectedSedeInfo = null;
-        let selectedLabInfo = null;
 
 
         // --- UTILS & CORE FUNCTIONS ---
@@ -265,7 +264,7 @@
                 if(window.innerWidth <= 768) { document.getElementById('logoutLink').style.display = 'none'; }
                 
                 await caricaParametriLogistica(); // Carica i parametri globali
-                await caricaSediFornitore();      // Carica il dropdown dei fornitori
+                await caricaSediFornitore();      // Carica il dropdown dei fornitori (Corretto)
                 await caricaLabsRiferimento();    // Carica il dropdown dei Labs
                 fetchLogisticaTrips();            // Carica la tabella dei viaggi registrati
             } else {
@@ -341,25 +340,33 @@
                 fornitoriSediCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 if (fornitoriSediCache.length === 0) {
-                    selectFornitore.innerHTML += '<option value="" disabled>Nessuna sede trovata in Firebase/fornitoriSedi</option>';
+                    selectFornitore.innerHTML += '<option value="" disabled>Nessuna sede trovata in Firebase/fornitori</option>';
                     return;
                 }
 
                 fornitoriSediCache.forEach(sede => {
                     const option = document.createElement('option');
                     
-                    // Cerca il nome: usa 'nome' se esiste, altrimenti 'nomeFornitore' o un placeholder
-                    const nomeVisualizzato = sede.nome || sede.nomeFornitore || sede.nomeSede || `Fornitore ID: ${sede.id.substring(0, 4)}...`;
+                    // 💡 LOGICA DI VISUALIZZAZIONE AGGIORNATA 💡
+                    // 1. Cerca il nome visualizzato: preferisce ragioneSociale, poi nomeFornitore/nomeSede, altrimenti usa l'ID.
+                    const nomeFornitoreDisplay = sede.ragioneSociale 
+                                                || sede.nome 
+                                                || sede.nomeFornitore 
+                                                || sede.nomeSede 
+                                                || `Fornitore ID: ${sede.id.substring(0, 4)}...`;
                     
-                    // Cerca la distanza: usa 'distanzaKm', altrimenti 0
+                    // 2. Prende la distanza (o 0 se mancante)
+                    // Il codice è robusto e gestisce anche il caso di campo mancante senza crashare.
                     const distanza = sede.distanzaKm || 0; 
 
                     // Costruisci l'opzione
-                    option.value = sede.id; 
-                    option.textContent = `${nomeVisualizzato} (${distanza} Km)`;
-                    option.setAttribute('data-dist', distanza);
+                    option.value = sede.id; // Manteniamo l'ID come valore per il salvataggio
+                    option.textContent = `${nomeFornitoreDisplay} (${distanza} Km)`; // ⭐ VISUALIZZA IL NOME
+                    option.setAttribute('data-dist', distanza); // Memorizza la distanza per il calcolo A/R
+                    
                     selectFornitore.appendChild(option);
                 });
+
             } catch (error) {
                 console.error("Errore nel caricamento delle sedi fornitore:", error);
                 selectFornitore.innerHTML += '<option value="" disabled>Errore di caricamento</option>';
@@ -399,9 +406,9 @@
             const selectFornitore = document.getElementById('selectFornitore');
             const selectedOption = selectFornitore.options[selectFornitore.selectedIndex];
             
-            // 2. Visualizzare distanza in km della sede (Sola Andata)
+            // 2. Recupera la distanza (Andata)
             const distanzaSolaAndata = parseFloat(selectedOption.getAttribute('data-dist')) || 0;
-            const distanzaKm = distanzaSolaAndata; // Usiamo la variabile con il nome originale per coerenza con la logica
+            const distanzaKm = distanzaSolaAndata; 
             
             const distanzaA_R = distanzaKm * 2;
             document.getElementById('distanzaKm').value = distanzaA_R.toFixed(2);
@@ -417,7 +424,7 @@
                 document.getElementById('costoGomme').textContent = '0.00 €';
                 document.getElementById('costoRCA').textContent = '0.00 €';
                 document.getElementById('costiLogisticiTotali').textContent = '0.00 €';
-                return;
+                return { costoTotale: 0 }; // Ritorna un costo zero
             }
             
             const params = globalParams; // Usa i parametri globali caricati/salvati
@@ -464,7 +471,7 @@
         function apriModaleLogistica() { 
             // Aggiorna la data di oggi come default
             document.getElementById('inputData').valueAsDate = new Date();
-            // Resetta e ricalcola i costi con la selezione corrente (o 0 se non selezionato)
+            // Resetta i dropdown ai placeholder per forzare la ricalcolo
             document.getElementById('selectFornitore').selectedIndex = 0; 
             document.getElementById('selectLab').selectedIndex = 0; 
             calcolaCosti(); 
@@ -498,13 +505,16 @@
                  return;
             }
 
+            // Recupera il nome visualizzato dal dropdown per salvarlo come stringa
+            const nomeSedeSalvato = sedeSelect.options[sedeSelect.selectedIndex].textContent.split('(')[0].trim();
             const labInfo = labsCache.find(l => l.id === labId);
 
             const newTrip = {
                 sedeId: sedeId,
-                nomeSede: selectedSedeInfo ? (selectedSedeInfo.nomeFornitore || selectedSedeInfo.nomeSede) + ' (' + (selectedSedeInfo.citta || 'N/A') + ')' : 'Sede Sconosciuta',
+                nomeSede: nomeSedeSalvato || 'Sede Sconosciuta',
                 labId: labId,
-                nomeLab: labInfo ? (labInfo.nome || labInfo.titolo) : 'Lab Sconosciuto',
+                // Usa nome o titolo del lab come stringa
+                nomeLab: labInfo ? (labInfo.nome || labInfo.titolo) : 'Lab Sconosciuto', 
                 dataSpesa: firebase.firestore.Timestamp.fromDate(new Date(dataSpesa)),
                 distanzaA_R: costi.distanzaTotale,
                 costoCarburante: costi.costoViaggio,
@@ -519,7 +529,7 @@
                 await colLogisticaTrips.add(newTrip); 
                 alert("Tragitto logistico registrato con successo! (Questo creerà la collezione 'logisticaTrips' su Firebase).");
                 chiudiModaleLogistica();
-                fetchLogisticaTrips(); // Ricarica la tabella
+                // fetchLogisticaTrips() viene chiamata automaticamente grazie a onSnapshot
             } catch (e) {
                 console.error("Errore nel salvataggio del tragitto:", e);
                 alert("Errore durante il salvataggio del tragitto. Controlla la console.");
@@ -577,6 +587,4 @@
 
     </script>
 </body>
-
 </html>
-
