@@ -654,29 +654,53 @@
         //             LOGICHE DI CACHE DATI FONDAMENTALI
         // ==========================================================
         
-        async function caricaSediPerCache() {
-            sediCache = {};
-            sedeLabSelect.innerHTML = '<option value="">-- Seleziona Sede (Costo Log.) --</option>';
+        // Funzione aggiornata in 03labs.html
+async function caricaSediPerCache() {
+    console.log('[LABS] Caricamento sedi fornitore in corso (per Labs)...');
+    fornitoriSediCache = {};
+    const selectSede = document.getElementById('selectSede');
+    selectSede.innerHTML = '<option value="">-- Seleziona Sede --</option>';
 
-            const fornitoriSnapshot = await db.collection("fornitori").get();
-            fornitoriSnapshot.forEach(doc => {
-                const data = doc.data();
-                const sedi = data.sedi || [];
-                const nomeFornitore = data.anagrafe.ragSoc || data.anagrafe.nome || 'Fornitore Sconosciuto';
-                sedi.forEach((sede, index) => {
-                    const sedeId = `${doc.id}_${index}`;
-                    sediCache[sedeId] = {
-                        nomeSede: `${nomeFornitore} - ${sede.nome || 'Sede Senza Nome'}`,
-                        costoNolo: parseFloat(sede.costoNolo || 0)
-                    };
-                    
-                    const option = document.createElement('option');
-                    option.value = sedeId;
-                    option.textContent = sediCache[sedeId].nomeSede + ` (€ ${sediCache[sedeId].costoNolo.toFixed(2)})`;
-                    sedeLabSelect.appendChild(option);
-                });
+    try {
+        const snapshot = await db.collection("fornitori").get();
+        if (snapshot.empty) return;
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const id = doc.id;
+
+            // FIX: Logica di fallback robusta per il nome fornitore (Ragione Sociale)
+            const nomeFornitore = data.ragSoc 
+                || data.nome 
+                || (data.anagrafe ? data.anagrafe.ragSoc : null)
+                || (data.anagrafe ? data.anagrafe.nome : null)
+                || `ID: ${id.substring(0, 7)}...`; 
+
+            const sedi = data.sedi || [];
+
+            sedi.forEach((sede, index) => {
+                const sedeId = `${id}_${index}`;
+                const nomeSede = sede.nome || sede.citta || 'Sede Principale';
+                const costoNolo = parseFloat(sede.costoNolo || 0).toFixed(2);
+
+                const nomeSedeCompleto = `${nomeFornitore} - ${nomeSede} (€ ${costoNolo})`;
+
+                fornitoriSediCache[sedeId] = {
+                    nome: nomeSedeCompleto,
+                    costoNolo: parseFloat(costoNolo),
+                    distanzaKm: parseFloat(sede.distanzaKm || 0) // Manteniamo la distanza anche qui per la cache
+                };
+
+                const option = document.createElement('option');
+                option.value = sedeId;
+                option.textContent = nomeSedeCompleto;
+                selectSede.appendChild(option);
             });
-        }
+        });
+    } catch (error) {
+        console.error("Errore nel caricamento delle sedi fornitore:", error);
+    }
+}
 
         async function caricaMaterialiInventarioPerCache() {
             inventarioCache = {};
