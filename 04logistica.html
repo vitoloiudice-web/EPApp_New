@@ -346,14 +346,20 @@
                 }
 
                 fornitoriSediCache.forEach(sede => {
-                    // Usiamo l'ID come value e la distanza come attributo per un recupero robusto
                     const option = document.createElement('option');
+                    
+                    // Cerca il nome: usa 'nome' se esiste, altrimenti 'nomeFornitore' o un placeholder
+                    const nomeVisualizzato = sede.nome || sede.nomeFornitore || sede.nomeSede || `Fornitore ID: ${sede.id.substring(0, 4)}...`;
+                    
+                    // Cerca la distanza: usa 'distanzaKm', altrimenti 0
+                    const distanza = sede.distanzaKm || 0; 
+
+                    // Costruisci l'opzione
                     option.value = sede.id; 
-                    option.textContent = `${sede.nomeFornitore || sede.nomeSede} - ${sede.citta || 'N/A'} (${sede.distanzaKm || 0} Km)`;
-                    option.setAttribute('data-dist', sede.distanzaKm || 0);
+                    option.textContent = `${nomeVisualizzato} (${distanza} Km)`;
+                    option.setAttribute('data-dist', distanza);
                     selectFornitore.appendChild(option);
                 });
-
             } catch (error) {
                 console.error("Errore nel caricamento delle sedi fornitore:", error);
                 selectFornitore.innerHTML += '<option value="" disabled>Errore di caricamento</option>';
@@ -573,3 +579,4 @@
 </body>
 
 </html>
+
