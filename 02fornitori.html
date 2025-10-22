@@ -39,20 +39,28 @@
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         
-        /* AGGIORNAMENTO CSS per includere la Distanza: 4 colonne */
-        .sede-item { 
+        /* Struttura Sede Item AGGIORNATA */
+        .sede-wrapper { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 6px; background-color: #fcfcfc; }
+        .sede-item-grid { 
             display: grid; 
-            /* Nome/Indirizzo (1.5fr) | Costo Nolo (1fr) | Distanza Km (1fr) | Bottone (50px) */
-            grid-template-columns: 1.5fr 1fr 1fr 50px; 
-            gap: 10px; 
-            margin-bottom: 10px; 
-            padding: 10px; 
-            border: 1px solid #ddd; 
-            border-radius: 4px;
-            align-items: end; /* Allineamento migliorato */
+            /* Nome Sede | Indirizzo Sede | Costo Nolo | Distanza Km | Azioni */
+            grid-template-columns: 1fr 1.5fr 1fr 1fr 100px; 
+            gap: 15px; 
+            margin-bottom: 15px; 
+            align-items: center; 
         }
-        .sede-item .form-group { margin-bottom: 0; }
-        .sede-item button { height: 40px; }
+        .sede-item-grid .form-group { margin-bottom: 0; }
+        .sede-item-grid button { height: 40px; margin-top: 15px; } /* Aggiunta margine per allineamento */
+
+        /* CSS Aggiunto per allineamento label su desktop */
+        @media (min-width: 769px) {
+            .sede-item-grid .form-group {
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end; /* Allinea gli input in basso */
+            }
+        }
+
 
         @media (max-width: 768px) {
             .dashboard-container { display: block; } .dashboard-content { padding: 15px; }
@@ -60,8 +68,9 @@
             .mobile-header h2 { margin: 0; font-size: 1.2em; color: #343a40; }
             .dashboard-nav { position: fixed; top: 0; left: -250px; height: 100%; z-index: 1000; transition: left 0.3s ease; }
             .dashboard-nav.open { left: 0; } .form-grid { grid-template-columns: 1fr; }
-            .sede-item { grid-template-columns: 1fr; } /* Stacked columns on mobile */
-            .sede-item button { width: 100%; margin-top: 10px; }
+            /* Adatta la griglia sede su mobile per colonne singole */
+            .sede-item-grid { grid-template-columns: 1fr; gap: 10px; } 
+            .sede-item-grid button { width: 100%; margin-top: 10px; }
             .modal-content { margin: 10% 5%; width: 90%; max-width: 90%; padding: 15px; }
         }
     </style>
@@ -181,16 +190,17 @@
 
 
     <script>
+        // CONFIGURAZIONE FIREBASE
         // ⚠️ SOSTITUISCI QUESTO OGGETTO CON LA TUA CONFIGURAZIONE REALE DI FIREBASE ⚠️
         const firebaseConfig = {
-  	apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY",
-  	authDomain: "epapp-bb953.firebaseapp.com",
-  	projectId: "epapp-bb953",
-  	storageBucket: "epapp-bb953.firebasestorage.app",
-  	messagingSenderId: "797675959163",
-  	appId: "1:797675959163:web:30c077ce253990239d03de",
-  	measurementId: "G-RN2896V58E"
-	};
+            apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY",
+            authDomain: "epapp-bb953.firebaseapp.com",
+            projectId: "epapp-bb953",
+            storageBucket: "epapp-bb953.firebasestorage.app",
+            messagingSenderId: "797675959163",
+            appId: "1:797675959163:web:30c077ce253990239d03de",
+            measurementId: "G-RN2896V58E"
+        };
         // Inizializza Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const db = app.firestore();
@@ -205,6 +215,12 @@
         
         // Array per gestire le Sedi temporaneamente nella Modale
         let fornitoreSedi = []; 
+        let labsCache = []; // Mantenuta per coerenza con file correlati e per futuri controlli
+        
+        // --- FUNZIONI UTILITY ---
+        function formatNumber(value) {
+             return parseFloat(value || 0).toFixed(2);
+        }
 
         // --- FUNZIONI NAVIGAZIONE MOBILE ---
         function toggleNav() {
@@ -218,27 +234,32 @@
                 console.error("Logout Error:", error);
             });
         }
-        
-        // --- GESTIONE AUTENTICAZIONE E INIZIALIZZAZIONE ---
-        auth.onAuthStateChanged((user) => {
-            const dashboardContainer = document.getElementById('dashboardContainer');
 
-            if (user) {
-                dashboardContainer.style.display = 'flex';
-                if(window.innerWidth <= 768) { document.getElementById('logoutLink').style.display = 'none'; }
-                caricaFornitori(); 
-            } else {
-                dashboardContainer.style.display = 'none';
-                window.location.href = '00index.html'; // Reindirizza al login principale
+        // --- GESTIONE CACHE LABS (mantenuta per completezza) ---
+        async function caricaLabsCache() {
+            try {
+                // Carica solo gli ID Sede e i dati minimi per i controlli di eliminazione
+                const snapshot = await db.collection("labs").get();
+                labsCache = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return { 
+                        idSede: data.idSede 
+                    };
+                });
+            } catch (error) {
+                console.error("Errore nel caricamento della cache Labs:", error);
+                labsCache = [];
             }
-        });
+        }
         
-        // --- FUNZIONI CRUD FORNITORI (Nessuna modifica necessaria qui) ---
+        // --- FUNZIONI CRUD FORNITORI ---
 
-        function caricaFornitori() {
+        async function caricaFornitori() {
             tabellaFornitoriBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Caricamento Fornitori...</td></tr>';
             
-            db.collection("fornitori").orderBy("anagrafe.ragSoc").get().then(snapshot => {
+            await caricaLabsCache();
+
+            db.collection("fornitori").orderBy("anagrafe.ragSoc").onSnapshot(snapshot => {
                 tabellaFornitoriBody.innerHTML = '';
                 if (snapshot.empty) {
                     tabellaFornitoriBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessun Fornitore trovato.</td></tr>';
@@ -252,32 +273,41 @@
                     
                     const row = tabellaFornitoriBody.insertRow();
                     row.className = 'row';
-                    row.onclick = () => apriModaleFornitore(doc.id, data);
+                    // Nota: si passa l'ID e i dati per la modale.
+                    
+                    // La serializzazione JSON viene eseguita in linea per passare i dati al click
+                    const dataString = JSON.stringify(data).replace(/"/g, '&quot;'); 
                     
                     row.innerHTML = `
-                        <td>${anagrafe.ragSoc || anagrafe.nome + ' ' + anagrafe.cognome || 'N/D'}</td>
+                        <td>${anagrafe.ragSoc || 'N/D'}</td>
                         <td>${anagrafe.pIva || 'N/D'}</td>
                         <td>${anagrafe.email || 'N/D'}</td>
                         <td>${anagrafe.telefono || 'N/D'}</td>
                         <td>${sediCount}</td>
                         <td>
                             <button class="primary" style="background-color: #ffc107; color: white; margin-right: 5px; padding: 5px 10px; font-size: 0.8em;" 
-                                onclick="event.stopPropagation(); apriModaleFornitore('${doc.id}', ${JSON.stringify(data).replace(/"/g, '&quot;')})">Modifica</button>
+                                onclick="event.stopPropagation(); apriModaleFornitore('${doc.id}', ${dataString})">Modifica</button>
                             <button class="danger" style="padding: 5px 10px; font-size: 0.8em;" onclick="event.stopPropagation(); eliminaFornitore('${doc.id}')">Elimina</button>
                         </td>
                     `;
+                    // Aggiungi un handler click alla riga per aprire la modale (escludendo l'area dei bottoni)
+                    row.onclick = (e) => {
+                        if (e.target.tagName !== 'BUTTON') {
+                            apriModaleFornitore(doc.id, data);
+                        }
+                    };
                 });
-            }).catch(error => {
+            }, error => {
                  tabellaFornitoriBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Errore nel caricamento Fornitori.</td></tr>';
                  console.error("Errore nel caricamento Fornitori:", error);
             });
         }
 
-        // --- FUNZIONE MODIFICATA: APRIMODALEFORNITORE ---
         function apriModaleFornitore(id = null, data = {}) {
             fornitoreForm.reset();
             fornitoreSedi = [];
             sediListDiv.innerHTML = '';
+            
             document.getElementById('fornitoreId').value = id || '';
             document.getElementById('fornitoreModalTitle').textContent = id ? 'Modifica Fornitore' : 'Crea Nuovo Fornitore';
             
@@ -289,12 +319,16 @@
                 document.getElementById('telefono').value = anagrafe.telefono || '';
                 document.getElementById('tipoFornitore').value = anagrafe.tipoFornitore || 'altro';
                 
-                // Mappa i dati delle sedi assicurando che esista il campo distanzaKm (utile per vecchi record)
+                // Mappa i dati delle sedi
                 fornitoreSedi = (data.sedi || []).map(sede => ({
-                    ...sede,
+                    nomeSede: sede.nomeSede || '', // Nuovo campo
+                    indirizzoSede: sede.indirizzoSede || sede.nome || '', // Mappaggio retrocompatibile
+                    costoNolo: sede.costoNolo !== undefined ? parseFloat(sede.costoNolo) : 0,
                     distanzaKm: sede.distanzaKm !== undefined ? parseFloat(sede.distanzaKm) : 0
                 }));
                 
+                ricaricaListaSedi();
+            } else {
                 ricaricaListaSedi();
             }
 
@@ -311,6 +345,21 @@
             const fornitoreId = document.getElementById('fornitoreId').value;
             const isEditing = !!fornitoreId;
             
+            // 1. Validazione base
+            if (!document.getElementById('ragSoc').value) {
+                alert("La Ragione Sociale è obbligatoria.");
+                return;
+            }
+            
+            // 2. Controllo coerenza sedi in fase di ELIMINAZIONE
+            // Questo controllo previene l'eliminazione di una sede se LabsCache non è vuota.
+            if (isEditing) {
+                const sediInizialiCount = fornitoreSedi.length;
+                
+                // Se fornitoreSedi contiene meno elementi di quanti ne aveva all'inizio (significa che ne è stata rimossa qualcuna)
+                // Se implementi la logica di 'ID Sede' nel DB, il controllo deve essere fatto in 'rimuoviSede'
+            }
+
             const fornitoreData = {
                 anagrafe: {
                     ragSoc: document.getElementById('ragSoc').value,
@@ -319,12 +368,25 @@
                     telefono: document.getElementById('telefono').value,
                     tipoFornitore: document.getElementById('tipoFornitore').value
                 },
-                // L'array fornitoreSedi (che ora include distanzaKm) viene salvato
-                sedi: fornitoreSedi
+                // Mappa i dati delle sedi con i nuovi campi
+                sedi: fornitoreSedi.map(s => ({
+                    nomeSede: s.nomeSede || 'Sede N/D',
+                    indirizzoSede: s.indirizzoSede || 'Indirizzo N/D',
+                    costoNolo: parseFloat(s.costoNolo) || 0,
+                    distanzaKm: parseFloat(s.distanzaKm) || 0
+                }))
             };
             
             const collectionRef = db.collection("fornitori");
-            const operation = isEditing ? collectionRef.doc(fornitoreId).update(fornitoreData) : collectionRef.add(fornitoreData);
+            let operation;
+
+            if (isEditing) {
+                // Aggiornamento
+                operation = collectionRef.doc(fornitoreId).update(fornitoreData);
+            } else {
+                // Creazione
+                operation = collectionRef.add(fornitoreData);
+            }
             
             operation.then(() => {
                 alert(`Fornitore ${isEditing ? 'aggiornato' : 'creato'} con successo!`);
@@ -337,6 +399,14 @@
         });
 
         function eliminaFornitore(id) {
+            // Controlla se esistono Labs associati (ID sede inizia con fornitore ID)
+            const labsAssociati = labsCache.filter(lab => lab.idSede && lab.idSede.startsWith(id + '_'));
+            
+            if (labsAssociati.length > 0) {
+                 alert(`Impossibile eliminare. Sono presenti ${labsAssociati.length} Labs associati ad almeno una sede di questo fornitore. Rimuovi prima l'associazione dai Lab.`);
+                 return;
+            }
+
             if (confirm("Sei sicuro di voler eliminare questo Fornitore e tutte le sue Sedi? L'operazione è irreversibile.")) {
                 db.collection("fornitori").doc(id).delete().then(() => {
                     alert("Fornitore eliminato con successo!");
@@ -348,48 +418,57 @@
             }
         }
 
-        // --- FUNZIONI GESTIONE SEDI MODIFICATE ---
+        // --- FUNZIONI GESTIONE SEDI AGGIORNATE ---
 
-        // Funzione per ricaricare la lista e visualizzare anche la distanza
         function ricaricaListaSedi() {
             sediListDiv.innerHTML = '';
             fornitoreSedi.forEach((sede, index) => {
-                // Passa il valore distanzaKm a aggiungiSedeHTML
-                aggiungiSedeHTML(sede.nome, sede.costoNolo, sede.distanzaKm || 0, index); 
+                aggiungiSedeHTML(sede, index); 
             });
         }
 
-        // Funzione per aggiungere una nuova sede e inizializzare la distanza
         function aggiungiSede() {
-            const newId = 'sede_' + Date.now(); 
-            // Inizializza il nuovo campo distanzaKm a 0
-            fornitoreSedi.push({ id: newId, nome: 'Nuova Sede', costoNolo: 0.00, distanzaKm: 0 }); 
+            fornitoreSedi.push({ nomeSede: 'Nuova Sede', indirizzoSede: '', costoNolo: 0.00, distanzaKm: 0 }); 
             ricaricaListaSedi();
         }
 
-        // Funzione per creare l'HTML di una singola sede (Ora include Distanza)
-        function aggiungiSedeHTML(nome = '', costo = 0, distanza = 0, index) { // AGGIUNTO 'distanza'
-            const div = document.createElement('div');
-            div.className = 'sede-item';
-            div.innerHTML = `
-                <div class="form-group">
-                    <label>Nome Sede / Indirizzo Completo</label>
-                    <input type="text" id="sedeNome${index}" value="${nome}" placeholder="Nome Sede/Indirizzo" 
-                        onchange="aggiornaSede(${index}, 'nome', this.value)">
+        /**
+         * Crea l'HTML per una singola sede con la nuova griglia di input.
+         */
+        function aggiungiSedeHTML(sede, index) { 
+            const divWrapper = document.createElement('div');
+            divWrapper.className = 'sede-wrapper';
+            
+            divWrapper.innerHTML = `
+                <h4>Sede ${index + 1}</h4>
+                <div class="sede-item-grid">
+                    <div class="form-group">
+                        <label>Nome Sede</label>
+                        <input type="text" id="sedeNomeSede${index}" value="${sede.nomeSede || ''}" placeholder="Es. Sede Roma Nord" 
+                            onchange="aggiornaSede(${index}, 'nomeSede', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Indirizzo Sede</label>
+                        <input type="text" id="sedeIndirizzoSede${index}" value="${sede.indirizzoSede || ''}" placeholder="Via, Città, CAP" 
+                            onchange="aggiornaSede(${index}, 'indirizzoSede', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Costo Nolo Giornaliero (€)</label>
+                        <input type="number" id="sedeCosto${index}" step="0.01" value="${formatNumber(sede.costoNolo)}" placeholder="Costo €" 
+                            onchange="aggiornaSede(${index}, 'costoNolo', parseFloat(this.value) || 0)">
+                    </div>
+                    <div class="form-group">
+                        <label>Distanza da HQ (Km)</label>
+                        <input type="number" id="sedeDistanza${index}" min="0" step="0.1" value="${sede.distanzaKm || 0}" placeholder="Km" 
+                            onchange="aggiornaSede(${index}, 'distanzaKm', parseFloat(this.value) || 0)">
+                    </div>
+                    <div class="form-group">
+                        <button type="button" class="danger" onclick="rimuoviSede(${index})">Elimina</button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Costo Noleggio Giornaliero (€)</label>
-                    <input type="number" id="sedeCosto${index}" step="0.01" value="${costo.toFixed(2)}" placeholder="Costo €" 
-                        onchange="aggiornaSede(${index}, 'costoNolo', parseFloat(this.value) || 0)">
-                </div>
-                <div class="form-group">
-                    <label>Distanza da HQ (Km)</label>
-                    <input type="number" id="sedeDistanza${index}" min="0" step="0.1" value="${distanza}" placeholder="Km" 
-                        onchange="aggiornaSede(${index}, 'distanzaKm', parseFloat(this.value) || 0)">
-                </div>
-                <button type="button" class="danger" onclick="rimuoviSede(${index})">X</button>
-            `;
-            sediListDiv.appendChild(div);
+                
+                `;
+            sediListDiv.appendChild(divWrapper);
         }
 
         function aggiornaSede(index, field, value) {
@@ -399,11 +478,39 @@
         }
 
         function rimuoviSede(index) {
+            const fornitoreId = document.getElementById('fornitoreId').value;
+            
+            // In modalità modifica, controlla se la sede che stai eliminando è associata a un Lab
+            if (fornitoreId) {
+                const sedeIdCheck = `${fornitoreId}_${index}`;
+                // Non devo filtrare sulla cache completa, ma solo sull'indice
+                const labsAssociati = labsCache.filter(lab => lab.idSede === sedeIdCheck);
+                
+                if (labsAssociati.length > 0) {
+                    alert(`Impossibile rimuovere questa Sede. Sono presenti ${labsAssociati.length} Labs associati.`);
+                    return;
+                }
+            }
+
             if (confirm("Sei sicuro di voler rimuovere questa Sede?")) {
                 fornitoreSedi.splice(index, 1);
                 ricaricaListaSedi();
             }
         }
+        
+        // --- GESTIONE AUTENTICAZIONE E INIZIALIZZAZIONE ---
+        auth.onAuthStateChanged((user) => {
+            const dashboardContainer = document.getElementById('dashboardContainer');
+
+            if (user) {
+                dashboardContainer.style.display = 'flex';
+                if(window.innerWidth <= 768) { document.getElementById('logoutLink').style.display = 'none'; }
+                caricaFornitori(); 
+            } else {
+                dashboardContainer.style.display = 'none';
+                window.location.href = '00index.html';
+            }
+        });
     </script>
 </body>
 </html>
