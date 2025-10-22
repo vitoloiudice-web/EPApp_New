@@ -347,26 +347,27 @@
                 fornitoriSediCache.forEach(sede => {
                     const option = document.createElement('option');
                     
-                    // 💡 LOGICA DI VISUALIZZAZIONE AGGIORNATA 💡
-                    // 1. Cerca il nome visualizzato: preferisce ragioneSociale, poi nomeFornitore/nomeSede, altrimenti usa l'ID.
-                    const nomeFornitoreDisplay = sede.ragioneSociale 
-                                                || sede.nome 
-                                                || sede.nomeFornitore 
-                                                || sede.nomeSede 
+                    // 💡 CORREZIONE DEFINITIVA: Utilizza i nomi esatti del database: 'azienda' e 'distanza' 💡
+                    
+                    // 1. Nome visualizzato (deve essere 'azienda')
+                    const nomeFornitoreDisplay = sede.azienda 
                                                 || `Fornitore ID: ${sede.id.substring(0, 4)}...`;
                     
-                    // 2. Prende la distanza (o 0 se mancante)
-                    // Il codice è robusto e gestisce anche il caso di campo mancante senza crashare.
-                    const distanza = sede.distanzaKm || 0; 
+                    // 2. Distanza (deve essere 'distanza')
+                    const distanza = sede.distanza || 0; 
+
+                    // Assicurati che il valore sia un numero (per il calcolo A/R)
+                    const distanzaNumber = parseFloat(distanza) || 0;
 
                     // Costruisci l'opzione
                     option.value = sede.id; // Manteniamo l'ID come valore per il salvataggio
-                    option.textContent = `${nomeFornitoreDisplay} (${distanza} Km)`; // ⭐ VISUALIZZA IL NOME
-                    option.setAttribute('data-dist', distanza); // Memorizza la distanza per il calcolo A/R
+                    // Visualizza il nome dell'azienda e la distanza (es. "Fornitore SRL (150.0 Km)")
+                    option.textContent = `${nomeFornitoreDisplay} (${distanzaNumber} Km)`; 
+                    option.setAttribute('data-dist', distanzaNumber); // Memorizza la distanza numerica
                     
                     selectFornitore.appendChild(option);
                 });
-
+				
             } catch (error) {
                 console.error("Errore nel caricamento delle sedi fornitore:", error);
                 selectFornitore.innerHTML += '<option value="" disabled>Errore di caricamento</option>';
@@ -588,3 +589,4 @@
     </script>
 </body>
 </html>
+
