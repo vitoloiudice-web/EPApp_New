@@ -10,73 +10,52 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
     <style>
-        /* CSS GLOBALE (PROTOCOLLO: Struttura CSS uniforme) */
+        /* CSS GLOBALE (Punto di Riferimento per tutti i files) */
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
-        
-        /* Layout Dashboard */
         .dashboard-container { display: flex; min-height: 100vh; }
-        
-        /* Navigazione */
         .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px 0; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
         .logo-link { width: 100%; text-align: center; margin-bottom: 30px; }
+        /* NOTA: lemon_logo.png deve esistere nella root */
         .logo-link img { max-width: 80%; height: auto; border-radius: 5px; cursor: pointer; } 
         .dashboard-nav small { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; align-self: flex-start; margin-left: 20px; margin-top: 15px; color: #909090; }
         .dashboard-nav hr { width: 85%; border: 0; border-top: 1px solid #495057; margin: 5px 0 10px 0; }
-        /* Link di navigazione: usa l'ID per puntare ai file di interfaccia */
+        /* Navigazione */
         .dashboard-nav a { color: #ccc; text-decoration: none; padding: 12px 15px; margin: 3px 0; display: block; width: 85%; text-align: left; border-radius: 4px; transition: background-color 0.3s, padding-left 0.3s; }
         .dashboard-nav a:hover, .dashboard-nav a.active { background-color: #A5DD2E; color: #343a40; font-weight: bold; padding-left: 20px; }
         .dashboard-nav #logoutLink { color: #ff9999; margin-top: auto; font-weight: bold; }
-        
-        /* Contenuto principale */
+
         .dashboard-content { flex-grow: 1; padding: 30px; }
-        .data-section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
-        h1 { color: #343a40; }
+        
+        /* Stili Login (Solo in app_gest_home.html) */
+        .login-container { max-width: 350px; margin: 100px auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        .login-container h2 { text-align: center; color: #343a40; margin-bottom: 20px; }
+        .login-container input[type="email"], .login-container input[type="password"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .login-container button { width: 100%; padding: 12px; background-color: #A5DD2E; color: #343a40; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background-color 0.3s; }
+        .login-container button:hover { background-color: #94c529; }
+        .error-message { color: #dc3545; margin-top: 10px; text-align: center; }
 
-        /* Stili Login/Auth (Come da Protocollo: unico stile per l'accesso) */
-        #authContainer { 
-            display: flex; justify-content: center; align-items: center; min-height: 100vh; 
-            background: linear-gradient(135deg, #A5DD2E 0%, #343a40 100%); 
-        }
-        .auth-box { 
-            background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
-            width: 90%; max-width: 350px; text-align: center;
-        }
-        .auth-box h2 { margin-bottom: 25px; color: #A5DD2E; }
-        .auth-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .auth-box button { background-color: #A5DD2E; color: #343a40; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: background-color 0.3s; width: 100%; margin-top: 10px; }
-        .auth-box button:hover { background-color: #94c529; }
-        .switch-mode { margin-top: 15px; font-size: 0.9em; cursor: pointer; color: #555; }
-        .switch-mode:hover { color: #A5DD2E; }
-        .error-message { color: #dc3545; margin-top: 10px; font-weight: bold; }
-
-        /* Mobile Adjustments (Robustezza) */
+        /* Mobile Layout */
+        .mobile-header { display: none; } /* Nascosto di default, mostrato solo in media query */
         @media (max-width: 768px) {
             .dashboard-container { display: block; }
-            .dashboard-content { padding: 15px; }
             .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 500; }
-            .mobile-header h2 { margin: 0; font-size: 1.2em; color: #343a40; }
             .hamburger-icon { font-size: 24px; cursor: pointer; color: #343a40; }
             .dashboard-nav { position: fixed; top: 0; left: -250px; height: 100%; z-index: 1000; transition: left 0.3s ease; }
             .dashboard-nav.open { left: 0; }
+            .dashboard-nav #logoutLink { display: block; } /* Assicura che il logout sia visibile nel menu mobile */
         }
     </style>
 </head>
 <body>
 
-    <div id="authContainer">
-        <div class="auth-box">
-            <img src="lemon_logo.png" alt="EPApp Logo" style="max-width: 100px; margin-bottom: 20px;">
-            <h2 id="authTitle">Accedi a EPApp</h2>
-            
-            <input type="email" id="authEmail" placeholder="Email" required>
-            <input type="password" id="authPassword" placeholder="Password" required>
-            
-            <button id="authButton" onclick="handleAuth()">ACCEDI</button>
-            
-            <p id="errorMessage" class="error-message" style="display: none;"></p>
-            
-            <p class="switch-mode" onclick="toggleAuthMode()">Passa a Registrazione</p>
-        </div>
+    <div id="loginSection" class="login-container">
+        <h2>EPApp - Accesso</h2>
+        <form id="loginForm">
+            <input type="email" id="loginEmail" placeholder="Email" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <button type="submit">ACCEDI</button>
+            <div id="loginError" class="error-message" style="display: none;"></div>
+        </form>
     </div>
 
     <div class="dashboard-container" id="dashboardContainer" style="display: none;">
@@ -84,8 +63,7 @@
         <div class="mobile-header">
             <span class="hamburger-icon" onclick="toggleNav()">☰</span>
             <h2>Dashboard</h2>
-            <a href="#" onclick="handleLogout()" style="text-decoration: none; color: #ff9999; font-weight: bold; font-size: 0.9em;">LOGOUT</a>
-        </div>
+            </div>
 
         <nav class="dashboard-nav" id="dashboardNav">
             <a href="app_gest_home.html" class="logo-link"><img src="lemon_logo.png" alt="EPApp Logo"></a>
@@ -113,23 +91,25 @@
         </nav>
 
         <main class="dashboard-content">
-            <h1>Benvenuto in EPApp!</h1>
-            <p>Utilizza il menu laterale per navigare tra i moduli di gestione.</p>
-
-            <div class="data-section" style="margin-top: 30px;">
-                <h2>Stato del Protocollo</h2>
-                <p>La base è stata impostata con successo. Il prossimo passo sarà la creazione del primo modulo anagrafico.</p>
+            <h1>Benvenuto in EPApp</h1>
+            <p>Questa è la tua Dashboard centrale. Clicca sulle voci di menu a sinistra per accedere ai moduli di gestione.</p>
+            
+            <div class="dashboard-stats">
+                <h2>Riepilogo Dati Principali</h2>
+                <p>Implementeremo i KPI e le statistiche dopo aver completato i moduli di gestione.</p>
             </div>
             
         </main>
     </div>
 
-
     <script>
-        // CONFIGURAZIONE FIREBASE
-        // ⚠️ SOSTITUISCI QUESTO OGGETTO CON LA TUA CONFIGURAZIONE REALE DI FIREBASE ⚠️
+        // =========================================================
+        // 1. CONFIGURAZIONE E INIZIALIZZAZIONE (Affidabilità)
+        // =========================================================
+
+        // ⚠️ SOSTITUISCI QUESTO OGGETTO con il tuo firebaseConfig AGGIORNATO ⚠️
         const firebaseConfig = {
-            apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY",
+            apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY", // Inserisci la tua API Key
             authDomain: "epapp-bb953.firebaseapp.com",
             projectId: "epapp-bb953",
             storageBucket: "epapp-bb953.firebasestorage.app",
@@ -137,111 +117,78 @@
             appId: "1:797675959163:web:30c077ce253990239d03de",
             measurementId: "G-RN2896V58E"
         };
-        // Inizializza Firebase
         const app = firebase.initializeApp(firebaseConfig);
-        const auth = app.auth(); 
-        
-        let isRegisterMode = false;
+        const auth = app.auth();
 
-        // Elementi DOM
-        const authContainer = document.getElementById('authContainer');
-        const dashboardContainer = document.getElementById('dashboardContainer');
-        const authTitle = document.getElementById('authTitle');
-        const authButton = document.getElementById('authButton');
-        const switchModeLink = document.querySelector('.switch-mode');
-        const errorMessage = document.getElementById('errorMessage');
+        // =========================================================
+        // 2. LOGICA DI AUTENTICAZIONE
+        // =========================================================
 
-        // --- FUNZIONI UTILITY INTERFACCIA ---
-        
-        function toggleNav() {
-            document.getElementById('dashboardNav').classList.toggle('open');
-        }
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorElement = document.getElementById('loginError');
 
-        function displayError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-        }
+            errorElement.style.display = 'none';
 
-        function hideError() {
-            errorMessage.style.display = 'none';
-        }
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Successo: l'utente viene gestito da onAuthStateChanged
+                    console.log("Login riuscito:", userCredential.user.email);
+                })
+                .catch((error) => {
+                    // Fallimento: mostra errore
+                    let errorMessage = "Errore di accesso. Controlla email e password.";
+                    if (error.code === 'auth/user-not-found') {
+                        errorMessage = "Utente non trovato.";
+                    } else if (error.code === 'auth/wrong-password') {
+                        errorMessage = "Password errata.";
+                    }
+                    errorElement.textContent = errorMessage;
+                    errorElement.style.display = 'block';
+                });
+        });
 
-        // --- FUNZIONI DI AUTENTICAZIONE (Affidabilità) ---
-
-        /**
-         * Cambia tra la modalità Login e Registrazione.
-         */
-        function toggleAuthMode() {
-            isRegisterMode = !isRegisterMode;
-            hideError();
-            if (isRegisterMode) {
-                authTitle.textContent = 'Registra un nuovo utente';
-                authButton.textContent = 'REGISTRATI';
-                switchModeLink.textContent = 'Passa a Login';
-            } else {
-                authTitle.textContent = 'Accedi a EPApp';
-                authButton.textContent = 'ACCEDI';
-                switchModeLink.textContent = 'Passa a Registrazione';
-            }
-        }
-
-        /**
-         * Gestisce Login o Registrazione in base allo stato.
-         */
-        function handleAuth() {
-            hideError();
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-
-            if (!email || !password) {
-                displayError("Inserisci Email e Password.");
-                return;
-            }
-
-            const operation = isRegisterMode 
-                ? auth.createUserWithEmailAndPassword(email, password)
-                : auth.signInWithEmailAndPassword(email, password);
-
-            operation.then(() => {
-                // Successo: gestito da onAuthStateChanged
-            }).catch((error) => {
-                let msg = error.code.includes('auth/weak-password') ? 'La password deve contenere almeno 6 caratteri.' :
-                          error.code.includes('auth/email-already-in-use') ? 'Questa email è già registrata.' :
-                          error.code.includes('auth/invalid-email') ? 'Formato email non valido.' :
-                          error.code.includes('auth/user-not-found') || error.code.includes('auth/wrong-password') ? 'Credenziali non valide.' :
-                          'Errore di autenticazione sconosciuto.';
-                displayError(msg);
-                console.error("Auth Error:", error);
+        function handleLogout() {
+            auth.signOut().then(() => {
+                // Successo: l'utente viene gestito da onAuthStateChanged
             });
         }
 
-        /**
-         * Gestisce il Logout.
-         */
-        function handleLogout() { 
-            auth.signOut().then(() => { 
-                // Logout avvenuto con successo, onAuthStateChanged gestirà la vista
-            }).catch(error => {
-                console.error("Logout Error:", error);
-            });
-        }
+        // =========================================================
+        // 3. GESTIONE STATO UTENTE (Robustezza)
+        // =========================================================
 
-        // --- INIZIALIZZAZIONE (Robustezza) ---
-
-        // Listener per lo stato di autenticazione: gestisce la visualizzazione della pagina
         auth.onAuthStateChanged((user) => {
+            const loginSection = document.getElementById('loginSection');
+            const dashboardContainer = document.getElementById('dashboardContainer');
+
             if (user) {
-                // Utente loggato: mostra la dashboard
-                authContainer.style.display = 'none';
-                dashboardContainer.style.display = 'flex'; 
-                if(window.innerWidth <= 768) { document.getElementById('logoutLink').style.display = 'none'; }
+                // Utente loggato: nascondi login, mostra dashboard
+                loginSection.style.display = 'none';
+                dashboardContainer.style.display = 'flex';
+                
+                // Chiude il menu mobile se è aperto (solo se siamo su mobile)
+                if(window.innerWidth <= 768) { 
+                    document.getElementById('dashboardNav').classList.remove('open');
+                }
+
             } else {
-                // Utente disconnesso: mostra la pagina di login
-                authContainer.style.display = 'flex';
+                // Utente disconnesso: mostra login, nascondi dashboard
+                loginSection.style.display = 'block';
                 dashboardContainer.style.display = 'none';
             }
         });
 
+        // =========================================================
+        // 4. FUNZIONI UTILITY
+        // =========================================================
+
+        // Funzione per il menu hamburger (Mobile)
+        function toggleNav() {
+            document.getElementById('dashboardNav').classList.toggle('open');
+        }
     </script>
 </body>
 </html>
