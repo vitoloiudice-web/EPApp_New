@@ -1,2 +1,2 @@
-# EPapp-Gestionale
-repository per piccola app gestionale
+# EPapp_New
+Repository EPapp_New
