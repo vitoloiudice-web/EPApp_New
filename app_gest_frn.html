@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPApp - Gestione Fornitori & Sedi</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <style>
+        /* CSS GLOBALE (Copiato per Affidabilità Strutturale) */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px 0; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+        .logo-link { width: 100%; text-align: center; margin-bottom: 30px; }
+        .logo-link img { max-width: 80%; height: auto; border-radius: 5px; cursor: pointer; } 
+        .dashboard-nav small { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; align-self: flex-start; margin-left: 20px; margin-top: 15px; color: #909090; }
+        .dashboard-nav hr { width: 85%; border: 0; border-top: 1px solid #495057; margin: 5px 0 10px 0; }
+        .dashboard-nav a { color: #ccc; text-decoration: none; padding: 12px 15px; margin: 3px 0; display: block; width: 85%; text-align: left; border-radius: 4px; transition: background-color 0.3s, padding-left 0.3s; }
+        .dashboard-nav a:hover, .dashboard-nav a.active { background-color: #A5DD2E; color: #343a40; font-weight: bold; padding-left: 20px; }
+        .dashboard-nav #logoutLink { color: #ff9999; margin-top: auto; font-weight: bold; }
+        .dashboard-content { flex-grow: 1; padding: 30px; }
+        
+        /* Stili Specifici della Pagina (Robustezza) */
+        .data-section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); margin-top: 20px; }
+        h1 { color: #343a40; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.9em; }
+        th { background-color: #A5DD2E; color: #343a40; }
+        button { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; margin-right: 5px; font-weight: bold; transition: background-color 0.3s; }
+        .primary { background-color: #343a40; color: white; }
+        .primary:hover { background-color: #1c1f23; }
+        .secondary { background-color: #A5DD2E; color: #343a40; }
+        .secondary:hover { background-color: #94c529; }
+        .danger { background-color: #dc3545; color: white; }
+        .danger:hover { background-color: #c82333; }
+
+        /* Stili Modale (Affidabilità Strutturale) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 750px; border-radius: 10px; position: relative; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .close:hover, .close:focus { color: #000; text-decoration: none; cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .modal-buttons { margin-top: 20px; display: flex; justify-content: flex-end; }
+        .sedi-section { border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-top: 10px; }
+        .sedi-section input { margin-top: 5px; }
+
+        /* Navigazione Mobile */
+        .mobile-header { display: none; }
+        @media (max-width: 768px) {
+            .dashboard-container { display: block; }
+            .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 500; }
+            .hamburger-icon { font-size: 24px; cursor: pointer; color: #343a40; }
+            .dashboard-nav { position: fixed; top: 0; left: -250px; height: 100%; z-index: 1000; transition: left 0.3s ease; }
+            .dashboard-nav.open { left: 0; }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="dashboard-container" id="dashboardContainer" style="display: none;">
+        
+        <div class="mobile-header">
+            <span class="hamburger-icon" onclick="toggleNav()">☰</span>
+            <h2>Gestione Fornitori & Sedi</h2>
+        </div>
+
+        <nav class="dashboard-nav" id="dashboardNav">
+            <a href="app_gest_home.html" class="logo-link"><img src="lemon_logo.png" alt="EPApp Logo"></a>
+            
+            <small>Dashboard</small><hr>
+            <a href="app_gest_home.html" class="tab-link">DASHBOARD</a> 
+
+            <small>Anagrafiche</small><hr>
+            <a href="app_gest_cli.html" class="tab-link">CLIENTI</a> 
+            <a href="app_gest_frn.html" class="tab-link active">FORNITORI & SEDI</a> <a href="app_gest_utn.html" class="tab-link">UTENTI</a> 
+            
+            <small>Labs & Logistica</small><hr>
+            <a href="app_gest_lab.html" class="tab-link">LABS & ATTIVITÀ</a> 
+            <a href="app_gest_isc.html" class="tab-link">ISCRIZIONI & PAGAMENTI</a> 
+            <a href="app_gest_inv.html" class="tab-link">INVENTARIO</a> 
+            <a href="app_gest_log.html" class="tab-link">LOGISTICA</a> 
+            
+            <small>Finanza & Analisi</small><hr>
+            <a href="app_gest_pre.html" class="tab-link">PREVENTIVI</a> 
+            <a href="app_gest_fat.html" class="tab-link">FATTURE</a>
+            <a href="app_gest_sta.html" class="tab-link">STATISTICHE & KPI</a> 
+
+            <a href="#" id="logoutLink" onclick="handleLogout()">LOGOUT</a>
+        </nav>
+
+        <main class="dashboard-content">
+            <h1>Gestione Fornitori</h1>
+            <p>Aggiungi, modifica o elimina i dati dei fornitori e gestisci le sedi associate.</p>
+
+            <div class="data-section">
+                <button class="primary" onclick="apriModaleFornitore()">AGGIUNGI NUOVO FORNITORE</button>
+                
+                <h2>Elenco Fornitori (db_frn_anag)</h2>
+                <table id="tabellaFornitori">
+                    <thead>
+                        <tr>
+                            <th>Nome/Rag. Sociale</th>
+                            <th>P.IVA/C.F.</th>
+                            <th>Email</th>
+                            <th>Categoria</th>
+                            <th>Sedi</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabellaFornitoriBody">
+                        <tr><td colspan="6" style="text-align: center;">Caricamento fornitori...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+        </main>
+    </div>
+
+    <div id="modaleFornitore" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="chiudiModaleFornitore()">&times;</span>
+            <h2 id="modalTitle">Aggiungi Fornitore</h2>
+            
+            <form id="fornitoreForm">
+                <input type="hidden" id="fornitoreId">
+                
+                <h3>Dati Anagrafici (db_frn_anag)</h3>
+                <div class="form-group">
+                    <label for="nomeFornitore">Nome / Ragione Sociale *</label>
+                    <input type="text" id="nomeFornitore" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="pIvaCfFrn">P.IVA / Codice Fiscale *</label>
+                    <input type="text" id="pIvaCfFrn" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="emailFornitore">Email *</label>
+                    <input type="email" id="emailFornitore" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="telefonoFornitore">Telefono</label>
+                    <input type="tel" id="telefonoFornitore">
+                </div>
+                
+                <div class="form-group">
+                    <label for="categoriaFornitore">Categoria Fornitore (db_frn_cat)</label>
+                    <select id="categoriaFornitore">
+                        <option value="">Caricamento Categorie...</option> 
+                    </select>
+                </div>
+                
+                <h3 style="margin-top: 30px;">Sedi del Fornitore (db_frn_sed)</h3>
+                <div id="sediContainer">
+                    <button type="button" class="secondary" onclick="aggiungiSede()">+ Aggiungi Sede</button>
+                    <p style="font-size: 0.9em; color: #6c757d;">(Le sedi esistenti verranno caricate automaticamente in modalità modifica)</p>
+                    <div id="sediList">
+                        </div>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="secondary">Salva Fornitore</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================
+        // 1. CONFIGURAZIONE E INIZIALIZZAZIONE (Affidabilità Critica)
+        // =========================================================
+
+        // ⚠️ SOSTITUISCI QUESTO OGGETTO con il tuo firebaseConfig AGGIORNATO (DEVE ESSERE IDENTICO A app_gest_cli.html) ⚠️
+        const firebaseConfig = {
+            apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY", 
+            authDomain: "epapp-bb953.firebaseapp.com",
+            projectId: "epapp-bb953",
+            storageBucket: "epapp-bb953.firebasestorage.app",
+            messagingSenderId: "797675959163",
+            appId: "1:797675959163:web:30c077ce253990239d03de",
+            measurementId: "G-RN2896V58E"
+        };
+        
+        // Inizializzazione dei servizi
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = app.firestore();
+        const auth = app.auth();
+
+        // Riferimenti alle Collezioni (Protocollo: Nomenclatura del DB)
+        const colFornitori = db.collection('db_frn_anag');
+        const colSediFornitori = db.collection('db_frn_sed'); 
+        const colCategorieFornitori = db.collection('db_frn_cat');
+
+        // Cache Locale (Protocollo: Robustezza)
+        let categorieFrnCache = [];
+        let sediFornitoreCorrente = {}; 
+        let nextTempId = 0; 
+        let fornitoreIdInModifica = null; 
+
+        // =========================================================
+        // 2. FUNZIONI UTILITY E CACHE
+        // =========================================================
+
+        function toggleNav() {
+            document.getElementById('dashboardNav').classList.toggle('open');
+        }
+
+        function handleLogout() { 
+            auth.signOut().then(() => { 
+                window.location.href = 'app_gest_home.html'; 
+            });
+        }
+
+        /**
+         * Carica e mette in cache le categorie Fornitore (db_frn_cat).
+         */
+        async function caricaDatiAnagrafici() {
+            try {
+                // Carica Categorie Fornitore
+                const catSnapshot = await colCategorieFornitori.get();
+                categorieFrnCache = catSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const catSelect = document.getElementById('categoriaFornitore');
+                catSelect.innerHTML = '<option value="">Seleziona Categoria</option>';
+                categorieFrnCache.forEach(cat => {
+                    catSelect.innerHTML += `<option value="${cat.id}">${cat.nome}</option>`;
+                });
+                
+            } catch (error) {
+                console.error("🔴 Errore nel caricamento delle anagrafiche Fornitore (Categorie):", error);
+                document.getElementById('categoriaFornitore').innerHTML = '<option value="">ERRORE CARICAMENTO</option>';
+            }
+        }
+
+        /**
+         * Recupera il nome di Categoria dalla cache per la tabella.
+         */
+        function getNomeDaCache(id, cache) {
+            const item = cache.find(item => item.id === id);
+            return item ? item.nome : 'N/D';
+        }
+
+        // =========================================================
+        // 3. GESTIONE SEDI FORNITORI (db_frn_sed)
+        // =========================================================
+        
+        function aggiungiSede(sedeData = {}) {
+            const id = sedeData.id || `temp-${nextTempId++}`; 
+            
+            sediFornitoreCorrente[id] = {
+                id: sedeData.id || id,
+                indirizzo: sedeData.indirizzo || '',
+                citta: sedeData.citta || '',
+                cap: sedeData.cap || '',
+                note: sedeData.note || '',
+                isNew: !sedeData.id, 
+                isDeleted: false 
+            };
+            renderSedi();
+        }
+
+        function rimuoviSede(id) {
+            if (sediFornitoreCorrente[id]) {
+                const sede = sediFornitoreCorrente[id];
+                if (sede.isNew) {
+                    delete sediFornitoreCorrente[id]; 
+                } else {
+                    sede.isDeleted = true; 
+                }
+                renderSedi();
+            }
+        }
+
+        function aggiornaSedeLocale(id, field, value) {
+            if (sediFornitoreCorrente[id]) {
+                sediFornitoreCorrente[id][field] = value;
+            }
+        }
+
+        function renderSedi() {
+            const container = document.getElementById('sediList');
+            container.innerHTML = '';
+            const sediDaVisualizzare = Object.values(sediFornitoreCorrente).filter(s => !s.isDeleted);
+            
+            sediDaVisualizzare.forEach(sede => {
+                const div = document.createElement('div');
+                div.className = 'sedi-section';
+                div.innerHTML = `
+                    <label style="font-style: italic; font-size: 0.9em; color: #555;">Sede: ${sede.citta || '(Nuova Sede)'} - ${sede.id.startsWith('temp') ? 'Temporanea' : 'Esistente'}</label>
+                    <div class="form-group">
+                        <input type="text" value="${sede.indirizzo}" placeholder="Indirizzo" 
+                            onchange="aggiornaSedeLocale('${sede.id}', 'indirizzo', this.value)" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" value="${sede.citta}" placeholder="Città" 
+                            onchange="aggiornaSedeLocale('${sede.id}', 'citta', this.value)" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" value="${sede.cap}" placeholder="CAP" 
+                            onchange="aggiornaSedeLocale('${sede.id}', 'cap', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" value="${sede.note}" placeholder="Note sulla Sede" 
+                            onchange="aggiornaSedeLocale('${sede.id}', 'note', this.value)">
+                    </div>
+                    <button type="button" class="danger" onclick="rimuoviSede('${sede.id}')">Rimuovi Sede</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+
+        // =========================================================
+        // 4. GESTIONE MODALE E CRUD FORNITORI (db_frn_anag)
+        // =========================================================
+
+        function apriModaleFornitore(fornitoreData = {}) {
+            fornitoreIdInModifica = fornitoreData.id || null;
+            document.getElementById('modalTitle').textContent = fornitoreIdInModifica ? 'Modifica Fornitore' : 'Aggiungi Fornitore';
+            document.getElementById('fornitoreId').value = fornitoreIdInModifica || '';
+            document.getElementById('fornitoreForm').reset();
+            sediFornitoreCorrente = {}; 
+            nextTempId = 0; 
+
+            caricaDatiAnagrafici(); 
+
+            if (fornitoreIdInModifica) {
+                document.getElementById('nomeFornitore').value = fornitoreData.nome || '';
+                document.getElementById('pIvaCfFrn').value = fornitoreData.pIvaCf || '';
+                document.getElementById('emailFornitore').value = fornitoreData.email || '';
+                document.getElementById('telefonoFornitore').value = fornitoreData.telefono || '';
+                
+                setTimeout(() => {
+                    document.getElementById('categoriaFornitore').value = fornitoreData.idCategoria || '';
+                }, 100); 
+
+                caricaSediEsistenti(fornitoreIdInModifica).then(sedi => {
+                    sedi.forEach(sede => aggiungiSede(sede));
+                });
+            } else {
+                renderSedi(); 
+            }
+            document.getElementById('modaleFornitore').style.display = 'block';
+        }
+        
+        async function caricaSediEsistenti(idFornitore) {
+             try {
+                const sediSnapshot = await colSediFornitori.where('idFornitore', '==', idFornitore).get();
+                return sediSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            } catch (error) {
+                console.error("🔴 Errore nel caricamento delle sedi Fornitore:", error);
+                return [];
+            }
+        }
+
+        function chiudiModaleFornitore() {
+            document.getElementById('modaleFornitore').style.display = 'none';
+            document.getElementById('fornitoreForm').reset();
+            sediFornitoreCorrente = {};
+            fornitoreIdInModifica = null;
+        }
+
+        document.getElementById('fornitoreForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            salvaFornitore();
+        });
+
+        async function salvaFornitore() {
+            const nome = document.getElementById('nomeFornitore').value.trim();
+            const pIvaCf = document.getElementById('pIvaCfFrn').value.trim();
+            const email = document.getElementById('emailFornitore').value.trim();
+            const telefono = document.getElementById('telefonoFornitore').value.trim();
+            const idCategoria = document.getElementById('categoriaFornitore').value;
+            
+            if (!nome || !pIvaCf || !email) {
+                alert("Nome/Ragione Sociale, P.IVA/C.F. ed Email sono campi obbligatori.");
+                return;
+            }
+
+            const fornitoreData = {
+                nome: nome,
+                pIvaCf: pIvaCf,
+                email: email,
+                telefono: telefono,
+                idCategoria: idCategoria,
+                dataUltimaModifica: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                let docRef;
+                if (fornitoreIdInModifica) {
+                    await colFornitori.doc(fornitoreIdInModifica).update(fornitoreData);
+                    docRef = colFornitori.doc(fornitoreIdInModifica);
+                } else {
+                    fornitoreData.dataCreazione = firebase.firestore.FieldValue.serverTimestamp();
+                    docRef = await colFornitori.add(fornitoreData);
+                }
+
+                const idFornitore = fornitoreIdInModifica || docRef.id;
+                const sedi = Object.values(sediFornitoreCorrente);
+
+                const sediPromises = sedi.map(sede => {
+                    if (sede.isDeleted && !sede.isNew) {
+                        return colSediFornitori.doc(sede.id).delete();
+                    }
+                    if (!sede.isDeleted) {
+                        if (!sede.indirizzo || !sede.citta) {
+                            console.warn(`Sede Fornitore non salvata per campi mancanti: ${JSON.stringify(sede)}`);
+                            return Promise.resolve(); 
+                        }
+
+                        const sedeToSave = {
+                            idFornitore: idFornitore, // ID Fornitore come chiave esterna
+                            indirizzo: sede.indirizzo,
+                            citta: sede.citta,
+                            cap: sede.cap || '',
+                            note: sede.note || '',
+                        };
+                        
+                        if (sede.isNew) {
+                            return colSediFornitori.add(sedeToSave);
+                        } else {
+                            return colSediFornitori.doc(sede.id).update(sedeToSave);
+                        }
+                    }
+                    return Promise.resolve();
+                });
+
+                await Promise.all(sediPromises);
+
+                alert(`Fornitore ${fornitoreIdInModifica ? 'aggiornato' : 'aggiunto'} con successo!`);
+                chiudiModaleFornitore();
+            } catch (error) {
+                console.error("🔴 Errore nel salvataggio/aggiornamento del fornitore:", error);
+                alert("Errore critico: Impossibile salvare il fornitore. Controlla la console.");
+            }
+        }
+
+
+        /**
+         * Carica e visualizza i fornitori nella tabella (db_frn_anag).
+         */
+        function caricaFornitori() {
+            const body = document.getElementById('tabellaFornitoriBody');
+            body.innerHTML = '<tr><td colspan="6" style="text-align: center;">Caricamento fornitori...</td></tr>';
+
+            colFornitori.onSnapshot(snapshot => {
+                const fornitori = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Mappa le sedi per un conteggio veloce (Robustezza)
+                colSediFornitori.get().then(sediSnapshot => {
+                    const sediMap = {};
+                    sediSnapshot.forEach(doc => {
+                        const sede = doc.data();
+                        sediMap[sede.idFornitore] = (sediMap[sede.idFornitore] || 0) + 1;
+                    });
+                    
+                    body.innerHTML = ''; 
+
+                    if (snapshot.empty) {
+                        body.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessun fornitore registrato.</td></tr>';
+                        return;
+                    }
+
+                    fornitori.forEach(fornitore => {
+                        const row = body.insertRow();
+                        row.insertCell().textContent = fornitore.nome;
+                        row.insertCell().textContent = fornitore.pIvaCf;
+                        row.insertCell().textContent = fornitore.email;
+                        row.insertCell().textContent = getNomeDaCache(fornitore.idCategoria, categorieFrnCache);
+                        row.insertCell().textContent = sediMap[fornitore.id] || 0; // Conteggio delle sedi
+                        
+                        const actionsCell = row.insertCell();
+                        const fornitoreJson = JSON.stringify(fornitore).replace(/"/g, '&quot;');
+                        actionsCell.innerHTML = `
+                            <button class="secondary" onclick="apriModaleFornitore(${fornitoreJson})">Modifica</button>
+                            <button class="danger" onclick="eliminaFornitore('${fornitore.id}')">Elimina</button>
+                        `;
+                    });
+
+                }).catch(err => {
+                    console.error("🔴 Errore nel conteggio sedi Fornitore:", err);
+                    body.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Errore nel conteggio delle sedi.</td></tr>';
+                });
+
+            }, error => {
+                console.error("🔴 Errore nel fetch dei fornitori:", error);
+                body.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Errore nel caricamento dei dati.</td></tr>';
+            });
+        }
+
+        /**
+         * Elimina un fornitore e tutte le sedi correlate (Integrità Dati).
+         */
+        async function eliminaFornitore(id) {
+            if (confirm("Sei sicuro di voler eliminare questo fornitore? Saranno eliminate anche tutte le sedi associate!")) {
+                try {
+                    // 1. Elimina le sedi collegate (Protocollo: Integrità Referenziale)
+                    const sediDaEliminare = await colSediFornitori.where('idFornitore', '==', id).get();
+                    const deleteSediPromises = sediDaEliminare.docs.map(doc => colSediFornitori.doc(doc.id).delete());
+                    await Promise.all(deleteSediPromises);
+                    
+                    // 2. Elimina il fornitore
+                    await colFornitori.doc(id).delete();
+
+                    alert("Fornitore e sedi associate eliminate con successo.");
+                } catch(e) {
+                    console.error("🔴 Errore eliminazione fornitore:", e);
+                    alert("Errore durante l'eliminazione del fornitore e/o delle sedi.");
+                }
+            }
+        }
+
+
+        // =========================================================
+        // 5. INIZIALIZZAZIONE
+        // =========================================================
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // Utente autenticato: mostra la dashboard e carica i dati
+                document.getElementById('dashboardContainer').style.display = 'flex';
+                if(window.innerWidth <= 768) { document.getElementById('logoutLink').style.display = 'none'; }
+                
+                // Caricamento asincrono e sequenziale dei dati (Robustezza)
+                Promise.all([
+                    caricaDatiAnagrafici() // 1. Carica prima le anagrafiche di base nella cache
+                ]).then(() => {
+                    caricaFornitori(); // 2. Poi carica la tabella Fornitori (che dipende dalla cache)
+                }).catch(err => {
+                    console.error("🔴 Errore nel caricamento dati iniziali Fornitori:", err);
+                });
+
+            } else {
+                // Utente disconnesso: reindirizza al login
+                window.location.href = 'app_gest_home.html';
+            }
+        });
+    </script>
+</body>
+</html>
