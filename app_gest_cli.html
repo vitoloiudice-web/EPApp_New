@@ -21,10 +21,10 @@
         </div>
 
         <nav class="dashboard-nav" id="dashboardNav">
-            <a href="app_gest_home.html" class="logo-link" onclick="toggleNav()"><img src="lemon_logo.png" alt="EPApp Logo"></a>
+            <a href="index.html" class="logo-link" onclick="toggleNav()"><img src="lemon_logo.png" alt="EPApp Logo"></a>
             
             <small>Dashboard</small><hr>
-            <a href="app_gest_home.html" class="tab-link" onclick="toggleNav()">DASHBOARD</a> 
+            <a href="index.html" class="tab-link" onclick="toggleNav()">DASHBOARD</a> 
 
             <small>Anagrafiche</small><hr>
             <a href="app_gest_cli.html" class="tab-link active" onclick="toggleNav()">CLIENTI</a> <a href="app_gest_frn.html" class="tab-link" onclick="toggleNav()">FORNITORI & SEDI</a>
@@ -147,9 +147,9 @@
 
         // Riferimenti alle Collezioni
         const colClienti = db.collection('db_cli');
-        const colSediCli = db.collection('db_sedecli'); // Collezione per le sedi
+        const colSediCli = db.collection('db_sedecli'); 
 
-        let idSedeCorrente = null; // ID della sede da aggiornare
+        let idSedeCorrente = null; 
 
         // =========================================================
         // 2. FUNZIONI UTILITY
@@ -180,7 +180,7 @@
             
             document.getElementById('modalTitle').textContent = isEdit ? 'Modifica Cliente' : 'Aggiungi Nuovo Cliente';
             document.getElementById('clienteId').value = clienteData.id || '';
-            idSedeCorrente = sedeData.id || null; // Salva l'ID della sede
+            idSedeCorrente = sedeData.id || null; 
             
             document.getElementById('clienteForm').reset();
             document.getElementById('eliminaButton').style.display = isEdit ? 'inline-block' : 'none';
@@ -233,7 +233,6 @@
                 indirizzo: indirizzo,
                 citta: citta,
                 cap: cap,
-                // Aggiungere qui altri campi sede se necessari (es. provincia, n_civ)
                 dataUltimaModifica: firebase.firestore.FieldValue.serverTimestamp()
             };
             
