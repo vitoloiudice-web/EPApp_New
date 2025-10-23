@@ -56,10 +56,10 @@
         </div>
 
         <nav class="dashboard-nav" id="dashboardNav">
-            <a href="app_gest_home.html" class="logo-link" onclick="toggleNav()"><img src="lemon_logo.png" alt="EPApp Logo"></a>
+            <a href="index.html" class="logo-link" onclick="toggleNav()"><img src="lemon_logo.png" alt="EPApp Logo"></a>
             
             <small>Dashboard</small><hr>
-            <a href="app_gest_home.html" class="tab-link active" onclick="toggleNav()">DASHBOARD</a> <small>Anagrafiche</small><hr>
+            <a href="index.html" class="tab-link active" onclick="toggleNav()">DASHBOARD</a> <small>Anagrafiche</small><hr>
             <a href="app_gest_cli.html" class="tab-link" onclick="toggleNav()">CLIENTI</a> 
             <a href="app_gest_frn.html" class="tab-link" onclick="toggleNav()">FORNITORI & SEDI</a>
             <a href="app_gest_utn.html" class="tab-link" onclick="toggleNav()">UTENTI</a> 
@@ -155,6 +155,7 @@
 
         function handleLogout() { 
             auth.signOut().then(() => { 
+                // Reindirizzamento al file di login (app_login.html)
                 window.location.href = 'app_login.html'; 
             });
         }
@@ -220,6 +221,7 @@
         auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('dashboardContainer').style.display = 'flex';
+                // Nascondi logout nella navbar mobile (perché è in fondo al menu a scomparsa)
                 if(window.innerWidth <= 768) { document.getElementById('logoutLink').style.display = 'none'; }
                 
                 caricaNomeUtente(user.uid);
