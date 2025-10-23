@@ -56,26 +56,26 @@
         </div>
 
         <nav class="dashboard-nav" id="dashboardNav">
-            <a href="app_gest_home.html" class="logo-link"><img src="lemon_logo.png" alt="EPApp Logo"></a>
+            <a href="app_gest_home.html" class="logo-link" onclick="toggleNav()"><img src="lemon_logo.png" alt="EPApp Logo"></a>
             
             <small>Dashboard</small><hr>
-            <a href="app_gest_home.html" class="tab-link active">DASHBOARD</a> <small>Anagrafiche</small><hr>
-            <a href="app_gest_cli.html" class="tab-link">CLIENTI</a> 
-            <a href="app_gest_frn.html" class="tab-link">FORNITORI & SEDI</a>
-            <a href="app_gest_utn.html" class="tab-link">UTENTI</a> 
+            <a href="app_gest_home.html" class="tab-link active" onclick="toggleNav()">DASHBOARD</a> <small>Anagrafiche</small><hr>
+            <a href="app_gest_cli.html" class="tab-link" onclick="toggleNav()">CLIENTI</a> 
+            <a href="app_gest_frn.html" class="tab-link" onclick="toggleNav()">FORNITORI & SEDI</a>
+            <a href="app_gest_utn.html" class="tab-link" onclick="toggleNav()">UTENTI</a> 
             
             <small>Labs & Logistica</small><hr>
-            <a href="app_gest_lab.html" class="tab-link">LABS & ATTIVITÀ</a> 
-            <a href="app_gest_isc.html" class="tab-link">ISCRIZIONI & PAGAMENTI</a> 
-            <a href="app_gest_inv.html" class="tab-link">INVENTARIO</a> 
-            <a href="app_gest_log.html" class="tab-link">LOGISTICA</a> 
+            <a href="app_gest_lab.html" class="tab-link" onclick="toggleNav()">LABS & ATTIVITÀ</a> 
+            <a href="app_gest_isc.html" class="tab-link" onclick="toggleNav()">ISCRIZIONI & PAGAMENTI</a> 
+            <a href="app_gest_inv.html" class="tab-link" onclick="toggleNav()">INVENTARIO</a> 
+            <a href="app_gest_log.html" class="tab-link" onclick="toggleNav()">LOGISTICA</a> 
             
             <small>Finanza & Analisi</small><hr>
-            <a href="app_gest_pre.html" class="tab-link">PREVENTIVI</a> 
-            <a href="app_gest_fat.html" class="tab-link">FATTURE</a>
-            <a href="app_gest_sta.html" class="tab-link">STATISTICHE & KPI</a> 
+            <a href="app_gest_pre.html" class="tab-link" onclick="toggleNav()">PREVENTIVI</a> 
+            <a href="app_gest_fat.html" class="tab-link" onclick="toggleNav()">FATTURE</a>
+            <a href="app_gest_sta.html" class="tab-link" onclick="toggleNav()">STATISTICHE & KPI</a> 
 
-            <a href="#" id="logoutLink" onclick="handleLogout()">LOGOUT</a>
+            <a href="#" id="logoutLink" onclick="handleLogout(); toggleNav();">LOGOUT</a>
         </nav>
 
         <main class="dashboard-content">
@@ -146,6 +146,9 @@
         // 2. FUNZIONI UTILITY E DI DASHBOARD
         // =========================================================
 
+        /**
+         * Funzione per aprire/chiudere il menu di navigazione su mobile.
+         */
         function toggleNav() {
             document.getElementById('dashboardNav').classList.toggle('open');
         }
@@ -208,7 +211,6 @@
                 <li>[09:00] Preventivo #2024-001 creato per Cliente Alfa.</li>
                 <li>[Ieri] Aggiornamento globale anagrafiche Fornitori completato.</li>
             `;
-            // In una versione reale, si interrogherebbe una collezione di log o di notifiche.
         }
 
         // =========================================================

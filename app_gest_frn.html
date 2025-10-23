@@ -54,27 +54,27 @@
         </div>
 
         <nav class="dashboard-nav" id="dashboardNav">
-            <a href="app_gest_home.html" class="logo-link"><img src="lemon_logo.png" alt="EPApp Logo"></a>
+            <a href="app_gest_home.html" class="logo-link" onclick="toggleNav()"><img src="lemon_logo.png" alt="EPApp Logo"></a>
             
             <small>Dashboard</small><hr>
-            <a href="app_gest_home.html" class="tab-link">DASHBOARD</a> 
+            <a href="app_gest_home.html" class="tab-link" onclick="toggleNav()">DASHBOARD</a> 
 
             <small>Anagrafiche</small><hr>
-            <a href="app_gest_cli.html" class="tab-link">CLIENTI</a> 
-            <a href="app_gest_frn.html" class="tab-link active">FORNITORI & SEDI</a> <a href="app_gest_utn.html" class="tab-link">UTENTI</a> 
+            <a href="app_gest_cli.html" class="tab-link" onclick="toggleNav()">CLIENTI</a> 
+            <a href="app_gest_frn.html" class="tab-link active" onclick="toggleNav()">FORNITORI & SEDI</a> <a href="app_gest_utn.html" class="tab-link" onclick="toggleNav()">UTENTI</a> 
             
             <small>Labs & Logistica</small><hr>
-            <a href="app_gest_lab.html" class="tab-link">LABS & ATTIVITÀ</a> 
-            <a href="app_gest_isc.html" class="tab-link">ISCRIZIONI & PAGAMENTI</a> 
-            <a href="app_gest_inv.html" class="tab-link">INVENTARIO</a> 
-            <a href="app_gest_log.html" class="tab-link">LOGISTICA</a> 
+            <a href="app_gest_lab.html" class="tab-link" onclick="toggleNav()">LABS & ATTIVITÀ</a> 
+            <a href="app_gest_isc.html" class="tab-link" onclick="toggleNav()">ISCRIZIONI & PAGAMENTI</a> 
+            <a href="app_gest_inv.html" class="tab-link" onclick="toggleNav()">INVENTARIO</a> 
+            <a href="app_gest_log.html" class="tab-link" onclick="toggleNav()">LOGISTICA</a> 
             
             <small>Finanza & Analisi</small><hr>
-            <a href="app_gest_pre.html" class="tab-link">PREVENTIVI</a> 
-            <a href="app_gest_fat.html" class="tab-link">FATTURE</a>
-            <a href="app_gest_sta.html" class="tab-link">STATISTICHE & KPI</a> 
+            <a href="app_gest_pre.html" class="tab-link" onclick="toggleNav()">PREVENTIVI</a> 
+            <a href="app_gest_fat.html" class="tab-link" onclick="toggleNav()">FATTURE</a>
+            <a href="app_gest_sta.html" class="tab-link" onclick="toggleNav()">STATISTICHE & KPI</a> 
 
-            <a href="#" id="logoutLink" onclick="handleLogout()">LOGOUT</a>
+            <a href="#" id="logoutLink" onclick="handleLogout(); toggleNav();">LOGOUT</a>
         </nav>
 
         <main class="dashboard-content">
@@ -226,6 +226,9 @@
         // 2. FUNZIONI UTILITY
         // =========================================================
 
+        /**
+         * Funzione per aprire/chiudere il menu di navigazione su mobile.
+         */
         function toggleNav() {
             document.getElementById('dashboardNav').classList.toggle('open');
         }
@@ -494,12 +497,23 @@
 
                     fornitori.forEach(fornitore => {
                         const row = body.insertRow();
-                        row.insertCell().textContent = fornitore.ragioneSociale;
-                        row.insertCell().textContent = fornitore.pivaCf;
-                        row.insertCell().textContent = fornitore.email || 'N/D';
-                        row.insertCell().textContent = sediCountMap[fornitore.id] || 0; // Conteggio Sedi
+                        
+                        // IMPORTANTE: Aggiungere data-label per il responsive su mobile
+                        row.insertCell().setAttribute('data-label', 'Ragione Sociale');
+                        row.cells[0].textContent = fornitore.ragioneSociale;
+                        
+                        row.insertCell().setAttribute('data-label', 'P.IVA/C.F.');
+                        row.cells[1].textContent = fornitore.pivaCf;
+                        
+                        row.insertCell().setAttribute('data-label', 'Email');
+                        row.cells[2].textContent = fornitore.email || 'N/D';
+                        
+                        row.insertCell().setAttribute('data-label', 'Sedi Registrate');
+                        row.cells[3].textContent = sediCountMap[fornitore.id] || 0; // Conteggio Sedi
                         
                         const actionsCell = row.insertCell();
+                        actionsCell.setAttribute('data-label', 'Azioni'); // Aggiunto anche per la colonna Azioni
+
                         const frnJson = JSON.stringify(fornitore).replace(/"/g, '&quot;');
                         actionsCell.innerHTML = `
                             <button class="secondary" onclick="apriModaleFornitore(${frnJson})">Modifica</button>

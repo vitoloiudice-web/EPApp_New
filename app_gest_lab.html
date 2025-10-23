@@ -10,8 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
     <link rel="stylesheet" href="main_style.css">
-
-    </head>
+</head>
 <body>
     
     <div class="dashboard-container" id="dashboardContainer" style="display: none;">
@@ -22,27 +21,27 @@
         </div>
 
         <nav class="dashboard-nav" id="dashboardNav">
-            <a href="app_gest_home.html" class="logo-link"><img src="lemon_logo.png" alt="EPApp Logo"></a>
+            <a href="app_gest_home.html" class="logo-link" onclick="toggleNav()"><img src="lemon_logo.png" alt="EPApp Logo"></a>
             
             <small>Dashboard</small><hr>
-            <a href="app_gest_home.html" class="tab-link">DASHBOARD</a> 
+            <a href="app_gest_home.html" class="tab-link" onclick="toggleNav()">DASHBOARD</a> 
 
             <small>Anagrafiche</small><hr>
-            <a href="app_gest_cli.html" class="tab-link">CLIENTI</a> 
-            <a href="app_gest_frn.html" class="tab-link">FORNITORI & SEDI</a>
-            <a href="app_gest_utn.html" class="tab-link">UTENTI</a> 
+            <a href="app_gest_cli.html" class="tab-link" onclick="toggleNav()">CLIENTI</a> 
+            <a href="app_gest_frn.html" class="tab-link" onclick="toggleNav()">FORNITORI & SEDI</a>
+            <a href="app_gest_utn.html" class="tab-link" onclick="toggleNav()">UTENTI</a> 
             
             <small>Labs & Logistica</small><hr>
-            <a href="app_gest_lab.html" class="tab-link active">LABS & ATTIVITÀ</a> <a href="app_gest_isc.html" class="tab-link">ISCRIZIONI & PAGAMENTI</a> 
-            <a href="app_gest_inv.html" class="tab-link">INVENTARIO</a> 
-            <a href="app_gest_log.html" class="tab-link">LOGISTICA</a> 
+            <a href="app_gest_lab.html" class="tab-link active" onclick="toggleNav()">LABS & ATTIVITÀ</a> <a href="app_gest_isc.html" class="tab-link" onclick="toggleNav()">ISCRIZIONI & PAGAMENTI</a> 
+            <a href="app_gest_inv.html" class="tab-link" onclick="toggleNav()">INVENTARIO</a> 
+            <a href="app_gest_log.html" class="tab-link" onclick="toggleNav()">LOGISTICA</a> 
             
             <small>Finanza & Analisi</small><hr>
-            <a href="app_gest_pre.html" class="tab-link">PREVENTIVI</a> 
-            <a href="app_gest_fat.html" class="tab-link">FATTURE</a>
-            <a href="app_gest_sta.html" class="tab-link">STATISTICHE & KPI</a> 
+            <a href="app_gest_pre.html" class="tab-link" onclick="toggleNav()">PREVENTIVI</a> 
+            <a href="app_gest_fat.html" class="tab-link" onclick="toggleNav()">FATTURE</a>
+            <a href="app_gest_sta.html" class="tab-link" onclick="toggleNav()">STATISTICHE & KPI</a> 
 
-            <a href="#" id="logoutLink" onclick="handleLogout()">LOGOUT</a>
+            <a href="#" id="logoutLink" onclick="handleLogout(); toggleNav();">LOGOUT</a>
         </nav>
 
         <main class="dashboard-content">
@@ -221,13 +220,16 @@
         // 2. FUNZIONI UTILITY E CACHE
         // =========================================================
 
+        /**
+         * Funzione per aprire/chiudere il menu di navigazione su mobile.
+         */
         function toggleNav() {
             document.getElementById('dashboardNav').classList.toggle('open');
         }
 
         function handleLogout() { 
             auth.signOut().then(() => { 
-                window.location.href = 'app_gest_home.html'; 
+                window.location.href = 'app_login.html'; 
             });
         }
 
@@ -381,13 +383,26 @@
 
                     labs.forEach(lab => {
                         const row = body.insertRow();
-                        row.insertCell().textContent = lab.nome;
-                        row.insertCell().textContent = lab.dataInizio;
-                        row.insertCell().textContent = lab.dataFinePrevista || 'N/D';
-                        row.insertCell().textContent = lab.stato;
-                        row.insertCell().textContent = attCountMap[lab.id] || 0; // Conteggio Attività
+                        
+                        // IMPORTANTE: Aggiungere data-label per il responsive su mobile
+                        row.insertCell().setAttribute('data-label', 'Nome Lab');
+                        row.cells[0].textContent = lab.nome;
+                        
+                        row.insertCell().setAttribute('data-label', 'Data Inizio');
+                        row.cells[1].textContent = lab.dataInizio;
+                        
+                        row.insertCell().setAttribute('data-label', 'Data Fine Prevista');
+                        row.cells[2].textContent = lab.dataFinePrevista || 'N/D';
+                        
+                        row.insertCell().setAttribute('data-label', 'Stato');
+                        row.cells[3].textContent = lab.stato;
+                        
+                        row.insertCell().setAttribute('data-label', 'Attività Collegate');
+                        row.cells[4].textContent = attCountMap[lab.id] || 0; // Conteggio Attività
                         
                         const actionsCell = row.insertCell();
+                        actionsCell.setAttribute('data-label', 'Azioni');
+                        
                         const labJson = JSON.stringify(lab).replace(/"/g, '&quot;');
                         actionsCell.innerHTML = `
                             <button class="secondary" onclick="apriModaleLab(${labJson})">Modifica</button>
@@ -503,11 +518,20 @@
                 snapshot.docs.forEach(doc => {
                     const attivita = { id: doc.id, ...doc.data() };
                     const row = body.insertRow();
-                    row.insertCell().textContent = attivita.nome;
-                    row.insertCell().textContent = getNomeDaCache(attivita.idCategoria, attCatCache);
-                    row.insertCell().textContent = attivita.stato;
+                    
+                    // IMPORTANTE: Aggiungere data-label per il responsive su mobile
+                    row.insertCell().setAttribute('data-label', 'Nome Attività');
+                    row.cells[0].textContent = attivita.nome;
+                    
+                    row.insertCell().setAttribute('data-label', 'Categoria');
+                    row.cells[1].textContent = getNomeDaCache(attivita.idCategoria, attCatCache);
+                    
+                    row.insertCell().setAttribute('data-label', 'Stato');
+                    row.cells[2].textContent = attivita.stato;
                     
                     const actionsCell = row.insertCell();
+                    actionsCell.setAttribute('data-label', 'Azioni');
+
                     const attivitaJson = JSON.stringify(attivita).replace(/"/g, '&quot;');
                     actionsCell.innerHTML = `
                         <button class="secondary" onclick="apriModaleAttivita(${attivitaJson})">Modifica</button>
@@ -554,7 +578,7 @@
                 });
 
             } else {
-                window.location.href = 'app_gest_home.html';
+                window.location.href = 'app_login.html';
             }
         });
     </script>
