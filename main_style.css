@@ -12,8 +12,12 @@ body {
 .dashboard-container { 
     display: flex; 
     min-height: 100vh; 
+    position: relative; /* Necessario per il layout mobile */
 } 
-/* Menu di Navigazione */
+
+/* ========================================================= */
+/* MENU DI NAVIGAZIONE (SIDEBAR) - Comportamento Desktop */
+/* ========================================================= */
 .dashboard-nav { 
     width: 250px; 
     background-color: #343a40; 
@@ -24,6 +28,8 @@ body {
     flex-direction: column; 
     align-items: center; 
     flex-shrink: 0; 
+    /* Transizione per il responsive */
+    transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
 }
 .logo-link { 
     width: 100%; 
@@ -74,13 +80,14 @@ body {
     font-weight: bold; 
 }
 
-/* Contenuto Principale */
+/* ========================================================= */
+/* CONTENUTO PRINCIPALE */
+/* ========================================================= */
 .dashboard-content { 
     flex-grow: 1; 
     padding: 30px; 
     background-color: #f4f7f6; 
 } 
-
 /* Stili Generici per Sezioni, Tabelle e Bottoni */
 .data-section { 
     background: white; 
@@ -137,7 +144,6 @@ button {
 .danger:hover { 
     background-color: #c82333; 
 }
-
 /* Stili Modale (Generici) */
 .modal { 
     display: none; 
@@ -191,22 +197,141 @@ button {
     display: flex; 
     justify-content: flex-end; 
 }
-
-/* Stili Specifici di app_gest_lab.html */
-.lab-details { 
+/* Stili specifici (per evitare conflitti, lascio qui gli stili specifici dei vari file) */
+.lab-details, .fornitore-details { 
     margin-top: 20px; 
     border-top: 1px solid #eee; 
     padding-top: 15px; 
 }
-.lab-att-header { 
+.lab-att-header, .sede-header { 
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
     margin-bottom: 15px; 
 }
-.activities-container { 
+.activities-container, .sede-container { 
     border: 1px solid #ccc; 
     padding: 10px; 
     margin-top: 10px; 
     border-radius: 5px; 
+}
+.sede-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dotted #ddd;
+}
+.sede-list-item:last-child {
+    border-bottom: none;
+}
+.sede-list-item button {
+    margin-left: 5px;
+}
+/* ========================================================= */
+/* RESPONSIVE DESIGN (Smartphone / Schermi Piccoli) */
+/* ========================================================= */
+/* Intestazione Mobile (di default nascosta) */
+.mobile-header {
+    display: none;
+    background-color: #343a40;
+    color: white;
+    padding: 15px;
+    width: 100%;
+    box-sizing: border-box;
+    position: fixed; /* Fissa l'header in alto */
+    top: 0;
+    left: 0;
+    z-index: 900;
+    align-items: center;
+    justify-content: space-between;
+    height: 55px; /* Altezza fissa per l'header */
+}
+.hamburger-icon {
+    font-size: 24px;
+    cursor: pointer;
+}
+.mobile-header h2 {
+    color: white;
+    font-size: 1.2em;
+    margin: 0;
+    flex-grow: 1;
+    text-align: center;
+    padding-right: 30px; /* Spazio per l'icona hamburger */
+}
+
+@media (max-width: 768px) {
+    
+    /* 1. Modifica Layout Generale */
+    .dashboard-container {
+        flex-direction: column; /* Menu sopra il contenuto */
+    }
+    
+    /* 2. Mostra l'Header Mobile */
+    .mobile-header {
+        display: flex;
+    }
+    
+    /* 3. Sposta il Contenuto Sotto l'Header */
+    .dashboard-content {
+        padding-top: 85px; /* Aggiunge spazio per l'header fisso */
+    }
+
+    /* 4. Nascondi Sidebar (Menu Off-Canvas) */
+    .dashboard-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 950;
+        height: 100%; /* Altezza piena dello schermo */
+        width: 0; /* Nascondi il menu di default */
+        padding-top: 70px; /* Spazio sotto l'header mobile */
+        transform: translateX(-100%); /* Sposta fuori schermo */
+        overflow-y: auto;
+    }
+
+    /* 5. Classe per mostrare Sidebar */
+    .dashboard-nav.open {
+        width: 250px; /* Larghezza visibile del menu */
+        transform: translateX(0); /* Fai entrare il menu */
+    }
+    
+    /* 6. Adattamento Testo e Tabelle */
+    table, thead, tbody, th, td, tr {
+        display: block; /* Forze le tabelle a comportarsi come blocchi (per schermi piccoli) */
+    }
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px; /* Nasconde l'intestazione della tabella */
+    }
+    td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50% !important; /* Spazio per l'etichetta */
+        text-align: right !important;
+    }
+    td:before {
+        content: attr(data-label); /* Utilizza un'etichetta (richiede modifica HTML) */
+        position: absolute;
+        left: 10px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+    }
+    .data-section {
+        overflow-x: auto; /* Permetti lo scroll orizzontale per elementi larghi */
+    }
+    /* Rimuovi l'impatto visivo della barra grigia a destra dopo l'header */
+    body {
+        background-color: #f4f7f6; /* Il body assume il colore del contenuto principale */
+    }
+    /* Assicurati che il box modale non sia troppo largo */
+    .modal-content {
+        width: 95%;
+        margin: 10px auto;
+    }
 }
