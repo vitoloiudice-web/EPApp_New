@@ -98,7 +98,7 @@
             <p>Aggiungi, modifica o elimina i dati dei clienti. Le Sedi sono correlate all'anagrafica principale per l'Integrità Dati.</p>
 
             <div class="data-section">
-                <button class="primary" onclick="apriModaleCliente()">AGGIUNGI NUOVO CLIENTE</button>
+                <button class="primary" id="addClienteButton" onclick="apriModaleCliente()">AGGIUNGI NUOVO CLIENTE</button>
                 
                 <h2>Elenco Clienti (db_cli_anag)</h2>
                 <table id="tabellaClienti">
@@ -182,12 +182,13 @@
 
     <script>
         // =========================================================
-        // 1. CONFIGURAZIONE E INIZIALIZZAZIONE (Affidabilità)
+        // 1. CONFIGURAZIONE E INIZIALIZZAZIONE (Affidabilità Critica)
         // =========================================================
 
-        // ⚠️ INCOLLA QUI IL TUO OGGETTO firebaseConfig AGGIORNATO (come in app_gest_home.html) ⚠️
+        // ⚠️ SOSTITUISCI QUESTO OGGETTO con il tuo firebaseConfig AGGIORNATO (VERIFICATO!) ⚠️
         const firebaseConfig = {
-            apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY", // Inserisci la tua API Key
+            // Usa le stesse chiavi che hai in app_gest_home.html
+            apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY", 
             authDomain: "epapp-bb953.firebaseapp.com",
             projectId: "epapp-bb953",
             storageBucket: "epapp-bb953.firebasestorage.app",
@@ -195,9 +196,14 @@
             appId: "1:797675959163:web:30c077ce253990239d03de",
             measurementId: "G-RN2896V58E"
         };
+        
+        // Inizializzazione dei servizi
         const app = firebase.initializeApp(firebaseConfig);
         const db = app.firestore();
         const auth = app.auth();
+
+        // 🟢 LOG DI TEST CRITICO: Verifichiamo l'inizializzazione
+        console.log("🟢 Firebase inizializzato correttamente in app_gest_cli.html"); 
 
         // Riferimenti alle Collezioni (Protocollo: Nomenclatura del DB)
         const colClienti = db.collection('db_cli_anag');
@@ -208,12 +214,12 @@
         // Cache Locale (Protocollo: Robustezza)
         let categorieCache = [];
         let tipiCache = [];
-        // Il buffer sediClienteCorrente ora usa un oggetto per ID unici per evitare duplicati
         let sediClienteCorrente = {}; 
-        let nextTempId = 0; // Contatore per ID temporanei
+        let nextTempId = 0; 
+        let clienteIdInModifica = null; 
 
         // =========================================================
-        // 2. FUNZIONI UTILITY E CACHE (Robustezza & Coerenza)
+        // 2. FUNZIONI UTILITY E CACHE
         // =========================================================
 
         function toggleNav() {
@@ -248,10 +254,15 @@
                 tipiCache.forEach(tipo => {
                     tipiSelect.innerHTML += `<option value="${tipo.id}">${tipo.nome}</option>`;
                 });
+                
+                console.log("🟢 Dati anagrafici (Categorie/Tipi) caricati con successo.");
 
             } catch (error) {
-                console.error("Errore nel caricamento delle anagrafiche di base (Categorie/Tipi):", error);
-                // Non blocca, ma avvisa che i campi a cascata non funzioneranno
+                // ERRORE CRITICO: se il log del punto 1 è visibile e questo no, la chiamata a Firestore fallisce
+                console.error("🔴 Errore nel caricamento delle anagrafiche di base (Categorie/Tipi). VERIFICA LE REGOLE DI SICUREZZA O NOMI COLLEZIONE:", error);
+                // Resetta le tendine a un valore di errore
+                document.getElementById('categoriaCliente').innerHTML = '<option value="">ERRORE CARICAMENTO</option>';
+                document.getElementById('tipoCliente').innerHTML = '<option value="">ERRORE CARICAMENTO</option>';
             }
         }
 
@@ -267,11 +278,7 @@
         // 3. GESTIONE SEDI (db_cli_sed)
         // =========================================================
         
-        /**
-         * Aggiunge una nuova sede al buffer locale o la carica da Firestore.
-         */
         function aggiungiSede(sedeData = {}) {
-            // Usa l'ID reale (se esistente) o un ID temporaneo
             const id = sedeData.id || `temp-${nextTempId++}`; 
             
             sediClienteCorrente[id] = {
@@ -286,33 +293,24 @@
             renderSedi();
         }
 
-        /**
-         * Rimuove una sede dal buffer locale o la marca come 'da eliminare'.
-         */
         function rimuoviSede(id) {
             if (sediClienteCorrente[id]) {
                 const sede = sediClienteCorrente[id];
                 if (sede.isNew) {
-                    delete sediClienteCorrente[id]; // Rimuovi completamente se è nuova
+                    delete sediClienteCorrente[id]; 
                 } else {
-                    sede.isDeleted = true; // Marca per eliminazione al salvataggio
+                    sede.isDeleted = true; 
                 }
                 renderSedi();
             }
         }
 
-        /**
-         * Aggiorna i dati di una sede nel buffer locale.
-         */
         function aggiornaSedeLocale(id, field, value) {
             if (sediClienteCorrente[id]) {
                 sediClienteCorrente[id][field] = value;
             }
         }
 
-        /**
-         * Renderizza le sedi nel container della modale.
-         */
         function renderSedi() {
             const container = document.getElementById('sediList');
             container.innerHTML = '';
@@ -343,9 +341,6 @@
                 `;
                 container.appendChild(div);
             });
-            
-            // Aggiorna il titolo dinamico
-            document.getElementById('sediContainer').querySelector('h3').textContent = `Sedi del Cliente (${sediDaVisualizzare.length})`;
         }
 
 
@@ -353,32 +348,34 @@
         // 4. GESTIONE MODALE E CRUD CLIENTI (db_cli_anag)
         // =========================================================
 
-        let clienteIdInModifica = null; // Variabile globale per l'ID cliente
-
         function apriModaleCliente(clienteData = {}) {
             clienteIdInModifica = clienteData.id || null;
             document.getElementById('modalTitle').textContent = clienteIdInModifica ? 'Modifica Cliente' : 'Aggiungi Cliente';
             document.getElementById('clienteId').value = clienteIdInModifica || '';
             document.getElementById('clienteForm').reset();
-            sediClienteCorrente = {}; // Resetta il buffer sedi
-            nextTempId = 0; // Resetta il contatore ID temporanei
+            sediClienteCorrente = {}; 
+            nextTempId = 0; 
+
+            // Ri-popola le selezioni ogni volta (Robustezza)
+            caricaDatiAnagrafici(); 
 
             if (clienteIdInModifica) {
-                // Carica dati cliente
                 document.getElementById('nomeCliente').value = clienteData.nome || '';
                 document.getElementById('pIvaCf').value = clienteData.pIvaCf || '';
                 document.getElementById('emailCliente').value = clienteData.email || '';
                 document.getElementById('telefonoCliente').value = clienteData.telefono || '';
-                document.getElementById('categoriaCliente').value = clienteData.idCategoria || '';
-                document.getElementById('tipoCliente').value = clienteData.idTipo || '';
                 
-                // Carica sedi esistenti (Coerenza: lookup tramite ID)
+                // Imposta le select DOPO che sono state ripopolate da caricaDatiAnagrafici()
+                setTimeout(() => {
+                    document.getElementById('categoriaCliente').value = clienteData.idCategoria || '';
+                    document.getElementById('tipoCliente').value = clienteData.idTipo || '';
+                }, 100); // Piccolo timeout per garantire che i dati siano caricati
+
                 caricaSediEsistenti(clienteIdInModifica).then(sedi => {
                     sedi.forEach(sede => aggiungiSede(sede));
-                    // renderSedi viene chiamato in aggiungiSede
                 });
             } else {
-                renderSedi(); // Renderizza contenitore vuoto
+                renderSedi(); 
             }
             document.getElementById('modaleCliente').style.display = 'block';
         }
@@ -405,11 +402,7 @@
             salvaCliente();
         });
 
-        /**
-         * Salva Cliente (db_cli_anag) e gestisce le sedi (db_cli_sed).
-         */
         async function salvaCliente() {
-            // Recupera dati anagrafici
             const nome = document.getElementById('nomeCliente').value.trim();
             const pIvaCf = document.getElementById('pIvaCf').value.trim();
             const email = document.getElementById('emailCliente').value.trim();
@@ -417,7 +410,6 @@
             const idCategoria = document.getElementById('categoriaCliente').value;
             const idTipo = document.getElementById('tipoCliente').value;
             
-            // PROTOCOLLO: Integrità Dati (Validazione Minima)
             if (!nome || !pIvaCf || !email) {
                 alert("Nome/Ragione Sociale, P.IVA/C.F. ed Email sono campi obbligatori.");
                 return;
@@ -436,29 +428,24 @@
             try {
                 let docRef;
                 if (clienteIdInModifica) {
-                    // Update: Salva Anagrafica Cliente
                     await colClienti.doc(clienteIdInModifica).update(clienteData);
                     docRef = colClienti.doc(clienteIdInModifica);
                 } else {
-                    // Create: Salva Anagrafica Cliente e ottieni l'ID generato
                     clienteData.dataCreazione = firebase.firestore.FieldValue.serverTimestamp();
                     docRef = await colClienti.add(clienteData);
                 }
 
-                // GESTIONE DELLE SEDI CORRELATE (db_cli_sed)
                 const idCliente = clienteIdInModifica || docRef.id;
                 const sedi = Object.values(sediClienteCorrente);
 
                 const sediPromises = sedi.map(sede => {
                     if (sede.isDeleted && !sede.isNew) {
-                        // Elimina sede esistente
                         return colSedi.doc(sede.id).delete();
                     }
                     if (!sede.isDeleted) {
-                        // Verifica che i campi obbligatori della sede siano presenti
                         if (!sede.indirizzo || !sede.citta) {
                             console.warn(`Sede non salvata per campi mancanti: ${JSON.stringify(sede)}`);
-                            return Promise.resolve(); // Salta se la sede è incompleta
+                            return Promise.resolve(); 
                         }
 
                         const sedeToSave = {
@@ -467,14 +454,11 @@
                             citta: sede.citta,
                             cap: sede.cap || '',
                             note: sede.note || '',
-                            // Aggiungi qui altri campi della sede se necessari
                         };
                         
                         if (sede.isNew) {
-                            // Crea nuova sede
                             return colSedi.add(sedeToSave);
                         } else {
-                            // Aggiorna sede esistente
                             return colSedi.doc(sede.id).update(sedeToSave);
                         }
                     }
@@ -485,10 +469,8 @@
 
                 alert(`Cliente ${clienteIdInModifica ? 'aggiornato' : 'aggiunto'} con successo!`);
                 chiudiModaleCliente();
-                // Ricarica tabella gestita da onSnapshot: caricaClienti() non è necessaria
-
             } catch (error) {
-                console.error("Errore nel salvataggio/aggiornamento del cliente:", error);
+                console.error("🔴 Errore nel salvataggio/aggiornamento del cliente:", error);
                 alert("Errore critico: Impossibile salvare il cliente. Controlla la console.");
             }
         }
@@ -501,11 +483,9 @@
             const body = document.getElementById('tabellaClientiBody');
             body.innerHTML = '<tr><td colspan="7" style="text-align: center;">Caricamento clienti...</td></tr>';
 
-            // onSnapshot per l'aggiornamento in tempo reale (Robustezza)
             colClienti.onSnapshot(snapshot => {
                 const clienti = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                // Mappa le sedi per un conteggio veloce (Robustezza)
                 colSedi.get().then(sediSnapshot => {
                     const sediMap = {};
                     sediSnapshot.forEach(doc => {
@@ -513,7 +493,7 @@
                         sediMap[sede.idCliente] = (sediMap[sede.idCliente] || 0) + 1;
                     });
                     
-                    body.innerHTML = ''; // Pulisci la tabella prima di popolare
+                    body.innerHTML = ''; 
 
                     if (snapshot.empty) {
                         body.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nessun cliente registrato.</td></tr>';
@@ -525,13 +505,11 @@
                         row.insertCell().textContent = cliente.nome;
                         row.insertCell().textContent = cliente.pIvaCf;
                         row.insertCell().textContent = cliente.email;
-                        // Coerenza: usa la cache per mostrare i nomi Categoria/Tipo
                         row.insertCell().textContent = getNomeDaCache(cliente.idCategoria, categorieCache);
                         row.insertCell().textContent = getNomeDaCache(cliente.idTipo, tipiCache);
-                        row.insertCell().textContent = sediMap[cliente.id] || 0; // Conteggio delle sedi
+                        row.insertCell().textContent = sediMap[cliente.id] || 0; 
                         
                         const actionsCell = row.insertCell();
-                        // Utilizzo di JSON.stringify e replace per passare dati complessi in HTML
                         const clienteJson = JSON.stringify(cliente).replace(/"/g, '&quot;');
                         actionsCell.innerHTML = `
                             <button class="secondary" onclick="apriModaleCliente(${clienteJson})">Modifica</button>
@@ -540,32 +518,26 @@
                     });
 
                 }).catch(err => {
-                    console.error("Errore nel conteggio sedi:", err);
+                    console.error("🔴 Errore nel conteggio sedi:", err);
                     body.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Errore nel conteggio delle sedi.</td></tr>';
                 });
 
             }, error => {
-                console.error("Errore nel fetch dei clienti:", error);
+                console.error("🔴 Errore nel fetch dei clienti (db_cli_anag):", error);
                 body.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Errore nel caricamento dei dati.</td></tr>';
             });
         }
 
-        /**
-         * Elimina un cliente e tutte le sedi correlate (Integrità Dati).
-         */
         async function eliminaCliente(id) {
             if (confirm("Sei sicuro di voler eliminare questo cliente? Saranno eliminate anche tutte le sedi associate!")) {
                 try {
-                    // 1. Elimina le sedi collegate (Protocollo: Integrità Referenziale)
                     const sediDaEliminare = await colSedi.where('idCliente', '==', id).get();
                     const deleteSediPromises = sediDaEliminare.docs.map(doc => colSedi.doc(doc.id).delete());
                     await Promise.all(deleteSediPromises);
                     
-                    // 2. Elimina il cliente
                     await colClienti.doc(id).delete();
 
                     alert("Cliente e sedi associate eliminate con successo.");
-                    // onSnapshot si occupa del ricaricamento
                 } catch(e) {
                     console.error("Errore eliminazione:", e);
                     alert("Errore durante l'eliminazione del cliente e/o delle sedi.");
@@ -575,7 +547,7 @@
 
 
         // =========================================================
-        // 5. INIZIALIZZAZIONE
+        // 5. INIZIALIZZAZIONE (Logica di Autenticazione)
         // =========================================================
 
         auth.onAuthStateChanged((user) => {
@@ -584,13 +556,13 @@
                 document.getElementById('dashboardContainer').style.display = 'flex';
                 if(window.innerWidth <= 768) { document.getElementById('logoutLink').style.display = 'none'; }
                 
-                // Caricamento asincrono e sequenziale dei dati (Robustezza)
+                // Caricamento asincrono e sequenziale dei dati
                 Promise.all([
                     caricaDatiAnagrafici() // 1. Carica prima le anagrafiche di base nella cache
                 ]).then(() => {
                     caricaClienti(); // 2. Poi carica la tabella Clienti (che dipende dalla cache)
                 }).catch(err => {
-                    console.error("Errore nel caricamento dati iniziali Clienti:", err);
+                    console.error("🔴 Errore nel caricamento dati iniziali Clienti (Promise):", err);
                 });
 
             } else {
@@ -600,5 +572,4 @@
         });
     </script>
 </body>
-
 </html>
