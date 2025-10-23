@@ -11,7 +11,8 @@
 
     <style>
         /* CSS GLOBALE */
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
+        /* CORREZIONE GRAFICA: Sfondo body impostato a #343a40 per eliminare la banda grigia a sinistra */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #343a40; color: #333; } 
         .dashboard-container { display: flex; min-height: 100vh; }
         .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px 0; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
         .logo-link { width: 100%; text-align: center; margin-bottom: 30px; }
@@ -21,7 +22,8 @@
         .dashboard-nav a { color: #ccc; text-decoration: none; padding: 12px 15px; margin: 3px 0; display: block; width: 85%; text-align: left; border-radius: 4px; transition: background-color 0.3s, padding-left 0.3s; }
         .dashboard-nav a:hover, .dashboard-nav a.active { background-color: #A5DD2E; color: #343a40; font-weight: bold; padding-left: 20px; }
         .dashboard-nav #logoutLink { color: #ff9999; margin-top: auto; font-weight: bold; }
-        .dashboard-content { flex-grow: 1; padding: 30px; }
+        /* Imposta lo sfondo del contenuto principale sul colore desiderato */
+        .dashboard-content { flex-grow: 1; padding: 30px; background-color: #f4f7f6; } 
         
         /* Stili Specifici della Pagina */
         .data-section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); margin-top: 20px; }
@@ -233,8 +235,8 @@
         // 1. CONFIGURAZIONE E INIZIALIZZAZIONE
         // =========================================================
 
+        // ⚠️ SOSTITUISCI QUESTO OGGETTO con il tuo firebaseConfig AGGIORNATO (DEVE ESSERE IDENTICO A app_gest_cli.html) ⚠️
         const firebaseConfig = {
-            // ⚠️ INSERISCI QUI LE TUE CREDENZIALI ⚠️
             apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY", 
             authDomain: "epapp-bb953.firebaseapp.com",
             projectId: "epapp-bb953",
