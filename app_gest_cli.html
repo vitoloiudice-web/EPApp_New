@@ -9,56 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
-    <style>
-        /* CSS GLOBALE (Copiato da app_gest_home.html per Affidabilità Strutturale) */
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
-        .dashboard-container { display: flex; min-height: 100vh; }
-        .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px 0; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
-        .logo-link { width: 100%; text-align: center; margin-bottom: 30px; }
-        .logo-link img { max-width: 80%; height: auto; border-radius: 5px; cursor: pointer; } 
-        .dashboard-nav small { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; align-self: flex-start; margin-left: 20px; margin-top: 15px; color: #909090; }
-        .dashboard-nav hr { width: 85%; border: 0; border-top: 1px solid #495057; margin: 5px 0 10px 0; }
-        .dashboard-nav a { color: #ccc; text-decoration: none; padding: 12px 15px; margin: 3px 0; display: block; width: 85%; text-align: left; border-radius: 4px; transition: background-color 0.3s, padding-left 0.3s; }
-        .dashboard-nav a:hover, .dashboard-nav a.active { background-color: #A5DD2E; color: #343a40; font-weight: bold; padding-left: 20px; }
-        .dashboard-nav #logoutLink { color: #ff9999; margin-top: auto; font-weight: bold; }
-        .dashboard-content { flex-grow: 1; padding: 30px; }
-        
-        /* Stili Specifici della Pagina (Robustezza) */
-        .data-section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); margin-top: 20px; }
-        h1 { color: #343a40; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.9em; }
-        th { background-color: #A5DD2E; color: #343a40; }
-        button { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; margin-right: 5px; font-weight: bold; transition: background-color 0.3s; }
-        .primary { background-color: #343a40; color: white; }
-        .primary:hover { background-color: #1c1f23; }
-        .secondary { background-color: #A5DD2E; color: #343a40; }
-        .secondary:hover { background-color: #94c529; }
-        .danger { background-color: #dc3545; color: white; }
-        .danger:hover { background-color: #c82333; }
-
-        /* Stili Modale (Affidabilità Strutturale) */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 750px; border-radius: 10px; position: relative; }
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
-        .close:hover, .close:focus { color: #000; text-decoration: none; cursor: pointer; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .modal-buttons { margin-top: 20px; display: flex; justify-content: flex-end; }
-        .sedi-section { border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-top: 10px; }
-        .sedi-section input { margin-top: 5px; }
-
-        /* Navigazione Mobile */
-        .mobile-header { display: none; }
-        @media (max-width: 768px) {
-            .dashboard-container { display: block; }
-            .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 500; }
-            .hamburger-icon { font-size: 24px; cursor: pointer; color: #343a40; }
-            .dashboard-nav { position: fixed; top: 0; left: -250px; height: 100%; z-index: 1000; transition: left 0.3s ease; }
-            .dashboard-nav.open { left: 0; }
-        }
-    </style>
+    <link rel="stylesheet" href="main_style.css">
 </head>
 <body>
     
@@ -76,7 +27,7 @@
             <a href="app_gest_home.html" class="tab-link">DASHBOARD</a> 
 
             <small>Anagrafiche</small><hr>
-            <a href="app_gest_cli.html" class="tab-link active">CLIENTI</a> <a href="app_gest_frn.html" class="tab-link">FORNITORI & SEDI</a> 
+            <a href="app_gest_cli.html" class="tab-link active">CLIENTI</a> <a href="app_gest_frn.html" class="tab-link">FORNITORI & SEDI</a>
             <a href="app_gest_utn.html" class="tab-link">UTENTI</a> 
             
             <small>Labs & Logistica</small><hr>
@@ -94,27 +45,26 @@
         </nav>
 
         <main class="dashboard-content">
-            <h1>Gestione Clienti</h1>
-            <p>Aggiungi, modifica o elimina i dati dei clienti. Le Sedi sono correlate all'anagrafica principale per l'Integrità Dati.</p>
+            <h1>Gestione Clienti (db_cli)</h1>
+            <p>Aggiungi, modifica o elimina le anagrafiche complete dei clienti.</p>
 
             <div class="data-section">
-                <button class="primary" id="addClienteButton" onclick="apriModaleCliente()">AGGIUNGI NUOVO CLIENTE</button>
+                <button class="primary" onclick="apriModaleCliente()">AGGIUNGI NUOVO CLIENTE</button>
                 
-                <h2>Elenco Clienti (db_cli_anag)</h2>
+                <h2>Elenco Clienti</h2>
                 <table id="tabellaClienti">
                     <thead>
                         <tr>
-                            <th>Nome/Rag. Sociale</th>
+                            <th>Ragione Sociale/Nome</th>
                             <th>P.IVA/C.F.</th>
                             <th>Email</th>
-                            <th>Categoria</th>
-                            <th>Tipo</th>
-                            <th>Sedi</th>
+                            <th>Telefono</th>
+                            <th>Indirizzo Sede Legale</th>
                             <th>Azioni</th>
                         </tr>
                     </thead>
                     <tbody id="tabellaClientiBody">
-                        <tr><td colspan="7" style="text-align: center;">Caricamento clienti...</td></tr>
+                        <tr><td colspan="6" style="text-align: center;">Caricamento clienti...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -130,50 +80,45 @@
             <form id="clienteForm">
                 <input type="hidden" id="clienteId">
                 
-                <h3>Dati Anagrafici (db_cli_anag)</h3>
+                <h3>Dati Anagrafici (db_cli)</h3>
                 <div class="form-group">
-                    <label for="nomeCliente">Nome / Ragione Sociale *</label>
-                    <input type="text" id="nomeCliente" required>
+                    <label for="ragioneSociale">Ragione Sociale / Nome *</label>
+                    <input type="text" id="ragioneSociale" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="pIvaCf">P.IVA / Codice Fiscale *</label>
-                    <input type="text" id="pIvaCf" required>
+                    <label for="pivaCf">P.IVA / Codice Fiscale *</label>
+                    <input type="text" id="pivaCf" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="emailCliente">Email *</label>
-                    <input type="email" id="emailCliente" required>
+                    <label for="email">Email Principale</label>
+                    <input type="email" id="email">
                 </div>
                 
                 <div class="form-group">
-                    <label for="telefonoCliente">Telefono</label>
-                    <input type="tel" id="telefonoCliente">
+                    <label for="telefono">Telefono</label>
+                    <input type="text" id="telefono">
+                </div>
+
+                <h3>Dati Sede Legale (db_sedecli)</h3>
+                <div class="form-group">
+                    <label for="indirizzo">Indirizzo *</label>
+                    <input type="text" id="indirizzo" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="categoriaCliente">Categoria Cliente (db_cli_cat)</label>
-                    <select id="categoriaCliente">
-                        <option value="">Caricamento Categorie...</option> 
-                    </select>
+                    <label for="citta">Città *</label>
+                    <input type="text" id="citta" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="tipoCliente">Tipo Cliente (db_cli_tip)</label>
-                    <select id="tipoCliente">
-                        <option value="">Caricamento Tipi...</option>
-                    </select>
-                </div>
-                
-                <h3 style="margin-top: 30px;">Sedi del Cliente (db_cli_sed)</h3>
-                <div id="sediContainer">
-                    <button type="button" class="secondary" onclick="aggiungiSede()">+ Aggiungi Sede</button>
-                    <p style="font-size: 0.9em; color: #6c757d;">(Le sedi esistenti verranno caricate automaticamente in modalità modifica)</p>
-                    <div id="sediList">
-                        </div>
+                    <label for="cap">CAP</label>
+                    <input type="text" id="cap">
                 </div>
 
                 <div class="modal-buttons">
+                    <button type="button" class="danger" onclick="eliminaCliente(document.getElementById('clienteId').value)" id="eliminaButton" style="display: none;">Elimina</button>
                     <button type="submit" class="secondary">Salva Cliente</button>
                 </div>
             </form>
@@ -182,12 +127,11 @@
 
     <script>
         // =========================================================
-        // 1. CONFIGURAZIONE E INIZIALIZZAZIONE (Affidabilità Critica)
+        // 1. CONFIGURAZIONE E INIZIALIZZAZIONE
         // =========================================================
 
-        // ⚠️ SOSTITUISCI QUESTO OGGETTO con il tuo firebaseConfig AGGIORNATO (VERIFICATO!) ⚠️
         const firebaseConfig = {
-            // Usa le stesse chiavi che hai in app_gest_home.html
+            // ⚠️ INSERISCI QUI LE TUE CREDENZIALI ⚠️
             apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY", 
             authDomain: "epapp-bb953.firebaseapp.com",
             projectId: "epapp-bb953",
@@ -197,29 +141,18 @@
             measurementId: "G-RN2896V58E"
         };
         
-        // Inizializzazione dei servizi
         const app = firebase.initializeApp(firebaseConfig);
         const db = app.firestore();
         const auth = app.auth();
 
-        // 🟢 LOG DI TEST CRITICO: Verifichiamo l'inizializzazione
-        console.log("🟢 Firebase inizializzato correttamente in app_gest_cli.html"); 
+        // Riferimenti alle Collezioni
+        const colClienti = db.collection('db_cli');
+        const colSediCli = db.collection('db_sedecli'); // Collezione per le sedi
 
-        // Riferimenti alle Collezioni (Protocollo: Nomenclatura del DB)
-        const colClienti = db.collection('db_cli_anag');
-        const colSedi = db.collection('db_cli_sed'); 
-        const colCategorie = db.collection('db_cli_cat');
-        const colTipi = db.collection('db_cli_tip');
-
-        // Cache Locale (Protocollo: Robustezza)
-        let categorieCache = [];
-        let tipiCache = [];
-        let sediClienteCorrente = {}; 
-        let nextTempId = 0; 
-        let clienteIdInModifica = null; 
+        let idSedeCorrente = null; // ID della sede da aggiornare
 
         // =========================================================
-        // 2. FUNZIONI UTILITY E CACHE
+        // 2. FUNZIONI UTILITY
         // =========================================================
 
         function toggleNav() {
@@ -228,173 +161,47 @@
 
         function handleLogout() { 
             auth.signOut().then(() => { 
-                window.location.href = 'app_gest_home.html'; 
+                window.location.href = 'app_login.html'; 
             });
         }
 
-        /**
-         * Carica e mette in cache le categorie e i tipi (db_cli_cat, db_cli_tip).
-         */
-        async function caricaDatiAnagrafici() {
-            try {
-                // Carica Categorie
-                const catSnapshot = await colCategorie.get();
-                categorieCache = catSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const catSelect = document.getElementById('categoriaCliente');
-                catSelect.innerHTML = '<option value="">Seleziona Categoria</option>';
-                categorieCache.forEach(cat => {
-                    catSelect.innerHTML += `<option value="${cat.id}">${cat.nome}</option>`;
-                });
-                
-                // Carica Tipi
-                const tipiSnapshot = await colTipi.get();
-                tipiCache = tipiSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const tipiSelect = document.getElementById('tipoCliente');
-                tipiSelect.innerHTML = '<option value="">Seleziona Tipo</option>';
-                tipiCache.forEach(tipo => {
-                    tipiSelect.innerHTML += `<option value="${tipo.id}">${tipo.nome}</option>`;
-                });
-                
-                console.log("🟢 Dati anagrafici (Categorie/Tipi) caricati con successo.");
-
-            } catch (error) {
-                // ERRORE CRITICO: se il log del punto 1 è visibile e questo no, la chiamata a Firestore fallisce
-                console.error("🔴 Errore nel caricamento delle anagrafiche di base (Categorie/Tipi). VERIFICA LE REGOLE DI SICUREZZA O NOMI COLLEZIONE:", error);
-                // Resetta le tendine a un valore di errore
-                document.getElementById('categoriaCliente').innerHTML = '<option value="">ERRORE CARICAMENTO</option>';
-                document.getElementById('tipoCliente').innerHTML = '<option value="">ERRORE CARICAMENTO</option>';
-            }
-        }
+        // =========================================================
+        // 3. GESTIONE MODALE E CRUD
+        // =========================================================
 
         /**
-         * Recupera il nome di Categoria o Tipo dalla cache per la tabella.
+         * Apre la modale per l'aggiunta o la modifica di un cliente.
          */
-        function getNomeDaCache(id, cache) {
-            const item = cache.find(item => item.id === id);
-            return item ? item.nome : 'N/D';
-        }
-
-        // =========================================================
-        // 3. GESTIONE SEDI (db_cli_sed)
-        // =========================================================
-        
-        function aggiungiSede(sedeData = {}) {
-            const id = sedeData.id || `temp-${nextTempId++}`; 
+        function apriModaleCliente(clienteData = {}, sedeData = {}) {
+            const isEdit = !!clienteData.id;
             
-            sediClienteCorrente[id] = {
-                id: sedeData.id || id,
-                indirizzo: sedeData.indirizzo || '',
-                citta: sedeData.citta || '',
-                cap: sedeData.cap || '',
-                note: sedeData.note || '',
-                isNew: !sedeData.id, 
-                isDeleted: false 
-            };
-            renderSedi();
-        }
-
-        function rimuoviSede(id) {
-            if (sediClienteCorrente[id]) {
-                const sede = sediClienteCorrente[id];
-                if (sede.isNew) {
-                    delete sediClienteCorrente[id]; 
-                } else {
-                    sede.isDeleted = true; 
-                }
-                renderSedi();
-            }
-        }
-
-        function aggiornaSedeLocale(id, field, value) {
-            if (sediClienteCorrente[id]) {
-                sediClienteCorrente[id][field] = value;
-            }
-        }
-
-        function renderSedi() {
-            const container = document.getElementById('sediList');
-            container.innerHTML = '';
-            const sediDaVisualizzare = Object.values(sediClienteCorrente).filter(s => !s.isDeleted);
+            document.getElementById('modalTitle').textContent = isEdit ? 'Modifica Cliente' : 'Aggiungi Nuovo Cliente';
+            document.getElementById('clienteId').value = clienteData.id || '';
+            idSedeCorrente = sedeData.id || null; // Salva l'ID della sede
             
-            sediDaVisualizzare.forEach(sede => {
-                const div = document.createElement('div');
-                div.className = 'sedi-section';
-                div.innerHTML = `
-                    <label style="font-style: italic; font-size: 0.9em; color: #555;">Sede: ${sede.citta || '(Nuova Sede)'} - ${sede.id.startsWith('temp') ? 'Temporanea' : 'Esistente'}</label>
-                    <div class="form-group">
-                        <input type="text" value="${sede.indirizzo}" placeholder="Indirizzo" 
-                            onchange="aggiornaSedeLocale('${sede.id}', 'indirizzo', this.value)" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" value="${sede.citta}" placeholder="Città" 
-                            onchange="aggiornaSedeLocale('${sede.id}', 'citta', this.value)" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" value="${sede.cap}" placeholder="CAP" 
-                            onchange="aggiornaSedeLocale('${sede.id}', 'cap', this.value)">
-                    </div>
-                    <div class="form-group">
-                        <input type="text" value="${sede.note}" placeholder="Note sulla Sede" 
-                            onchange="aggiornaSedeLocale('${sede.id}', 'note', this.value)">
-                    </div>
-                    <button type="button" class="danger" onclick="rimuoviSede('${sede.id}')">Rimuovi Sede</button>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-
-        // =========================================================
-        // 4. GESTIONE MODALE E CRUD CLIENTI (db_cli_anag)
-        // =========================================================
-
-        function apriModaleCliente(clienteData = {}) {
-            clienteIdInModifica = clienteData.id || null;
-            document.getElementById('modalTitle').textContent = clienteIdInModifica ? 'Modifica Cliente' : 'Aggiungi Cliente';
-            document.getElementById('clienteId').value = clienteIdInModifica || '';
             document.getElementById('clienteForm').reset();
-            sediClienteCorrente = {}; 
-            nextTempId = 0; 
+            document.getElementById('eliminaButton').style.display = isEdit ? 'inline-block' : 'none';
 
-            // Ri-popola le selezioni ogni volta (Robustezza)
-            caricaDatiAnagrafici(); 
-
-            if (clienteIdInModifica) {
-                document.getElementById('nomeCliente').value = clienteData.nome || '';
-                document.getElementById('pIvaCf').value = clienteData.pIvaCf || '';
-                document.getElementById('emailCliente').value = clienteData.email || '';
-                document.getElementById('telefonoCliente').value = clienteData.telefono || '';
+            if (isEdit) {
+                // Dati Cliente (db_cli)
+                document.getElementById('ragioneSociale').value = clienteData.ragioneSociale || '';
+                document.getElementById('pivaCf').value = clienteData.pivaCf || '';
+                document.getElementById('email').value = clienteData.email || '';
+                document.getElementById('telefono').value = clienteData.telefono || '';
                 
-                // Imposta le select DOPO che sono state ripopolate da caricaDatiAnagrafici()
-                setTimeout(() => {
-                    document.getElementById('categoriaCliente').value = clienteData.idCategoria || '';
-                    document.getElementById('tipoCliente').value = clienteData.idTipo || '';
-                }, 100); // Piccolo timeout per garantire che i dati siano caricati
-
-                caricaSediEsistenti(clienteIdInModifica).then(sedi => {
-                    sedi.forEach(sede => aggiungiSede(sede));
-                });
-            } else {
-                renderSedi(); 
+                // Dati Sede (db_sedecli)
+                document.getElementById('indirizzo').value = sedeData.indirizzo || '';
+                document.getElementById('citta').value = sedeData.citta || '';
+                document.getElementById('cap').value = sedeData.cap || '';
             }
+            
             document.getElementById('modaleCliente').style.display = 'block';
-        }
-        
-        async function caricaSediEsistenti(idCliente) {
-             try {
-                const sediSnapshot = await colSedi.where('idCliente', '==', idCliente).get();
-                return sediSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            } catch (error) {
-                console.error("Errore nel caricamento delle sedi:", error);
-                return [];
-            }
         }
 
         function chiudiModaleCliente() {
             document.getElementById('modaleCliente').style.display = 'none';
             document.getElementById('clienteForm').reset();
-            sediClienteCorrente = {};
-            clienteIdInModifica = null;
+            idSedeCorrente = null;
         }
 
         document.getElementById('clienteForm').addEventListener('submit', function(e) {
@@ -403,171 +210,183 @@
         });
 
         async function salvaCliente() {
-            const nome = document.getElementById('nomeCliente').value.trim();
-            const pIvaCf = document.getElementById('pIvaCf').value.trim();
-            const email = document.getElementById('emailCliente').value.trim();
-            const telefono = document.getElementById('telefonoCliente').value.trim();
-            const idCategoria = document.getElementById('categoriaCliente').value;
-            const idTipo = document.getElementById('tipoCliente').value;
+            const clienteId = document.getElementById('clienteId').value;
+            const ragioneSociale = document.getElementById('ragioneSociale').value.trim();
+            const pivaCf = document.getElementById('pivaCf').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const telefono = document.getElementById('telefono').value.trim();
             
-            if (!nome || !pIvaCf || !email) {
-                alert("Nome/Ragione Sociale, P.IVA/C.F. ed Email sono campi obbligatori.");
+            const indirizzo = document.getElementById('indirizzo').value.trim();
+            const citta = document.getElementById('citta').value.trim();
+            const cap = document.getElementById('cap').value.trim();
+
+            if (!ragioneSociale || !pivaCf || !indirizzo || !citta) {
+                alert("I campi contrassegnati (*) sono obbligatori.");
                 return;
             }
 
+            // Dati Sede
+            const sedeData = {
+                indirizzo: indirizzo,
+                citta: citta,
+                cap: cap,
+                // Aggiungere qui altri campi sede se necessari (es. provincia, n_civ)
+                dataUltimaModifica: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            // Dati Cliente
             const clienteData = {
-                nome: nome,
-                pIvaCf: pIvaCf,
+                ragioneSociale: ragioneSociale,
+                pivaCf: pivaCf,
                 email: email,
                 telefono: telefono,
-                idCategoria: idCategoria,
-                idTipo: idTipo,
                 dataUltimaModifica: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             try {
-                let docRef;
-                if (clienteIdInModifica) {
-                    await colClienti.doc(clienteIdInModifica).update(clienteData);
-                    docRef = colClienti.doc(clienteIdInModifica);
+                if (clienteId) {
+                    // Aggiornamento
+                    const sedePromise = idSedeCorrente 
+                        ? colSediCli.doc(idSedeCorrente).update(sedeData) 
+                        : colSediCli.add(sedeData).then(docRef => {
+                            idSedeCorrente = docRef.id;
+                            clienteData.idSedeLegale = docRef.id;
+                        });
+
+                    await Promise.all([
+                        colClienti.doc(clienteId).update(clienteData),
+                        sedePromise
+                    ]);
+
                 } else {
+                    // Creazione (richiede prima la creazione della Sede)
+                    sedeData.dataCreazione = firebase.firestore.FieldValue.serverTimestamp();
+                    const sedeRef = await colSediCli.add(sedeData);
+                    
+                    clienteData.idSedeLegale = sedeRef.id;
                     clienteData.dataCreazione = firebase.firestore.FieldValue.serverTimestamp();
-                    docRef = await colClienti.add(clienteData);
+                    await colClienti.add(clienteData);
                 }
 
-                const idCliente = clienteIdInModifica || docRef.id;
-                const sedi = Object.values(sediClienteCorrente);
-
-                const sediPromises = sedi.map(sede => {
-                    if (sede.isDeleted && !sede.isNew) {
-                        return colSedi.doc(sede.id).delete();
-                    }
-                    if (!sede.isDeleted) {
-                        if (!sede.indirizzo || !sede.citta) {
-                            console.warn(`Sede non salvata per campi mancanti: ${JSON.stringify(sede)}`);
-                            return Promise.resolve(); 
-                        }
-
-                        const sedeToSave = {
-                            idCliente: idCliente,
-                            indirizzo: sede.indirizzo,
-                            citta: sede.citta,
-                            cap: sede.cap || '',
-                            note: sede.note || '',
-                        };
-                        
-                        if (sede.isNew) {
-                            return colSedi.add(sedeToSave);
-                        } else {
-                            return colSedi.doc(sede.id).update(sedeToSave);
-                        }
-                    }
-                    return Promise.resolve();
-                });
-
-                await Promise.all(sediPromises);
-
-                alert(`Cliente ${clienteIdInModifica ? 'aggiornato' : 'aggiunto'} con successo!`);
+                alert(`Cliente ${clienteId ? 'aggiornato' : 'aggiunto'} con successo!`);
                 chiudiModaleCliente();
+                caricaClienti(); 
+
             } catch (error) {
-                console.error("🔴 Errore nel salvataggio/aggiornamento del cliente:", error);
+                console.error("🔴 Errore nel salvataggio/aggiornamento:", error);
                 alert("Errore critico: Impossibile salvare il cliente. Controlla la console.");
             }
         }
 
+        async function eliminaCliente(id) {
+            if (!id) return;
+            if (confirm("Sei sicuro di voler eliminare questo Cliente e la sua Sede Legale associata?")) {
+                try {
+                    // 1. Trova il documento Cliente per trovare l'idSedeLegale
+                    const clienteDoc = await colClienti.doc(id).get();
+                    const clienteData = clienteDoc.data();
+                    const idSedeLegale = clienteData.idSedeLegale;
 
-        /**
-         * Carica e visualizza i clienti nella tabella (db_cli_anag).
-         */
-        function caricaClienti() {
-            const body = document.getElementById('tabellaClientiBody');
-            body.innerHTML = '<tr><td colspan="7" style="text-align: center;">Caricamento clienti...</td></tr>';
-
-            colClienti.onSnapshot(snapshot => {
-                const clienti = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                colSedi.get().then(sediSnapshot => {
-                    const sediMap = {};
-                    sediSnapshot.forEach(doc => {
-                        const sede = doc.data();
-                        sediMap[sede.idCliente] = (sediMap[sede.idCliente] || 0) + 1;
-                    });
-                    
-                    body.innerHTML = ''; 
-
-                    if (snapshot.empty) {
-                        body.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nessun cliente registrato.</td></tr>';
-                        return;
+                    // 2. Elimina la Sede (db_sedecli)
+                    if (idSedeLegale) {
+                        await colSediCli.doc(idSedeLegale).delete();
                     }
 
-                    clienti.forEach(cliente => {
-                        const row = body.insertRow();
-                        row.insertCell().textContent = cliente.nome;
-                        row.insertCell().textContent = cliente.pIvaCf;
-                        row.insertCell().textContent = cliente.email;
-                        row.insertCell().textContent = getNomeDaCache(cliente.idCategoria, categorieCache);
-                        row.insertCell().textContent = getNomeDaCache(cliente.idTipo, tipiCache);
-                        row.insertCell().textContent = sediMap[cliente.id] || 0; 
-                        
-                        const actionsCell = row.insertCell();
-                        const clienteJson = JSON.stringify(cliente).replace(/"/g, '&quot;');
-                        actionsCell.innerHTML = `
-                            <button class="secondary" onclick="apriModaleCliente(${clienteJson})">Modifica</button>
-                            <button class="danger" onclick="eliminaCliente('${cliente.id}')">Elimina</button>
-                        `;
-                    });
-
-                }).catch(err => {
-                    console.error("🔴 Errore nel conteggio sedi:", err);
-                    body.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Errore nel conteggio delle sedi.</td></tr>';
-                });
-
-            }, error => {
-                console.error("🔴 Errore nel fetch dei clienti (db_cli_anag):", error);
-                body.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Errore nel caricamento dei dati.</td></tr>';
-            });
-        }
-
-        async function eliminaCliente(id) {
-            if (confirm("Sei sicuro di voler eliminare questo cliente? Saranno eliminate anche tutte le sedi associate!")) {
-                try {
-                    const sediDaEliminare = await colSedi.where('idCliente', '==', id).get();
-                    const deleteSediPromises = sediDaEliminare.docs.map(doc => colSedi.doc(doc.id).delete());
-                    await Promise.all(deleteSediPromises);
-                    
+                    // 3. Elimina il Cliente (db_cli)
                     await colClienti.doc(id).delete();
 
-                    alert("Cliente e sedi associate eliminate con successo.");
+                    alert("Cliente eliminato con successo.");
+                    caricaClienti();
                 } catch(e) {
-                    console.error("Errore eliminazione:", e);
-                    alert("Errore durante l'eliminazione del cliente e/o delle sedi.");
+                    console.error("🔴 Errore eliminazione Cliente:", e);
+                    alert("Errore durante l'eliminazione del Cliente.");
                 }
             }
         }
 
 
         // =========================================================
-        // 5. INIZIALIZZAZIONE (Logica di Autenticazione)
+        // 4. CARICAMENTO DATI
+        // =========================================================
+        
+        /**
+         * Carica e visualizza i clienti, facendo il lookup delle sedi.
+         */
+        async function caricaClienti() {
+            const body = document.getElementById('tabellaClientiBody');
+            body.innerHTML = '<tr><td colspan="6" style="text-align: center;">Caricamento clienti...</td></tr>';
+
+            try {
+                const cliSnapshot = await colClienti.get();
+                if (cliSnapshot.empty) {
+                    body.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessun cliente registrato.</td></tr>';
+                    return;
+                }
+
+                const clienti = cliSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // 1. Raccoglie tutti gli ID delle sedi da cercare
+                const idSedi = clienti.map(cli => cli.idSedeLegale).filter(id => id);
+                
+                // 2. Fetch le sedi con una singola query (ottimizzazione)
+                let sediMap = {};
+                if (idSedi.length > 0) {
+                    // Suddividi in blocchi se gli ID superano i 10 (limite query 'in' di Firestore)
+                    const chunks = [];
+                    for (let i = 0; i < idSedi.length; i += 10) {
+                        chunks.push(idSedi.slice(i, i + 10));
+                    }
+                    
+                    const sediPromises = chunks.map(chunk => colSediCli.where(firebase.firestore.FieldPath.documentId(), 'in', chunk).get());
+                    const sediResults = await Promise.all(sediPromises);
+
+                    sediResults.forEach(result => {
+                        result.forEach(doc => {
+                            sediMap[doc.id] = { id: doc.id, ...doc.data() };
+                        });
+                    });
+                }
+
+                // 3. Popola la tabella
+                body.innerHTML = '';
+                clienti.forEach(cliente => {
+                    const sede = sediMap[cliente.idSedeLegale] || {};
+                    
+                    const row = body.insertRow();
+                    row.insertCell().textContent = cliente.ragioneSociale;
+                    row.insertCell().textContent = cliente.pivaCf;
+                    row.insertCell().textContent = cliente.email || 'N/D';
+                    row.insertCell().textContent = cliente.telefono || 'N/D';
+                    row.insertCell().textContent = `${sede.indirizzo || 'N/D'}, ${sede.citta || ''} (${sede.cap || ''})`;
+                    
+                    const actionsCell = row.insertCell();
+                    // Preparazione dati per la modale in modo sicuro
+                    const cliJson = JSON.stringify(cliente).replace(/"/g, '&quot;');
+                    const sedeJson = JSON.stringify(sede).replace(/"/g, '&quot;');
+                    
+                    actionsCell.innerHTML = `
+                        <button class="secondary" onclick="apriModaleCliente(${cliJson}, ${sedeJson})">Modifica</button>
+                        <button class="danger" onclick="eliminaCliente('${cliente.id}')">Elimina</button>
+                    `;
+                });
+
+            } catch (error) {
+                console.error("🔴 Errore nel fetch dei Clienti:", error);
+                body.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Errore nel caricamento dei clienti.</td></tr>';
+            }
+        }
+
+        // =========================================================
+        // 5. INIZIALIZZAZIONE
         // =========================================================
 
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // Utente autenticato: mostra la dashboard e carica i dati
                 document.getElementById('dashboardContainer').style.display = 'flex';
                 if(window.innerWidth <= 768) { document.getElementById('logoutLink').style.display = 'none'; }
-                
-                // Caricamento asincrono e sequenziale dei dati
-                Promise.all([
-                    caricaDatiAnagrafici() // 1. Carica prima le anagrafiche di base nella cache
-                ]).then(() => {
-                    caricaClienti(); // 2. Poi carica la tabella Clienti (che dipende dalla cache)
-                }).catch(err => {
-                    console.error("🔴 Errore nel caricamento dati iniziali Clienti (Promise):", err);
-                });
-
+                caricaClienti();
             } else {
-                // Utente disconnesso: reindirizza al login
-                window.location.href = 'app_gest_home.html';
+                window.location.href = 'app_login.html';
             }
         });
     </script>

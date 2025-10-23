@@ -3,60 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPApp - Gestione Fornitori & Sedi</title>
+    <title>EPApp - Gestione Fornitori e Sedi</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
+    <link rel="stylesheet" href="main_style.css">
+
     <style>
-        /* CSS GLOBALE (Copiato per Affidabilità Strutturale) */
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
-        .dashboard-container { display: flex; min-height: 100vh; }
-        .dashboard-nav { width: 250px; background-color: #343a40; color: white; padding: 20px 0; box-shadow: 2px 0 5px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
-        .logo-link { width: 100%; text-align: center; margin-bottom: 30px; }
-        .logo-link img { max-width: 80%; height: auto; border-radius: 5px; cursor: pointer; } 
-        .dashboard-nav small { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; align-self: flex-start; margin-left: 20px; margin-top: 15px; color: #909090; }
-        .dashboard-nav hr { width: 85%; border: 0; border-top: 1px solid #495057; margin: 5px 0 10px 0; }
-        .dashboard-nav a { color: #ccc; text-decoration: none; padding: 12px 15px; margin: 3px 0; display: block; width: 85%; text-align: left; border-radius: 4px; transition: background-color 0.3s, padding-left 0.3s; }
-        .dashboard-nav a:hover, .dashboard-nav a.active { background-color: #A5DD2E; color: #343a40; font-weight: bold; padding-left: 20px; }
-        .dashboard-nav #logoutLink { color: #ff9999; margin-top: auto; font-weight: bold; }
-        .dashboard-content { flex-grow: 1; padding: 30px; }
-        
-        /* Stili Specifici della Pagina (Robustezza) */
-        .data-section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); margin-top: 20px; }
-        h1 { color: #343a40; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.9em; }
-        th { background-color: #A5DD2E; color: #343a40; }
-        button { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; margin-right: 5px; font-weight: bold; transition: background-color 0.3s; }
-        .primary { background-color: #343a40; color: white; }
-        .primary:hover { background-color: #1c1f23; }
-        .secondary { background-color: #A5DD2E; color: #343a40; }
-        .secondary:hover { background-color: #94c529; }
-        .danger { background-color: #dc3545; color: white; }
-        .danger:hover { background-color: #c82333; }
-
-        /* Stili Modale (Affidabilità Strutturale) */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 750px; border-radius: 10px; position: relative; }
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
-        .close:hover, .close:focus { color: #000; text-decoration: none; cursor: pointer; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .modal-buttons { margin-top: 20px; display: flex; justify-content: flex-end; }
-        .sedi-section { border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-top: 10px; }
-        .sedi-section input { margin-top: 5px; }
-
-        /* Navigazione Mobile */
-        .mobile-header { display: none; }
-        @media (max-width: 768px) {
-            .dashboard-container { display: block; }
-            .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 500; }
-            .hamburger-icon { font-size: 24px; cursor: pointer; color: #343a40; }
-            .dashboard-nav { position: fixed; top: 0; left: -250px; height: 100%; z-index: 1000; transition: left 0.3s ease; }
-            .dashboard-nav.open { left: 0; }
+        .fornitore-details { 
+            margin-top: 20px; 
+            border-top: 1px solid #eee; 
+            padding-top: 15px; 
+        }
+        .sede-container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        .sede-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .sede-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dotted #ddd;
+        }
+        .sede-list-item:last-child {
+            border-bottom: none;
+        }
+        .sede-list-item button {
+            margin-left: 5px;
         }
     </style>
 </head>
@@ -66,7 +50,7 @@
         
         <div class="mobile-header">
             <span class="hamburger-icon" onclick="toggleNav()">☰</span>
-            <h2>Gestione Fornitori & Sedi</h2>
+            <h2>Gestione Fornitori</h2>
         </div>
 
         <nav class="dashboard-nav" id="dashboardNav">
@@ -94,26 +78,25 @@
         </nav>
 
         <main class="dashboard-content">
-            <h1>Gestione Fornitori</h1>
-            <p>Aggiungi, modifica o elimina i dati dei fornitori e gestisci le sedi associate.</p>
+            <h1>Gestione Fornitori e Sedi (db_frn, db_sedefrn)</h1>
+            <p>Aggiungi, modifica o elimina le anagrafiche complete dei fornitori e le loro sedi operative.</p>
 
             <div class="data-section">
                 <button class="primary" onclick="apriModaleFornitore()">AGGIUNGI NUOVO FORNITORE</button>
                 
-                <h2>Elenco Fornitori (db_frn_anag)</h2>
+                <h2>Elenco Fornitori</h2>
                 <table id="tabellaFornitori">
                     <thead>
                         <tr>
-                            <th>Nome/Rag. Sociale</th>
+                            <th>Ragione Sociale</th>
                             <th>P.IVA/C.F.</th>
                             <th>Email</th>
-                            <th>Categoria</th>
-                            <th>Sedi</th>
+                            <th>Sedi Registrate</th>
                             <th>Azioni</th>
                         </tr>
                     </thead>
                     <tbody id="tabellaFornitoriBody">
-                        <tr><td colspan="6" style="text-align: center;">Caricamento fornitori...</td></tr>
+                        <tr><td colspan="5" style="text-align: center;">Caricamento fornitori...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -124,49 +107,89 @@
     <div id="modaleFornitore" class="modal">
         <div class="modal-content">
             <span class="close" onclick="chiudiModaleFornitore()">&times;</span>
-            <h2 id="modalTitle">Aggiungi Fornitore</h2>
+            <h2 id="modalTitleFornitore">Aggiungi Fornitore</h2>
             
             <form id="fornitoreForm">
                 <input type="hidden" id="fornitoreId">
                 
-                <h3>Dati Anagrafici (db_frn_anag)</h3>
+                <h3>Dati Anagrafici (db_frn)</h3>
                 <div class="form-group">
-                    <label for="nomeFornitore">Nome / Ragione Sociale *</label>
-                    <input type="text" id="nomeFornitore" required>
+                    <label for="ragioneSocialeFrn">Ragione Sociale *</label>
+                    <input type="text" id="ragioneSocialeFrn" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="pIvaCfFrn">P.IVA / Codice Fiscale *</label>
-                    <input type="text" id="pIvaCfFrn" required>
+                    <label for="pivaCfFrn">P.IVA / Codice Fiscale *</label>
+                    <input type="text" id="pivaCfFrn" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="emailFornitore">Email *</label>
-                    <input type="email" id="emailFornitore" required>
+                    <label for="emailFrn">Email Principale</label>
+                    <input type="email" id="emailFrn">
                 </div>
                 
                 <div class="form-group">
-                    <label for="telefonoFornitore">Telefono</label>
-                    <input type="tel" id="telefonoFornitore">
+                    <label for="telefonoFrn">Telefono</label>
+                    <input type="text" id="telefonoFrn">
                 </div>
                 
-                <div class="form-group">
-                    <label for="categoriaFornitore">Categoria Fornitore (db_frn_cat)</label>
-                    <select id="categoriaFornitore">
-                        <option value="">Caricamento Categorie...</option> 
-                    </select>
-                </div>
-                
-                <h3 style="margin-top: 30px;">Sedi del Fornitore (db_frn_sed)</h3>
-                <div id="sediContainer">
-                    <button type="button" class="secondary" onclick="aggiungiSede()">+ Aggiungi Sede</button>
-                    <p style="font-size: 0.9em; color: #6c757d;">(Le sedi esistenti verranno caricate automaticamente in modalità modifica)</p>
-                    <div id="sediList">
+                <div class="fornitore-details" id="fornitoreSediSection" style="display: none;">
+                    <h3>Gestione Sedi Associate (db_sedefrn)</h3>
+                    <div class="sede-header">
+                        <h4>Elenco Sedi</h4>
+                        <button type="button" class="secondary" onclick="apriModaleSede()">+ Aggiungi Sede</button>
+                    </div>
+                    
+                    <div class="sede-container">
+                        <div id="listaSediFornitore">
+                            <p style="text-align: center; margin: 5px;">Nessuna sede collegata.</p>
                         </div>
+                    </div>
                 </div>
 
                 <div class="modal-buttons">
+                    <button type="button" class="danger" onclick="eliminaFornitore(document.getElementById('fornitoreId').value)" id="eliminaFornitoreButton" style="display: none;">Elimina Fornitore</button>
                     <button type="submit" class="secondary">Salva Fornitore</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="modaleSede" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="chiudiModaleSede()">&times;</span>
+            <h2 id="modalTitleSede">Aggiungi Sede</h2>
+            
+            <form id="sedeForm">
+                <input type="hidden" id="sedeId">
+                <input type="hidden" id="idFornitorePadre">
+                
+                <h3>Dati Sede (db_sedefrn)</h3>
+                <div class="form-group">
+                    <label for="tipoSede">Tipo Sede</label>
+                    <select id="tipoSede">
+                        <option value="Sede Legale">Sede Legale</option>
+                        <option value="Sede Operativa">Sede Operativa</option>
+                        <option value="Sede Commerciale">Sede Commerciale</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="indirizzoSede">Indirizzo *</label>
+                    <input type="text" id="indirizzoSede" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cittaSede">Città *</label>
+                    <input type="text" id="cittaSede" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="capSede">CAP</label>
+                    <input type="text" id="capSede">
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="submit" class="secondary">Salva Sede</button>
                 </div>
             </form>
         </div>
@@ -174,11 +197,11 @@
 
     <script>
         // =========================================================
-        // 1. CONFIGURAZIONE E INIZIALIZZAZIONE (Affidabilità Critica)
+        // 1. CONFIGURAZIONE E INIZIALIZZAZIONE
         // =========================================================
 
-        // ⚠️ SOSTITUISCI QUESTO OGGETTO con il tuo firebaseConfig AGGIORNATO (DEVE ESSERE IDENTICO A app_gest_cli.html) ⚠️
         const firebaseConfig = {
+            // ⚠️ INSERISCI QUI LE TUE CREDENZIALI ⚠️
             apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY", 
             authDomain: "epapp-bb953.firebaseapp.com",
             projectId: "epapp-bb953",
@@ -188,24 +211,19 @@
             measurementId: "G-RN2896V58E"
         };
         
-        // Inizializzazione dei servizi
         const app = firebase.initializeApp(firebaseConfig);
         const db = app.firestore();
         const auth = app.auth();
 
-        // Riferimenti alle Collezioni (Protocollo: Nomenclatura del DB)
-        const colFornitori = db.collection('db_frn_anag');
-        const colSediFornitori = db.collection('db_frn_sed'); 
-        const colCategorieFornitori = db.collection('db_frn_cat');
+        // Riferimenti alle Collezioni
+        const colFornitori = db.collection('db_frn');
+        const colSediFrn = db.collection('db_sedefrn'); 
 
-        // Cache Locale (Protocollo: Robustezza)
-        let categorieFrnCache = [];
-        let sediFornitoreCorrente = {}; 
-        let nextTempId = 0; 
-        let fornitoreIdInModifica = null; 
+        let fornitoreIdCorrente = null; 
+        let sedeIdInModifica = null;
 
         // =========================================================
-        // 2. FUNZIONI UTILITY E CACHE
+        // 2. FUNZIONI UTILITY
         // =========================================================
 
         function toggleNav() {
@@ -214,156 +232,48 @@
 
         function handleLogout() { 
             auth.signOut().then(() => { 
-                window.location.href = 'app_gest_home.html'; 
+                window.location.href = 'app_login.html'; 
             });
         }
 
-        /**
-         * Carica e mette in cache le categorie Fornitore (db_frn_cat).
-         */
-        async function caricaDatiAnagrafici() {
-            try {
-                // Carica Categorie Fornitore
-                const catSnapshot = await colCategorieFornitori.get();
-                categorieFrnCache = catSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const catSelect = document.getElementById('categoriaFornitore');
-                catSelect.innerHTML = '<option value="">Seleziona Categoria</option>';
-                categorieFrnCache.forEach(cat => {
-                    catSelect.innerHTML += `<option value="${cat.id}">${cat.nome}</option>`;
-                });
-                
-            } catch (error) {
-                console.error("🔴 Errore nel caricamento delle anagrafiche Fornitore (Categorie):", error);
-                document.getElementById('categoriaFornitore').innerHTML = '<option value="">ERRORE CARICAMENTO</option>';
-            }
-        }
+        // =========================================================
+        // 3. GESTIONE FORNITORE (CRUD su db_frn)
+        // =========================================================
 
         /**
-         * Recupera il nome di Categoria dalla cache per la tabella.
+         * Apre la modale per l'aggiunta o la modifica di un fornitore.
          */
-        function getNomeDaCache(id, cache) {
-            const item = cache.find(item => item.id === id);
-            return item ? item.nome : 'N/D';
-        }
-
-        // =========================================================
-        // 3. GESTIONE SEDI FORNITORI (db_frn_sed)
-        // =========================================================
-        
-        function aggiungiSede(sedeData = {}) {
-            const id = sedeData.id || `temp-${nextTempId++}`; 
-            
-            sediFornitoreCorrente[id] = {
-                id: sedeData.id || id,
-                indirizzo: sedeData.indirizzo || '',
-                citta: sedeData.citta || '',
-                cap: sedeData.cap || '',
-                note: sedeData.note || '',
-                isNew: !sedeData.id, 
-                isDeleted: false 
-            };
-            renderSedi();
-        }
-
-        function rimuoviSede(id) {
-            if (sediFornitoreCorrente[id]) {
-                const sede = sediFornitoreCorrente[id];
-                if (sede.isNew) {
-                    delete sediFornitoreCorrente[id]; 
-                } else {
-                    sede.isDeleted = true; 
-                }
-                renderSedi();
-            }
-        }
-
-        function aggiornaSedeLocale(id, field, value) {
-            if (sediFornitoreCorrente[id]) {
-                sediFornitoreCorrente[id][field] = value;
-            }
-        }
-
-        function renderSedi() {
-            const container = document.getElementById('sediList');
-            container.innerHTML = '';
-            const sediDaVisualizzare = Object.values(sediFornitoreCorrente).filter(s => !s.isDeleted);
-            
-            sediDaVisualizzare.forEach(sede => {
-                const div = document.createElement('div');
-                div.className = 'sedi-section';
-                div.innerHTML = `
-                    <label style="font-style: italic; font-size: 0.9em; color: #555;">Sede: ${sede.citta || '(Nuova Sede)'} - ${sede.id.startsWith('temp') ? 'Temporanea' : 'Esistente'}</label>
-                    <div class="form-group">
-                        <input type="text" value="${sede.indirizzo}" placeholder="Indirizzo" 
-                            onchange="aggiornaSedeLocale('${sede.id}', 'indirizzo', this.value)" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" value="${sede.citta}" placeholder="Città" 
-                            onchange="aggiornaSedeLocale('${sede.id}', 'citta', this.value)" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" value="${sede.cap}" placeholder="CAP" 
-                            onchange="aggiornaSedeLocale('${sede.id}', 'cap', this.value)">
-                    </div>
-                    <div class="form-group">
-                        <input type="text" value="${sede.note}" placeholder="Note sulla Sede" 
-                            onchange="aggiornaSedeLocale('${sede.id}', 'note', this.value)">
-                    </div>
-                    <button type="button" class="danger" onclick="rimuoviSede('${sede.id}')">Rimuovi Sede</button>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-
-        // =========================================================
-        // 4. GESTIONE MODALE E CRUD FORNITORI (db_frn_anag)
-        // =========================================================
-
         function apriModaleFornitore(fornitoreData = {}) {
-            fornitoreIdInModifica = fornitoreData.id || null;
-            document.getElementById('modalTitle').textContent = fornitoreIdInModifica ? 'Modifica Fornitore' : 'Aggiungi Fornitore';
-            document.getElementById('fornitoreId').value = fornitoreIdInModifica || '';
+            fornitoreIdCorrente = fornitoreData.id || null;
+            const isEdit = !!fornitoreIdCorrente;
+            
+            document.getElementById('modalTitleFornitore').textContent = isEdit ? 'Modifica Fornitore' : 'Aggiungi Nuovo Fornitore';
+            document.getElementById('fornitoreId').value = fornitoreIdCorrente || '';
             document.getElementById('fornitoreForm').reset();
-            sediFornitoreCorrente = {}; 
-            nextTempId = 0; 
+            
+            document.getElementById('eliminaFornitoreButton').style.display = isEdit ? 'inline-block' : 'none';
 
-            caricaDatiAnagrafici(); 
+            if (isEdit) {
+                document.getElementById('ragioneSocialeFrn').value = fornitoreData.ragioneSociale || '';
+                document.getElementById('pivaCfFrn').value = fornitoreData.pivaCf || '';
+                document.getElementById('emailFrn').value = fornitoreData.email || '';
+                document.getElementById('telefonoFrn').value = fornitoreData.telefono || '';
 
-            if (fornitoreIdInModifica) {
-                document.getElementById('nomeFornitore').value = fornitoreData.nome || '';
-                document.getElementById('pIvaCfFrn').value = fornitoreData.pIvaCf || '';
-                document.getElementById('emailFornitore').value = fornitoreData.email || '';
-                document.getElementById('telefonoFornitore').value = fornitoreData.telefono || '';
-                
-                setTimeout(() => {
-                    document.getElementById('categoriaFornitore').value = fornitoreData.idCategoria || '';
-                }, 100); 
-
-                caricaSediEsistenti(fornitoreIdInModifica).then(sedi => {
-                    sedi.forEach(sede => aggiungiSede(sede));
-                });
+                // Mostra la sezione sedi solo in modifica
+                document.getElementById('fornitoreSediSection').style.display = 'block';
+                caricaSediPerFornitore(fornitoreIdCorrente);
             } else {
-                renderSedi(); 
+                // Nasconde la sezione sedi in creazione
+                document.getElementById('fornitoreSediSection').style.display = 'none';
             }
+            
             document.getElementById('modaleFornitore').style.display = 'block';
-        }
-        
-        async function caricaSediEsistenti(idFornitore) {
-             try {
-                const sediSnapshot = await colSediFornitori.where('idFornitore', '==', idFornitore).get();
-                return sediSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            } catch (error) {
-                console.error("🔴 Errore nel caricamento delle sedi Fornitore:", error);
-                return [];
-            }
         }
 
         function chiudiModaleFornitore() {
             document.getElementById('modaleFornitore').style.display = 'none';
             document.getElementById('fornitoreForm').reset();
-            sediFornitoreCorrente = {};
-            fornitoreIdInModifica = null;
+            fornitoreIdCorrente = null;
         }
 
         document.getElementById('fornitoreForm').addEventListener('submit', function(e) {
@@ -372,174 +282,254 @@
         });
 
         async function salvaFornitore() {
-            const nome = document.getElementById('nomeFornitore').value.trim();
-            const pIvaCf = document.getElementById('pIvaCfFrn').value.trim();
-            const email = document.getElementById('emailFornitore').value.trim();
-            const telefono = document.getElementById('telefonoFornitore').value.trim();
-            const idCategoria = document.getElementById('categoriaFornitore').value;
+            const id = document.getElementById('fornitoreId').value;
+            const ragioneSociale = document.getElementById('ragioneSocialeFrn').value.trim();
+            const pivaCf = document.getElementById('pivaCfFrn').value.trim();
+            const email = document.getElementById('emailFrn').value.trim();
+            const telefono = document.getElementById('telefonoFrn').value.trim();
             
-            if (!nome || !pIvaCf || !email) {
-                alert("Nome/Ragione Sociale, P.IVA/C.F. ed Email sono campi obbligatori.");
+            if (!ragioneSociale || !pivaCf) {
+                alert("Ragione Sociale e P.IVA/C.F. sono campi obbligatori.");
                 return;
             }
 
             const fornitoreData = {
-                nome: nome,
-                pIvaCf: pIvaCf,
+                ragioneSociale: ragioneSociale,
+                pivaCf: pivaCf,
                 email: email,
                 telefono: telefono,
-                idCategoria: idCategoria,
                 dataUltimaModifica: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             try {
-                let docRef;
-                if (fornitoreIdInModifica) {
-                    await colFornitori.doc(fornitoreIdInModifica).update(fornitoreData);
-                    docRef = colFornitori.doc(fornitoreIdInModifica);
+                if (id) {
+                    await colFornitori.doc(id).update(fornitoreData);
                 } else {
                     fornitoreData.dataCreazione = firebase.firestore.FieldValue.serverTimestamp();
-                    docRef = await colFornitori.add(fornitoreData);
+                    await colFornitori.add(fornitoreData);
                 }
 
-                const idFornitore = fornitoreIdInModifica || docRef.id;
-                const sedi = Object.values(sediFornitoreCorrente);
-
-                const sediPromises = sedi.map(sede => {
-                    if (sede.isDeleted && !sede.isNew) {
-                        return colSediFornitori.doc(sede.id).delete();
-                    }
-                    if (!sede.isDeleted) {
-                        if (!sede.indirizzo || !sede.citta) {
-                            console.warn(`Sede Fornitore non salvata per campi mancanti: ${JSON.stringify(sede)}`);
-                            return Promise.resolve(); 
-                        }
-
-                        const sedeToSave = {
-                            idFornitore: idFornitore, // ID Fornitore come chiave esterna
-                            indirizzo: sede.indirizzo,
-                            citta: sede.citta,
-                            cap: sede.cap || '',
-                            note: sede.note || '',
-                        };
-                        
-                        if (sede.isNew) {
-                            return colSediFornitori.add(sedeToSave);
-                        } else {
-                            return colSediFornitori.doc(sede.id).update(sedeToSave);
-                        }
-                    }
-                    return Promise.resolve();
-                });
-
-                await Promise.all(sediPromises);
-
-                alert(`Fornitore ${fornitoreIdInModifica ? 'aggiornato' : 'aggiunto'} con successo!`);
+                alert(`Fornitore ${id ? 'aggiornato' : 'aggiunto'} con successo!`);
                 chiudiModaleFornitore();
+                caricaFornitori(); // Ricarica la tabella principale
             } catch (error) {
-                console.error("🔴 Errore nel salvataggio/aggiornamento del fornitore:", error);
-                alert("Errore critico: Impossibile salvare il fornitore. Controlla la console.");
+                console.error("🔴 Errore nel salvataggio/aggiornamento del Fornitore:", error);
+                alert("Errore critico: Impossibile salvare il Fornitore. Controlla la console.");
+            }
+        }
+
+        async function eliminaFornitore(id) {
+            if (confirm("Sei sicuro di voler eliminare questo Fornitore? Saranno eliminate anche tutte le SEDI collegate (db_sedefrn)!")) {
+                try {
+                    // 1. Elimina le Sedi collegate (Integrità Referenziale)
+                    const sediDaEliminare = await colSediFrn.where('idFornitore', '==', id).get();
+                    const deleteSediPromises = sediDaEliminare.docs.map(doc => colSediFrn.doc(doc.id).delete());
+                    await Promise.all(deleteSediPromises);
+                    
+                    // 2. Elimina il Fornitore
+                    await colFornitori.doc(id).delete();
+
+                    alert("Fornitore e sedi associate eliminate con successo.");
+                    caricaFornitori();
+                } catch(e) {
+                    console.error("🔴 Errore eliminazione Fornitore:", e);
+                    alert("Errore durante l'eliminazione del Fornitore e/o delle sedi.");
+                }
             }
         }
 
 
+        // =========================================================
+        // 4. GESTIONE SEDI (CRUD su db_sedefrn)
+        // =========================================================
+
+        function apriModaleSede(sedeData = {}) {
+            if (!fornitoreIdCorrente) {
+                alert("Devi prima salvare il Fornitore per aggiungere una sede.");
+                return;
+            }
+            
+            sedeIdInModifica = sedeData.id || null;
+            document.getElementById('modalTitleSede').textContent = sedeIdInModifica ? 'Modifica Sede' : 'Aggiungi Nuova Sede';
+            document.getElementById('sedeId').value = sedeIdInModifica || '';
+            document.getElementById('idFornitorePadre').value = fornitoreIdCorrente; 
+            document.getElementById('sedeForm').reset();
+            
+            if (sedeIdInModifica) {
+                document.getElementById('tipoSede').value = sedeData.tipo || 'Sede Operativa';
+                document.getElementById('indirizzoSede').value = sedeData.indirizzo || '';
+                document.getElementById('cittaSede').value = sedeData.citta || '';
+                document.getElementById('capSede').value = sedeData.cap || '';
+            } 
+            document.getElementById('modaleSede').style.display = 'block';
+        }
+
+        function chiudiModaleSede() {
+            document.getElementById('modaleSede').style.display = 'none';
+            document.getElementById('sedeForm').reset();
+            sedeIdInModifica = null;
+        }
+
+        document.getElementById('sedeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            salvaSede();
+        });
+
+        async function salvaSede() {
+            const idFornitore = document.getElementById('idFornitorePadre').value;
+            const tipo = document.getElementById('tipoSede').value;
+            const indirizzo = document.getElementById('indirizzoSede').value.trim();
+            const citta = document.getElementById('cittaSede').value.trim();
+            const cap = document.getElementById('capSede').value.trim();
+
+            if (!idFornitore || !indirizzo || !citta) {
+                alert("Indirizzo e Città sono campi obbligatori.");
+                return;
+            }
+
+            const sedeData = {
+                idFornitore: idFornitore,
+                tipo: tipo,
+                indirizzo: indirizzo,
+                citta: citta,
+                cap: cap,
+                dataUltimaModifica: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                if (sedeIdInModifica) {
+                    await colSediFrn.doc(sedeIdInModifica).update(sedeData);
+                } else {
+                    sedeData.dataCreazione = firebase.firestore.FieldValue.serverTimestamp();
+                    await colSediFrn.add(sedeData);
+                }
+
+                alert(`Sede ${sedeIdInModifica ? 'aggiornata' : 'aggiunta'} con successo!`);
+                chiudiModaleSede();
+                caricaSediPerFornitore(idFornitore); // Aggiorna la lista sedi nella modale Fornitore
+                caricaFornitori(); // Aggiorna il conteggio nella tabella principale
+            } catch (error) {
+                console.error("🔴 Errore nel salvataggio/aggiornamento della Sede:", error);
+                alert("Errore critico: Impossibile salvare la Sede. Controlla la console.");
+            }
+        }
+
+        function caricaSediPerFornitore(idFornitore) {
+            const lista = document.getElementById('listaSediFornitore');
+            lista.innerHTML = '<p style="text-align: center; margin: 5px;">Caricamento sedi...</p>';
+            
+            // Ascoltatore per le sedi relative al Fornitore corrente
+            colSediFrn.where('idFornitore', '==', idFornitore).onSnapshot(snapshot => {
+                lista.innerHTML = '';
+                if (snapshot.empty) {
+                    lista.innerHTML = '<p style="text-align: center; margin: 5px;">Nessuna sede collegata.</p>';
+                    return;
+                }
+
+                snapshot.docs.forEach(doc => {
+                    const sede = { id: doc.id, ...doc.data() };
+                    const sedeJson = JSON.stringify(sede).replace(/"/g, '&quot;');
+                    
+                    const item = document.createElement('div');
+                    item.className = 'sede-list-item';
+                    item.innerHTML = `
+                        <span>${sede.tipo}: ${sede.indirizzo}, ${sede.citta} (${sede.cap || 'N/D'})</span>
+                        <div>
+                            <button class="secondary" onclick="apriModaleSede(${sedeJson})">Modifica</button>
+                            <button class="danger" onclick="eliminaSede('${sede.id}', '${idFornitore}')">Elimina</button>
+                        </div>
+                    `;
+                    lista.appendChild(item);
+                });
+            }, error => {
+                console.error("🔴 Errore nel fetch delle Sedi:", error);
+                lista.innerHTML = '<p style="text-align: center; color: red;">Errore nel caricamento sedi.</p>';
+            });
+        }
+
+        async function eliminaSede(idSede, idFornitore) {
+            if (confirm("Sei sicuro di voler eliminare questa Sede?")) {
+                try {
+                    await colSediFrn.doc(idSede).delete();
+                    alert("Sede eliminata con successo.");
+                    caricaSediPerFornitore(idFornitore); // Ricarica la lista
+                    caricaFornitori(); // Aggiorna il conteggio nella tabella principale
+                } catch(e) {
+                    console.error("🔴 Errore eliminazione Sede:", e);
+                    alert("Errore durante l'eliminazione della Sede.");
+                }
+            }
+        }
+
+
+        // =========================================================
+        // 5. CARICAMENTO DATI PRINCIPALE
+        // =========================================================
+        
         /**
-         * Carica e visualizza i fornitori nella tabella (db_frn_anag).
+         * Carica e visualizza i fornitori con il conteggio delle sedi.
          */
         function caricaFornitori() {
             const body = document.getElementById('tabellaFornitoriBody');
-            body.innerHTML = '<tr><td colspan="6" style="text-align: center;">Caricamento fornitori...</td></tr>';
+            body.innerHTML = '<tr><td colspan="5" style="text-align: center;">Caricamento fornitori...</td></tr>';
 
+            // Ascoltatore in tempo reale per db_frn
             colFornitori.onSnapshot(snapshot => {
                 const fornitori = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                // Mappa le sedi per un conteggio veloce (Robustezza)
-                colSediFornitori.get().then(sediSnapshot => {
-                    const sediMap = {};
+                // Carica Sedi per contare il numero di elementi per Fornitore (Robustezza)
+                colSediFrn.get().then(sediSnapshot => {
+                    const sediCountMap = {};
                     sediSnapshot.forEach(doc => {
                         const sede = doc.data();
-                        sediMap[sede.idFornitore] = (sediMap[sede.idFornitore] || 0) + 1;
+                        sediCountMap[sede.idFornitore] = (sediCountMap[sede.idFornitore] || 0) + 1;
                     });
                     
                     body.innerHTML = ''; 
 
                     if (snapshot.empty) {
-                        body.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessun fornitore registrato.</td></tr>';
+                        body.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nessun fornitore registrato.</td></tr>';
                         return;
                     }
 
                     fornitori.forEach(fornitore => {
                         const row = body.insertRow();
-                        row.insertCell().textContent = fornitore.nome;
-                        row.insertCell().textContent = fornitore.pIvaCf;
-                        row.insertCell().textContent = fornitore.email;
-                        row.insertCell().textContent = getNomeDaCache(fornitore.idCategoria, categorieFrnCache);
-                        row.insertCell().textContent = sediMap[fornitore.id] || 0; // Conteggio delle sedi
+                        row.insertCell().textContent = fornitore.ragioneSociale;
+                        row.insertCell().textContent = fornitore.pivaCf;
+                        row.insertCell().textContent = fornitore.email || 'N/D';
+                        row.insertCell().textContent = sediCountMap[fornitore.id] || 0; // Conteggio Sedi
                         
                         const actionsCell = row.insertCell();
-                        const fornitoreJson = JSON.stringify(fornitore).replace(/"/g, '&quot;');
+                        const frnJson = JSON.stringify(fornitore).replace(/"/g, '&quot;');
                         actionsCell.innerHTML = `
-                            <button class="secondary" onclick="apriModaleFornitore(${fornitoreJson})">Modifica</button>
+                            <button class="secondary" onclick="apriModaleFornitore(${frnJson})">Modifica</button>
                             <button class="danger" onclick="eliminaFornitore('${fornitore.id}')">Elimina</button>
                         `;
                     });
 
                 }).catch(err => {
-                    console.error("🔴 Errore nel conteggio sedi Fornitore:", err);
-                    body.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Errore nel conteggio delle sedi.</td></tr>';
+                    console.error("🔴 Errore nel conteggio Sedi Fornitore:", err);
+                    // Continua a mostrare i fornitori anche se il conteggio fallisce
                 });
 
             }, error => {
-                console.error("🔴 Errore nel fetch dei fornitori:", error);
-                body.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Errore nel caricamento dei dati.</td></tr>';
+                console.error("🔴 Errore nel fetch dei Fornitori:", error);
+                body.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Errore nel caricamento dei Fornitori.</td></tr>';
             });
-        }
-
-        /**
-         * Elimina un fornitore e tutte le sedi correlate (Integrità Dati).
-         */
-        async function eliminaFornitore(id) {
-            if (confirm("Sei sicuro di voler eliminare questo fornitore? Saranno eliminate anche tutte le sedi associate!")) {
-                try {
-                    // 1. Elimina le sedi collegate (Protocollo: Integrità Referenziale)
-                    const sediDaEliminare = await colSediFornitori.where('idFornitore', '==', id).get();
-                    const deleteSediPromises = sediDaEliminare.docs.map(doc => colSediFornitori.doc(doc.id).delete());
-                    await Promise.all(deleteSediPromises);
-                    
-                    // 2. Elimina il fornitore
-                    await colFornitori.doc(id).delete();
-
-                    alert("Fornitore e sedi associate eliminate con successo.");
-                } catch(e) {
-                    console.error("🔴 Errore eliminazione fornitore:", e);
-                    alert("Errore durante l'eliminazione del fornitore e/o delle sedi.");
-                }
-            }
         }
 
 
         // =========================================================
-        // 5. INIZIALIZZAZIONE
+        // 6. INIZIALIZZAZIONE
         // =========================================================
 
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // Utente autenticato: mostra la dashboard e carica i dati
                 document.getElementById('dashboardContainer').style.display = 'flex';
                 if(window.innerWidth <= 768) { document.getElementById('logoutLink').style.display = 'none'; }
-                
-                // Caricamento asincrono e sequenziale dei dati (Robustezza)
-                Promise.all([
-                    caricaDatiAnagrafici() // 1. Carica prima le anagrafiche di base nella cache
-                ]).then(() => {
-                    caricaFornitori(); // 2. Poi carica la tabella Fornitori (che dipende dalla cache)
-                }).catch(err => {
-                    console.error("🔴 Errore nel caricamento dati iniziali Fornitori:", err);
-                });
-
+                caricaFornitori();
             } else {
-                // Utente disconnesso: reindirizza al login
-                window.location.href = 'app_gest_home.html';
+                window.location.href = 'app_login.html';
             }
         });
     </script>
