@@ -1,337 +1,429 @@
-/* CSS GLOBALE per tutte le pagine di gestione */
-
-/* CORREZIONE GRAFICA: Sfondo body impostato su #343a40 (colore menu) per eliminare la banda grigia a sinistra e overflow-x: hidden */
-body { 
-    font-family: Arial, sans-serif; 
-    margin: 0; 
-    padding: 0; 
-    background-color: #343a40; 
-    color: #333; 
-    overflow-x: hidden; 
-}
-.dashboard-container { 
-    display: flex; 
-    min-height: 100vh; 
-    position: relative; /* Necessario per il layout mobile */
-} 
-
 /* ========================================================= */
-/* MENU DI NAVIGAZIONE (SIDEBAR) - Comportamento Desktop */
+/* 1. RESET E FONDAMENTA                                     */
 /* ========================================================= */
-.dashboard-nav { 
-    width: 250px; 
-    background-color: #343a40; 
-    color: white; 
-    padding: 20px 0; 
-    box-shadow: 2px 0 5px rgba(0,0,0,0.2); 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    flex-shrink: 0; 
-    /* Transizione per il responsive */
-    transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+
+:root {
+    /* Palette Colori */
+    --primary-color: #A5DD2E;   /* Giallo Limone */
+    --primary-dark: #8fc225;
+    --secondary-color: #343a40; /* Grigio/Nero Scuro (sfondo Nav) */
+    --text-color: #333;
+    --background-color: #f4f7f6;
+    --link-hover: #ffffff;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --success-color: #28a745;
 }
-.logo-link { 
-    width: 100%; 
-    text-align: center; 
-    margin-bottom: 30px; 
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
-.logo-link img { 
-    max-width: 80%; 
-    height: auto; 
-    border-radius: 5px; 
-    cursor: pointer; 
-} 
-.dashboard-nav small { 
-    font-size: 0.8em; 
-    text-transform: uppercase; 
-    letter-spacing: 0.5px; 
-    align-self: flex-start; 
-    margin-left: 20px; 
-    margin-top: 15px; 
-    color: #909090; 
-}
-.dashboard-nav hr { 
-    width: 85%; 
-    border: 0; 
-    border-top: 1px solid #495057; 
-    margin: 5px 0 10px 0; 
-}
-.dashboard-nav a { 
-    color: #ccc; 
-    text-decoration: none; 
-    padding: 12px 15px; 
-    margin: 3px 0; 
-    display: block; 
-    width: 85%; 
-    text-align: left; 
-    border-radius: 4px; 
-    transition: background-color 0.3s, padding-left 0.3s; 
-}
-.dashboard-nav a:hover, .dashboard-nav a.active { 
-    background-color: #A5DD2E; 
-    color: #343a40; 
-    font-weight: bold; 
-    padding-left: 20px; 
-}
-.dashboard-nav #logoutLink { 
-    color: #ff9999; 
-    margin-top: auto; 
-    font-weight: bold; 
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
 }
 
 /* ========================================================= */
-/* CONTENUTO PRINCIPALE */
+/* 2. LAYOUT PRINCIPALE (DASHBOARD)                          */
 /* ========================================================= */
-.dashboard-content { 
-    flex-grow: 1; 
-    padding: 30px; 
-    background-color: #f4f7f6; 
-} 
-/* Stili Generici per Sezioni, Tabelle e Bottoni */
-.data-section { 
-    background: white; 
-    padding: 20px; 
-    border-radius: 8px; 
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
-    margin-top: 20px; 
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    /* Spazio per la sidebar fissa su desktop */
+    padding-left: 250px; 
+    transition: padding-left 0.3s;
 }
-h1, h2 { 
-    color: #343a40; 
+
+/* Menu di Navigazione (Sidebar) */
+.dashboard-nav {
+    width: 250px;
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 20px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    overflow-y: auto;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    z-index: 1000;
+    transition: transform 0.3s, width 0.3s;
 }
-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    margin-top: 15px; 
+
+/* Loghi e Titoli nel Menu */
+.logo-link {
+    display: block;
+    text-align: center;
+    padding: 10px 0 20px;
 }
-th, td { 
-    padding: 10px; 
-    text-align: left; 
-    border-bottom: 1px solid #ddd; 
-    font-size: 0.9em; 
+.logo-link img {
+    width: 150px; 
+    height: auto;
 }
-th { 
-    background-color: #A5DD2E; 
-    color: #343a40; 
+
+.dashboard-nav small {
+    display: block;
+    color: var(--primary-color);
+    padding: 10px 20px 5px;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    font-weight: bold;
 }
-button { 
-    padding: 8px 12px; 
-    border: none; 
-    border-radius: 5px; 
-    cursor: pointer; 
-    margin-right: 5px; 
-    font-weight: bold; 
-    transition: background-color 0.3s; 
+.dashboard-nav hr {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0 20px 10px;
 }
-.primary { 
-    background-color: #343a40; 
-    color: white; 
+
+/* Link di Navigazione */
+.tab-link {
+    display: block;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 10px 20px;
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s;
+    font-size: 0.9em;
+    font-weight: 500;
 }
-.primary:hover { 
-    background-color: #1c1f23; 
+.tab-link:hover,
+.tab-link.active {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--primary-color);
 }
-.secondary { 
-    background-color: #A5DD2E; 
-    color: #343a40; 
+
+/* Contenuto Principale */
+.dashboard-content {
+    flex-grow: 1;
+    padding: 20px;
+    max-width: 100%; /* Gestione overflow implicito */
+    padding-top: 20px;
 }
-.secondary:hover { 
-    background-color: #94c529; 
-}
-.danger { 
-    background-color: #dc3545; 
-    color: white; 
-}
-.danger:hover { 
-    background-color: #c82333; 
-}
-/* Stili Modale (Generici) */
-.modal { 
-    display: none; 
+
+/* ========================================================= */
+/* 3. STILI MODALI (POPUPS)                                  */
+/* ========================================================= */
+
+.modal {
+    display: none; /* Nascosto di default */
     position: fixed; 
-    z-index: 1000; 
-    left: 0; 
-    top: 0; 
+    z-index: 2000; /* Superiore alla nav */
+    left: 0;
+    top: 0;
     width: 100%; 
     height: 100%; 
     overflow: auto; 
     background-color: rgba(0,0,0,0.4); 
+    padding-top: 50px;
 }
-.modal-content { 
-    background-color: #fefefe; 
-    margin: 5% auto; 
-    padding: 25px; 
-    border: 1px solid #888; 
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto; /* 5% dall'alto e centrato */
+    padding: 30px;
+    border: 1px solid #888;
     width: 90%; 
-    max-width: 750px; 
-    border-radius: 10px; 
-    position: relative; 
+    max-width: 700px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative;
+    animation-name: animatetop;
+    animation-duration: 0.4s;
 }
-.close { 
-    color: #aaa; 
-    float: right; 
-    font-size: 28px; 
-    font-weight: bold; 
+
+/* Animazione Modale */
+@keyframes animatetop {
+    from {top: -300px; opacity: 0}
+    to {top: 0; opacity: 1}
 }
-.close:hover, .close:focus { 
-    color: #000; 
-    text-decoration: none; 
-    cursor: pointer; 
-}
-.form-group { 
-    margin-bottom: 15px; 
-}
-.form-group label { 
-    display: block; 
-    margin-bottom: 5px; 
-    font-weight: bold; 
-}
-.form-group input, .form-group select, .form-group textarea { 
-    width: 100%; 
-    padding: 10px; 
-    border: 1px solid #ccc; 
-    border-radius: 5px; 
-    box-sizing: border-box; 
-}
-.modal-buttons { 
-    margin-top: 20px; 
-    display: flex; 
-    justify-content: flex-end; 
-}
-/* Stili specifici (per evitare conflitti, lascio qui gli stili specifici dei vari file) */
-.lab-details, .fornitore-details { 
-    margin-top: 20px; 
-    border-top: 1px solid #eee; 
-    padding-top: 15px; 
-}
-.lab-att-header, .sede-header { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    margin-bottom: 15px; 
-}
-.activities-container, .sede-container { 
-    border: 1px solid #ccc; 
-    padding: 10px; 
-    margin-top: 10px; 
-    border-radius: 5px; 
-}
-.sede-list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px dotted #ddd;
-}
-.sede-list-item:last-child {
-    border-bottom: none;
-}
-.sede-list-item button {
-    margin-left: 5px;
-}
-/* ========================================================= */
-/* RESPONSIVE DESIGN (Smartphone / Schermi Piccoli) */
-/* ========================================================= */
-/* Intestazione Mobile (di default nascosta) */
-.mobile-header {
-    display: none;
-    background-color: #343a40;
-    color: white;
-    padding: 15px;
-    width: 100%;
-    box-sizing: border-box;
-    position: fixed; /* Fissa l'header in alto */
-    top: 0;
-    left: 0;
-    z-index: 900;
-    align-items: center;
-    justify-content: space-between;
-    height: 55px; /* Altezza fissa per l'header */
-}
-.hamburger-icon {
-    font-size: 24px;
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 20px;
     cursor: pointer;
 }
-.mobile-header h2 {
-    color: white;
-    font-size: 1.2em;
-    margin: 0;
-    flex-grow: 1;
-    text-align: center;
-    padding-right: 30px; /* Spazio per l'icona hamburger */
+
+.close:hover,
+.close:focus {
+    color: var(--danger-color);
+    text-decoration: none;
+    cursor: pointer;
 }
 
-@media (max-width: 768px) {
-    
-    /* 1. Modifica Layout Generale */
-    .dashboard-container {
-        flex-direction: column; /* Menu sopra il contenuto */
-    }
-    
-    /* 2. Mostra l'Header Mobile */
+/* Stili Form all'interno della Modale */
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 0.9em;
+    color: var(--secondary-color);
+}
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="date"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+.modal-buttons {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.modal-buttons button.danger {
+    margin-right: auto; /* Sposta il bottone di eliminazione a sinistra */
+}
+
+
+/* ========================================================= */
+/* 4. BOTTONI E ELEMENTI BASE                                */
+/* ========================================================= */
+
+button, .button-link {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s, opacity 0.2s;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.primary {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+}
+.primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.secondary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+.secondary:hover {
+    opacity: 0.9;
+    background-color: #212529;
+}
+
+.danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+.danger:hover {
+    background-color: #c82333;
+}
+
+.info {
+    background-color: var(--info-color);
+    color: white;
+}
+
+.data-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-top: 20px;
+}
+
+/* ========================================================= */
+/* 5. STILI TABELLE (RESPONSIVE)                             */
+/* ========================================================= */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    table-layout: auto; /* Permette alla tabella di adattarsi */
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    font-size: 0.9em;
+}
+
+th {
+    background-color: var(--secondary-color);
+    color: white;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+
+/* ========================================================= */
+/* 6. LAYOUT MOBILE & RESPONSIVENESS                         */
+/* ========================================================= */
+
+/* HEADER MOBILE (Barra orizzontale superiore) */
+.mobile-header {
+    /* AGGIUNTO: ABILITA IL FLEX PER POSIZIONARE GLI ELEMENTI */
+    display: none; /* Nascosto per desktop */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-color: var(--secondary-color);
+    color: white;
+    display: flex; 
+    justify-content: space-between; /* Sposta Hamburger a SX, Titolo al Centro, Logout a DX */
+    align-items: center;
+    padding: 0 15px;
+    z-index: 1001; /* Sopra la navbar e il contenuto */
+    box-sizing: border-box;
+}
+
+/* Icona Hamburger */
+.hamburger-icon {
+    font-size: 1.8em;
+    cursor: pointer;
+    line-height: 1;
+    margin-right: 15px;
+    order: 1; /* Assicura che sia il primo a sinistra */
+}
+
+/* Titolo Header Mobile */
+.mobile-header h2 {
+    font-size: 1.2em;
+    margin: 0;
+    flex-grow: 1; 
+    text-align: center;
+    order: 2; /* Al centro */
+}
+
+/* NUOVO: Bottone di Logout nell'Header Mobile */
+.mobile-logout-btn {
+    background: none;
+    border: none;
+    color: white;
+    padding: 8px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none; 
+    order: 3; /* Ultimo elemento a destra */
+}
+.mobile-logout-btn:hover {
+    color: var(--primary-color); 
+}
+
+/* Regole per schermi grandi (Disattiva elementi Mobile) */
+@media (min-width: 769px) {
     .mobile-header {
-        display: flex;
+        display: none !important;
+    }
+    .mobile-logout-btn {
+        display: none !important; 
+    }
+}
+
+/* Regole per schermi piccoli (Tablet e Smartphone) */
+@media (max-width: 768px) {
+    /* Attiva elementi Mobile */
+    .dashboard-container {
+        /* Toglie lo spazio per la sidebar fissa */
+        padding-left: 0; 
+        /* Aggiunge spazio per l'header mobile fisso */
+        padding-top: 60px; 
     }
     
-    /* 3. Sposta il Contenuto Sotto l'Header */
-    .dashboard-content {
-        padding-top: 85px; /* Aggiunge spazio per l'header fisso */
+    .mobile-header {
+        display: flex; /* Mostra l'header mobile */
     }
 
-    /* 4. Nascondi Sidebar (Menu Off-Canvas) */
+    /* Nasconde la sidebar fissa (sostituita dal menu a comparsa) */
     .dashboard-nav {
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 950;
-        height: 100%; /* Altezza piena dello schermo */
-        width: 0; /* Nascondi il menu di default */
-        padding-top: 70px; /* Spazio sotto l'header mobile */
-        transform: translateX(-100%); /* Sposta fuori schermo */
-        overflow-y: auto;
+        /* Usa la trasformazione per nasconderla/mostrarla off-screen */
+        transform: translateX(-100%); 
+        width: 250px;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.3);
     }
 
-    /* 5. Classe per mostrare Sidebar */
+    /* Stato del menu aperto (mostrato) */
     .dashboard-nav.open {
-        width: 250px; /* Larghezza visibile del menu */
-        transform: translateX(0); /* Fai entrare il menu */
+        transform: translateX(0);
     }
     
-    /* 6. Adattamento Testo e Tabelle */
+    /* Stile Tabella Responsive (Trasforma in elenco di schede) */
     table, thead, tbody, th, td, tr {
-        display: block; /* Forze le tabelle a comportarsi come blocchi (per schermi piccoli) */
+        display: block;
     }
+    
     thead tr {
         position: absolute;
         top: -9999px;
-        left: -9999px; /* Nasconde l'intestazione della tabella */
+        left: -9999px;
     }
+    
+    tr {
+        border: 1px solid #ccc;
+        margin-bottom: 15px;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        background: white;
+    }
+    
     td {
+        /* Comportamento di blocco per le celle */
         border: none;
-        border-bottom: 1px solid #eee;
         position: relative;
-        padding-left: 50% !important; /* Spazio per l'etichetta */
-        text-align: right !important;
+        padding-left: 50%; /* Spazio per la label */
+        text-align: right;
+        font-size: 1em;
     }
+    
     td:before {
-        content: attr(data-label); /* Utilizza un'etichetta (richiede modifica HTML) */
+        /* Genera la label usando l'attributo data-label */
+        content: attr(data-label);
         position: absolute;
-        left: 10px;
+        top: 0;
+        left: 0;
         width: 45%;
-        padding-right: 10px;
-        white-space: nowrap;
-        text-align: left;
+        padding-left: 10px;
         font-weight: bold;
+        text-align: left;
+        color: var(--secondary-color);
+        white-space: nowrap;
     }
-    .data-section {
-        overflow-x: auto; /* Permetti lo scroll orizzontale per elementi larghi */
+    
+    /* Regola il padding delle celle per le label */
+    td {
+        padding: 10px 15px 10px 50%;
+        border-bottom: 1px solid #eee;
     }
-    /* Rimuovi l'impatto visivo della barra grigia a destra dopo l'header */
-    body {
-        background-color: #f4f7f6; /* Il body assume il colore del contenuto principale */
-    }
-    /* Assicurati che il box modale non sia troppo largo */
-    .modal-content {
-        width: 95%;
-        margin: 10px auto;
+    td:last-child {
+        border-bottom: none;
+        text-align: center; /* Centra i bottoni */
+        padding-left: 15px;
     }
 }

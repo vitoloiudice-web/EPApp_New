@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPApp - Labs & Attività</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <link rel="stylesheet" href="main_style.css">
+</head>
+<body>
+    
+    <div class="dashboard-container" id="dashboardContainer" style="display: none;">
+        
+        <div class="mobile-header">
+            <span class="hamburger-icon" onclick="toggleNav()">☰</span>
+            <h2>Labs & Attività</h2>
+            <button class="mobile-logout-btn" onclick="handleLogout()">Logout</button>
+        </div>
+
+        <nav class="dashboard-nav" id="dashboardNav">
+            <a href="index.html" class="logo-link" onclick="toggleNav()"><img src="lemon_logo.png" alt="EPApp Logo"></a>
+            
+            <small>Dashboard</small><hr>
+            <a href="index.html" class="tab-link" onclick="toggleNav()">DASHBOARD</a> 
+
+            <small>Anagrafiche</small><hr>
+            <a href="app_gest_cli.html" class="tab-link" onclick="toggleNav()">CLIENTI</a> 
+            <a href="app_gest_frn.html" class="tab-link" onclick="toggleNav()">FORNITORI & SEDI</a>
+            <a href="app_gest_utn.html" class="tab-link" onclick="toggleNav()">UTENTI</a> 
+            
+            <small>Labs & Logistica</small><hr>
+            <a href="app_gest_lab.html" class="tab-link active" onclick="toggleNav()">LABS & ATTIVITÀ</a> <a href="app_gest_isc.html" class="tab-link" onclick="toggleNav()">ISCRIZIONI & PAGAMENTI</a> 
+            <a href="app_gest_inv.html" class="tab-link" onclick="toggleNav()">INVENTARIO</a> 
+            <a href="app_gest_log.html" class="tab-link" onclick="toggleNav()">LOGISTICA</a> 
+            
+            <small>Finanza & Analisi</small><hr>
+            <a href="app_gest_pre.html" class="tab-link" onclick="toggleNav()">PREVENTIVI</a> 
+            <a href="app_gest_fat.html" class="tab-link" onclick="toggleNav()">FATTURE</a>
+            <a href="app_gest_sta.html" class="tab-link" onclick="toggleNav()">STATISTICHE & KPI</a> 
+
+            <a href="#" id="logoutLink" onclick="handleLogout(); toggleNav();">LOGOUT</a>
+        </nav>
+
+        <main class="dashboard-content">
+            <h1>Gestione Labs & Attività</h1>
+            <p>Qui puoi definire i Labs (i progetti principali) e le Attività specifiche associate a ciascun Lab.</p>
+
+            <div class="data-section">
+                <button class="primary" onclick="apriModaleLab()">AGGIUNGI NUOVO LAB</button>
+                
+                <h2>Elenco Labs (db_lab)</h2>
+                <table id="tabellaLabs">
+                    <thead>
+                        <tr>
+                            <th>Nome Lab</th>
+                            <th>Data Inizio</th>
+                            <th>Data Fine Prevista</th>
+                            <th>Stato</th>
+                            <th>Attività Collegate</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabellaLabsBody">
+                        <tr><td colspan="6" style="text-align: center;">Caricamento labs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+        </main>
+    </div>
+
+    <div id="modaleLab" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="chiudiModaleLab()">&times;</span>
+            <h2 id="modalTitleLab">Aggiungi Lab</h2>
+            
+            <form id="labForm">
+                <input type="hidden" id="labId">
+                
+                <h3>Dati Lab (db_lab)</h3>
+                <div class="form-group">
+                    <label for="nomeLab">Nome Lab *</label>
+                    <input type="text" id="nomeLab" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="descrizioneLab">Descrizione</label>
+                    <textarea id="descrizioneLab"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dataInizio">Data Inizio *</label>
+                    <input type="date" id="dataInizio" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dataFinePrevista">Data Fine Prevista</label>
+                    <input type="date" id="dataFinePrevista">
+                </div>
+                
+                <div class="form-group">
+                    <label for="statoLab">Stato Lab *</label>
+                    <select id="statoLab" required>
+                        <option value="Da Iniziare">Da Iniziare</option>
+                        <option value="In Corso">In Corso</option>
+                        <option value="Completato">Completato</option>
+                        <option value="Sospeso">Sospeso</option>
+                    </select>
+                </div>
+
+                <div class="lab-details" id="labAttivitaSection" style="display: none;">
+                    <h3>Gestione Attività Associate (db_lab_att)</h3>
+                    <div class="lab-att-header">
+                        <h4>Elenco Attività per questo Lab</h4>
+                        <button type="button" class="secondary" onclick="apriModaleAttivita()">+ Aggiungi Attività</button>
+                    </div>
+                    
+                    <div class="activities-container">
+                        <table id="tabellaAttivitaLab">
+                            <thead>
+                                <tr>
+                                    <th>Nome Attività</th>
+                                    <th>Categoria</th>
+                                    <th>Stato</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabellaAttivitaLabBody">
+                                <tr><td colspan="4" style="text-align: center;">Nessuna attività collegata.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="secondary">Salva Lab</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="modaleAttivita" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="chiudiModaleAttivita()">&times;</span>
+            <h2 id="modalTitleAttivita">Aggiungi Attività</h2>
+            
+            <form id="attivitaForm">
+                <input type="hidden" id="attivitaId">
+                <input type="hidden" id="idLabPadre">
+                
+                <h3>Dati Attività (db_lab_att)</h3>
+                <div class="form-group">
+                    <label for="nomeAttivita">Nome Attività *</label>
+                    <input type="text" id="nomeAttivita" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="descrizioneAttivita">Descrizione</label>
+                    <textarea id="descrizioneAttivita"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="categoriaAttivita">Categoria Attività (db_att_cat) *</label>
+                    <select id="categoriaAttivita" required>
+                        <option value="">Caricamento Categorie...</option> 
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="statoAttivita">Stato Attività *</label>
+                    <select id="statoAttivita" required>
+                        <option value="In Coda">In Coda</option>
+                        <option value="In Lavorazione">In Lavorazione</option>
+                        <option value="Completata">Completata</option>
+                        <option value="Interrotta">Interrotta</option>
+                    </select>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="submit" class="secondary">Salva Attività</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================
+        // 1. CONFIGURAZIONE E INIZIALIZZAZIONE
+        // =========================================================
+
+        const firebaseConfig = {
+            // ⚠️ INSERISCI QUI LE TUE CREDENZIALI ⚠️
+            apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY", 
+            authDomain: "epapp-bb953.firebaseapp.com",
+            projectId: "epapp-bb953",
+            storageBucket: "epapp-bb953.firebasestorage.app",
+            messagingSenderId: "797675959163",
+            appId: "1:797675959163:web:30c077ce253990239d03de",
+            measurementId: "G-RN2896V58E"
+        };
+        
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = app.firestore();
+        const auth = app.auth();
+
+        // Riferimenti alle Collezioni
+        const colLabs = db.collection('db_lab');
+        const colAttivitaCat = db.collection('db_att_cat'); 
+        const colLabAttivita = db.collection('db_lab_att'); 
+
+        // Cache Locale
+        let attCatCache = [];
+        let labIdCorrente = null; 
+        let attivitaIdInModifica = null;
+
+        // =========================================================
+        // 2. FUNZIONI UTILITY E CACHE
+        // =========================================================
+
+        /**
+         * Funzione per aprire/chiudere il menu di navigazione su mobile.
+         */
+        function toggleNav() {
+            document.getElementById('dashboardNav').classList.toggle('open');
+        }
+
+        function handleLogout() { 
+            auth.signOut().then(() => { 
+                window.location.href = 'app_login.html'; 
+            });
+        }
+
+        /**
+         * Carica le categorie attività per la select (db_att_cat).
+         */
+        async function caricaCategorieAttivita() {
+            try {
+                const catSnapshot = await colAttivitaCat.get();
+                attCatCache = catSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                const catSelect = document.getElementById('categoriaAttivita');
+                catSelect.innerHTML = '<option value="">Seleziona Categoria</option>';
+                attCatCache.forEach(cat => {
+                    catSelect.innerHTML += `<option value="${cat.id}">${cat.nome}</option>`;
+                });
+                
+            } catch (error) {
+                console.error("🔴 Errore nel caricamento delle categorie attività:", error);
+                document.getElementById('categoriaAttivita').innerHTML = '<option value="">ERRORE CARICAMENTO</option>';
+            }
+        }
+
+        function getNomeDaCache(id, cache) {
+            const item = cache.find(item => item.id === id);
+            return item ? item.nome : 'N/D';
+        }
+
+        // =========================================================
+        // 3. GESTIONE LAB (CRUD su db_lab)
+        // =========================================================
+
+        function apriModaleLab(labData = {}) {
+            labIdCorrente = labData.id || null;
+            document.getElementById('modalTitleLab').textContent = labIdCorrente ? 'Modifica Lab' : 'Aggiungi Nuovo Lab';
+            document.getElementById('labId').value = labIdCorrente || '';
+            document.getElementById('labForm').reset();
+            
+            // Popola la modale Lab
+            if (labIdCorrente) {
+                document.getElementById('nomeLab').value = labData.nome || '';
+                document.getElementById('descrizioneLab').value = labData.descrizione || '';
+                document.getElementById('dataInizio').value = labData.dataInizio || '';
+                document.getElementById('dataFinePrevista').value = labData.dataFinePrevista || '';
+                document.getElementById('statoLab').value = labData.stato || 'Da Iniziare';
+
+                // Mostra la sezione attività solo in modifica
+                document.getElementById('labAttivitaSection').style.display = 'block';
+                caricaAttivitaPerLab(labIdCorrente);
+            } else {
+                // Nascondi la sezione attività in creazione
+                document.getElementById('labAttivitaSection').style.display = 'none';
+            }
+            document.getElementById('modaleLab').style.display = 'block';
+        }
+
+        function chiudiModaleLab() {
+            document.getElementById('modaleLab').style.display = 'none';
+            document.getElementById('labForm').reset();
+            labIdCorrente = null;
+        }
+
+        document.getElementById('labForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            salvaLab();
+        });
+
+        async function salvaLab() {
+            const nome = document.getElementById('nomeLab').value.trim();
+            const descrizione = document.getElementById('descrizioneLab').value.trim();
+            const dataInizio = document.getElementById('dataInizio').value;
+            const dataFinePrevista = document.getElementById('dataFinePrevista').value;
+            const stato = document.getElementById('statoLab').value;
+            
+            if (!nome || !dataInizio || !stato) {
+                alert("Nome Lab, Data Inizio e Stato sono campi obbligatori.");
+                return;
+            }
+
+            const labData = {
+                nome: nome,
+                descrizione: descrizione,
+                dataInizio: dataInizio,
+                dataFinePrevista: dataFinePrevista,
+                stato: stato,
+                dataUltimaModifica: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                if (labIdCorrente) {
+                    await colLabs.doc(labIdCorrente).update(labData);
+                } else {
+                    labData.dataCreazione = firebase.firestore.FieldValue.serverTimestamp();
+                    await colLabs.add(labData);
+                }
+
+                alert(`Lab ${labIdCorrente ? 'aggiornato' : 'aggiunto'} con successo!`);
+                chiudiModaleLab();
+                caricaLabs(); // Ricarica la tabella principale
+            } catch (error) {
+                console.error("🔴 Errore nel salvataggio/aggiornamento del Lab:", error);
+                alert("Errore critico: Impossibile salvare il Lab. Controlla la console.");
+            }
+        }
+
+        async function eliminaLab(id) {
+            if (confirm("Sei sicuro di voler eliminare questo Lab? Saranno eliminate anche tutte le ATTIVITÀ collegate (db_lab_att)!")) {
+                try {
+                    // 1. Elimina le Attività collegate (Integrità Referenziale)
+                    const attivitaDaEliminare = await colLabAttivita.where('idLab', '==', id).get();
+                    const deleteAttivitaPromises = attivitaDaEliminare.docs.map(doc => colLabAttivita.doc(doc.id).delete());
+                    await Promise.all(deleteAttivitaPromises);
+                    
+                    // 2. Elimina il Lab
+                    await colLabs.doc(id).delete();
+
+                    alert("Lab e attività associate eliminate con successo.");
+                    caricaLabs();
+                } catch(e) {
+                    console.error("🔴 Errore eliminazione Lab:", e);
+                    alert("Errore durante l'eliminazione del Lab e/o delle attività.");
+                }
+            }
+        }
+
+        /**
+         * Carica e visualizza i Labs nella tabella (db_lab).
+         */
+        function caricaLabs() {
+            const body = document.getElementById('tabellaLabsBody');
+            body.innerHTML = '<tr><td colspan="6" style="text-align: center;">Caricamento labs...</td></tr>';
+
+            // Ascoltatore in tempo reale per db_lab
+            colLabs.onSnapshot(snapshot => {
+                const labs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Carica Attività per contare il numero di elementi per Lab (Robustezza)
+                colLabAttivita.get().then(attSnapshot => {
+                    const attCountMap = {};
+                    attSnapshot.forEach(doc => {
+                        const att = doc.data();
+                        attCountMap[att.idLab] = (attCountMap[att.idLab] || 0) + 1;
+                    });
+                    
+                    body.innerHTML = ''; 
+
+                    if (snapshot.empty) {
+                        body.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessun Lab registrato.</td></tr>';
+                        return;
+                    }
+
+                    labs.forEach(lab => {
+                        const row = body.insertRow();
+                        
+                        // IMPORTANTE: Aggiungere data-label per il responsive su mobile
+                        row.insertCell().setAttribute('data-label', 'Nome Lab');
+                        row.cells[0].textContent = lab.nome;
+                        
+                        row.insertCell().setAttribute('data-label', 'Data Inizio');
+                        row.cells[1].textContent = lab.dataInizio;
+                        
+                        row.insertCell().setAttribute('data-label', 'Data Fine Prevista');
+                        row.cells[2].textContent = lab.dataFinePrevista || 'N/D';
+                        
+                        row.insertCell().setAttribute('data-label', 'Stato');
+                        row.cells[3].textContent = lab.stato;
+                        
+                        row.insertCell().setAttribute('data-label', 'Attività Collegate');
+                        row.cells[4].textContent = attCountMap[lab.id] || 0; // Conteggio Attività
+                        
+                        const actionsCell = row.insertCell();
+                        actionsCell.setAttribute('data-label', 'Azioni');
+                        
+                        const labJson = JSON.stringify(lab).replace(/"/g, '&quot;');
+                        actionsCell.innerHTML = `
+                            <button class="secondary" onclick="apriModaleLab(${labJson})">Modifica</button>
+                            <button class="danger" onclick="eliminaLab('${lab.id}')">Elimina</button>
+                        `;
+                    });
+
+                }).catch(err => {
+                    console.error("🔴 Errore nel conteggio Attività Lab:", err);
+                    // Continua a mostrare i Labs anche se il conteggio fallisce
+                });
+
+            }, error => {
+                console.error("🔴 Errore nel fetch dei Labs:", error);
+                body.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Errore nel caricamento dei Labs.</td></tr>';
+            });
+        }
+
+
+        // =========================================================
+        // 4. GESTIONE ATTIVITÀ (CRUD su db_lab_att)
+        // =========================================================
+
+        function apriModaleAttivita(attivitaData = {}) {
+            if (!labIdCorrente) {
+                alert("Devi prima salvare il Lab per aggiungere un'attività.");
+                return;
+            }
+            
+            attivitaIdInModifica = attivitaData.id || null;
+            document.getElementById('modalTitleAttivita').textContent = attivitaIdInModifica ? 'Modifica Attività' : 'Aggiungi Nuova Attività';
+            document.getElementById('attivitaId').value = attivitaIdInModifica || '';
+            document.getElementById('idLabPadre').value = labIdCorrente; 
+            document.getElementById('attivitaForm').reset();
+            
+            // Popola la modale Attività
+            if (attivitaIdInModifica) {
+                document.getElementById('nomeAttivita').value = attivitaData.nome || '';
+                document.getElementById('descrizioneAttivita').value = attivitaData.descrizione || '';
+                
+                // Imposta la select
+                setTimeout(() => {
+                    document.getElementById('categoriaAttivita').value = attivitaData.idCategoria || '';
+                    document.getElementById('statoAttivita').value = attivitaData.stato || 'In Coda';
+                }, 50);
+            } 
+
+            document.getElementById('modaleAttivita').style.display = 'block';
+        }
+
+        function chiudiModaleAttivita() {
+            document.getElementById('modaleAttivita').style.display = 'none';
+            document.getElementById('attivitaForm').reset();
+            attivitaIdInModifica = null;
+        }
+
+        document.getElementById('attivitaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            salvaAttivita();
+        });
+
+        async function salvaAttivita() {
+            const idLab = document.getElementById('idLabPadre').value;
+            const nome = document.getElementById('nomeAttivita').value.trim();
+            const descrizione = document.getElementById('descrizioneAttivita').value.trim();
+            const idCategoria = document.getElementById('categoriaAttivita').value;
+            const stato = document.getElementById('statoAttivita').value;
+
+            if (!idLab || !nome || !idCategoria || !stato) {
+                alert("Tutti i campi contrassegnati sono obbligatori.");
+                return;
+            }
+
+            const attivitaData = {
+                idLab: idLab,
+                nome: nome,
+                descrizione: descrizione,
+                idCategoria: idCategoria,
+                stato: stato,
+                dataUltimaModifica: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                if (attivitaIdInModifica) {
+                    await colLabAttivita.doc(attivitaIdInModifica).update(attivitaData);
+                } else {
+                    attivitaData.dataCreazione = firebase.firestore.FieldValue.serverTimestamp();
+                    await colLabAttivita.add(attivitaData);
+                }
+
+                alert(`Attività ${attivitaIdInModifica ? 'aggiornata' : 'aggiunta'} con successo!`);
+                chiudiModaleAttivita();
+                caricaAttivitaPerLab(idLab); // Aggiorna la tabella attività
+                caricaLabs(); // Aggiorna il conteggio nella tabella principale
+            } catch (error) {
+                console.error("🔴 Errore nel salvataggio/aggiornamento dell'Attività:", error);
+                alert("Errore critico: Impossibile salvare l'Attività. Controlla la console.");
+            }
+        }
+
+        function caricaAttivitaPerLab(idLab) {
+            const body = document.getElementById('tabellaAttivitaLabBody');
+            body.innerHTML = '<tr><td colspan="4" style="text-align: center;">Caricamento attività...</td></tr>';
+            
+            // Ascoltatore per le attività relative al Lab corrente
+            colLabAttivita.where('idLab', '==', idLab).onSnapshot(snapshot => {
+                body.innerHTML = '';
+                if (snapshot.empty) {
+                    body.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nessuna attività collegata.</td></tr>';
+                    return;
+                }
+
+                snapshot.docs.forEach(doc => {
+                    const attivita = { id: doc.id, ...doc.data() };
+                    const row = body.insertRow();
+                    
+                    // IMPORTANTE: Aggiungere data-label per il responsive su mobile
+                    row.insertCell().setAttribute('data-label', 'Nome Attività');
+                    row.cells[0].textContent = attivita.nome;
+                    
+                    row.insertCell().setAttribute('data-label', 'Categoria');
+                    row.cells[1].textContent = getNomeDaCache(attivita.idCategoria, attCatCache);
+                    
+                    row.insertCell().setAttribute('data-label', 'Stato');
+                    row.cells[2].textContent = attivita.stato;
+                    
+                    const actionsCell = row.insertCell();
+                    actionsCell.setAttribute('data-label', 'Azioni');
+
+                    const attivitaJson = JSON.stringify(attivita).replace(/"/g, '&quot;');
+                    actionsCell.innerHTML = `
+                        <button class="secondary" onclick="apriModaleAttivita(${attivitaJson})">Modifica</button>
+                        <button class="danger" onclick="eliminaAttivita('${attivita.id}', '${attivita.idLab}')">Elimina</button>
+                    `;
+                });
+            }, error => {
+                console.error("🔴 Errore nel fetch delle Attività per Lab:", error);
+                body.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Errore nel caricamento attività.</td></tr>';
+            });
+        }
+
+        async function eliminaAttivita(idAttivita, idLab) {
+            if (confirm("Sei sicuro di voler eliminare questa Attività?")) {
+                try {
+                    await colLabAttivita.doc(idAttivita).delete();
+                    alert("Attività eliminata con successo.");
+                    caricaAttivitaPerLab(idLab); // Ricarica la lista
+                    caricaLabs(); // Aggiorna il conteggio nella tabella principale
+                } catch(e) {
+                    console.error("🔴 Errore eliminazione Attività:", e);
+                    alert("Errore durante l'eliminazione dell'Attività.");
+                }
+            }
+        }
+
+
+        // =========================================================
+        // 5. INIZIALIZZAZIONE
+        // =========================================================
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('dashboardContainer').style.display = 'flex';
+                // NON NASCONDIAMO PIÙ IL LOGOUT DALLA NAV. IL LOGOUT MOBILE È NEL HEADER DEDICATO.
+                
+                // Caricamento asincrono e sequenziale dei dati
+                Promise.all([
+                    caricaCategorieAttivita() // 1. Carica le categorie di attività nella cache
+                ]).then(() => {
+                    caricaLabs(); // 2. Poi carica la tabella Labs (che dipende dal conteggio delle attività)
+                }).catch(err => {
+                    console.error("🔴 Errore nel caricamento dati iniziali Labs & Attività:", err);
+                });
+
+            } else {
+                window.location.href = 'app_login.html';
+            }
+        });
+    </script>
+</body>
+</html>
