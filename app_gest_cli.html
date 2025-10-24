@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPApp - Gestione Clienti</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <link rel="stylesheet" href="main_style.css">
+</head>
+<body>
+    
+    <div class="dashboard-container" id="dashboardContainer" style="display: none;">
+        
+        <div class="mobile-header">
+            <span class="hamburger-icon" onclick="toggleNav()">☰</span>
+            <h2>Gestione Clienti</h2>
+            <button class="mobile-logout-btn" onclick="handleLogout()">Logout</button>
+        </div>
+
+        <nav class="dashboard-nav" id="dashboardNav">
+            <a href="index.html" class="logo-link" onclick="toggleNav()"><img src="lemon_logo.png" alt="EPApp Logo"></a>
+            
+            <small>Dashboard</small><hr>
+            <a href="index.html" class="tab-link" onclick="toggleNav()">DASHBOARD</a> 
+
+            <small>Anagrafiche</small><hr>
+            <a href="app_gest_cli.html" class="tab-link active" onclick="toggleNav()">CLIENTI</a> <a href="app_gest_frn.html" class="tab-link" onclick="toggleNav()">FORNITORI & SEDI</a>
+            <a href="app_gest_utn.html" class="tab-link" onclick="toggleNav()">UTENTI</a> 
+            
+            <small>Labs & Logistica</small><hr>
+            <a href="app_gest_lab.html" class="tab-link" onclick="toggleNav()">LABS & ATTIVITÀ</a> 
+            <a href="app_gest_isc.html" class="tab-link" onclick="toggleNav()">ISCRIZIONI & PAGAMENTI</a> 
+            <a href="app_gest_inv.html" class="tab-link" onclick="toggleNav()">INVENTARIO</a> 
+            <a href="app_gest_log.html" class="tab-link" onclick="toggleNav()">LOGISTICA</a> 
+            
+            <small>Finanza & Analisi</small><hr>
+            <a href="app_gest_pre.html" class="tab-link" onclick="toggleNav()">PREVENTIVI</a> 
+            <a href="app_gest_fat.html" class="tab-link" onclick="toggleNav()">FATTURE</a>
+            <a href="app_gest_sta.html" class="tab-link" onclick="toggleNav()">STATISTICHE & KPI</a> 
+
+            <a href="#" id="logoutLink" onclick="handleLogout(); toggleNav();">LOGOUT</a>
+        </nav>
+
+        <main class="dashboard-content">
+            <h1>Gestione Clienti (db_cli)</h1>
+            <p>Aggiungi, modifica o elimina le anagrafiche complete dei clienti.</p>
+
+            <div class="data-section">
+                <button class="primary" onclick="apriModaleCliente()">AGGIUNGI NUOVO CLIENTE</button>
+                
+                <h2>Elenco Clienti</h2>
+                <table id="tabellaClienti">
+                    <thead>
+                        <tr>
+                            <th>Ragione Sociale/Nome</th>
+                            <th>P.IVA/C.F.</th>
+                            <th>Email</th>
+                            <th>Telefono</th>
+                            <th>Indirizzo Sede Legale</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabellaClientiBody">
+                        <tr><td colspan="6" style="text-align: center;">Caricamento clienti...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+        </main>
+    </div>
+
+    <div id="modaleCliente" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="chiudiModaleCliente()">&times;</span>
+            <h2 id="modalTitle">Aggiungi Cliente</h2>
+            
+            <form id="clienteForm">
+                <input type="hidden" id="clienteId">
+                
+                <h3>Dati Anagrafici (db_cli)</h3>
+                <div class="form-group">
+                    <label for="ragioneSociale">Ragione Sociale / Nome *</label>
+                    <input type="text" id="ragioneSociale" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="pivaCf">P.IVA / Codice Fiscale *</label>
+                    <input type="text" id="pivaCf" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email Principale</label>
+                    <input type="email" id="email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="telefono">Telefono</label>
+                    <input type="text" id="telefono">
+                </div>
+
+                <h3>Dati Sede Legale (db_sedecli)</h3>
+                <div class="form-group">
+                    <label for="indirizzo">Indirizzo *</label>
+                    <input type="text" id="indirizzo" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="citta">Città *</label>
+                    <input type="text" id="citta" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cap">CAP</label>
+                    <input type="text" id="cap">
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" class="danger" onclick="eliminaCliente(document.getElementById('clienteId').value)" id="eliminaButton" style="display: none;">Elimina</button>
+                    <button type="submit" class="secondary">Salva Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================
+        // 1. CONFIGURAZIONE E INIZIALIZZAZIONE
+        // =========================================================
+
+        const firebaseConfig = {
+            // ⚠️ INSERISCI QUI LE TUE CREDENZIALI ⚠️
+            apiKey: "AIzaSyCumjnczv2vErHKu-KHF_2sh4GJey5RFTY", 
+            authDomain: "epapp-bb953.firebaseapp.com",
+            projectId: "epapp-bb953",
+            storageBucket: "epapp-bb953.firebasestorage.app",
+            messagingSenderId: "797675959163",
+            appId: "1:797675959163:web:30c077ce253990239d03de",
+            measurementId: "G-RN2896V58E"
+        };
+        
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = app.firestore();
+        const auth = app.auth();
+
+        // Riferimenti alle Collezioni
+        const colClienti = db.collection('db_cli');
+        const colSediCli = db.collection('db_sedecli'); 
+
+        let idSedeCorrente = null; 
+
+        // =========================================================
+        // 2. FUNZIONI UTILITY
+        // =========================================================
+
+        /**
+         * Funzione per aprire/chiudere il menu di navigazione su mobile.
+         */
+        function toggleNav() {
+            document.getElementById('dashboardNav').classList.toggle('open');
+        }
+
+        function handleLogout() { 
+            auth.signOut().then(() => { 
+                window.location.href = 'app_login.html'; 
+            });
+        }
+
+        // =========================================================
+        // 3. GESTIONE MODALE E CRUD
+        // =========================================================
+
+        /**
+         * Apre la modale per l'aggiunta o la modifica di un cliente.
+         */
+        function apriModaleCliente(clienteData = {}, sedeData = {}) {
+            const isEdit = !!clienteData.id;
+            
+            document.getElementById('modalTitle').textContent = isEdit ? 'Modifica Cliente' : 'Aggiungi Nuovo Cliente';
+            document.getElementById('clienteId').value = clienteData.id || '';
+            idSedeCorrente = sedeData.id || null; 
+            
+            document.getElementById('clienteForm').reset();
+            document.getElementById('eliminaButton').style.display = isEdit ? 'inline-block' : 'none';
+
+            if (isEdit) {
+                // Dati Cliente (db_cli)
+                document.getElementById('ragioneSociale').value = clienteData.ragioneSociale || '';
+                document.getElementById('pivaCf').value = clienteData.pivaCf || '';
+                document.getElementById('email').value = clienteData.email || '';
+                document.getElementById('telefono').value = clienteData.telefono || '';
+                
+                // Dati Sede (db_sedecli)
+                document.getElementById('indirizzo').value = sedeData.indirizzo || '';
+                document.getElementById('citta').value = sedeData.citta || '';
+                document.getElementById('cap').value = sedeData.cap || '';
+            }
+            
+            document.getElementById('modaleCliente').style.display = 'block';
+        }
+
+        function chiudiModaleCliente() {
+            document.getElementById('modaleCliente').style.display = 'none';
+            document.getElementById('clienteForm').reset();
+            idSedeCorrente = null;
+        }
+
+        document.getElementById('clienteForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            salvaCliente();
+        });
+
+        async function salvaCliente() {
+            const clienteId = document.getElementById('clienteId').value;
+            const ragioneSociale = document.getElementById('ragioneSociale').value.trim();
+            const pivaCf = document.getElementById('pivaCf').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const telefono = document.getElementById('telefono').value.trim();
+            
+            const indirizzo = document.getElementById('indirizzo').value.trim();
+            const citta = document.getElementById('citta').value.trim();
+            const cap = document.getElementById('cap').value.trim();
+
+            if (!ragioneSociale || !pivaCf || !indirizzo || !citta) {
+                alert("I campi contrassegnati (*) sono obbligatori.");
+                return;
+            }
+
+            // Dati Sede
+            const sedeData = {
+                indirizzo: indirizzo,
+                citta: citta,
+                cap: cap,
+                dataUltimaModifica: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            // Dati Cliente
+            const clienteData = {
+                ragioneSociale: ragioneSociale,
+                pivaCf: pivaCf,
+                email: email,
+                telefono: telefono,
+                dataUltimaModifica: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                if (clienteId) {
+                    // Aggiornamento
+                    const sedePromise = idSedeCorrente 
+                        ? colSediCli.doc(idSedeCorrente).update(sedeData) 
+                        : colSediCli.add(sedeData).then(docRef => {
+                            idSedeCorrente = docRef.id;
+                            clienteData.idSedeLegale = docRef.id;
+                        });
+
+                    await Promise.all([
+                        colClienti.doc(clienteId).update(clienteData),
+                        sedePromise
+                    ]);
+
+                } else {
+                    // Creazione (richiede prima la creazione della Sede)
+                    sedeData.dataCreazione = firebase.firestore.FieldValue.serverTimestamp();
+                    const sedeRef = await colSediCli.add(sedeData);
+                    
+                    clienteData.idSedeLegale = sedeRef.id;
+                    clienteData.dataCreazione = firebase.firestore.FieldValue.serverTimestamp();
+                    await colClienti.add(clienteData);
+                }
+
+                alert(`Cliente ${clienteId ? 'aggiornato' : 'aggiunto'} con successo!`);
+                chiudiModaleCliente();
+                caricaClienti(); 
+
+            } catch (error) {
+                console.error("🔴 Errore nel salvataggio/aggiornamento:", error);
+                alert("Errore critico: Impossibile salvare il cliente. Controlla la console.");
+            }
+        }
+
+        async function eliminaCliente(id) {
+            if (!id) return;
+            if (confirm("Sei sicuro di voler eliminare questo Cliente e la sua Sede Legale associata?")) {
+                try {
+                    // 1. Trova il documento Cliente per trovare l'idSedeLegale
+                    const clienteDoc = await colClienti.doc(id).get();
+                    const clienteData = clienteDoc.data();
+                    const idSedeLegale = clienteData.idSedeLegale;
+
+                    // 2. Elimina la Sede (db_sedecli)
+                    if (idSedeLegale) {
+                        await colSediCli.doc(idSedeLegale).delete();
+                    }
+
+                    // 3. Elimina il Cliente (db_cli)
+                    await colClienti.doc(id).delete();
+
+                    alert("Cliente eliminato con successo.");
+                    caricaClienti();
+                } catch(e) {
+                    console.error("🔴 Errore eliminazione Cliente:", e);
+                    alert("Errore durante l'eliminazione del Cliente.");
+                }
+            }
+        }
+
+
+        // =========================================================
+        // 4. CARICAMENTO DATI
+        // =========================================================
+        
+        /**
+         * Carica e visualizza i clienti, facendo il lookup delle sedi.
+         */
+        async function caricaClienti() {
+            const body = document.getElementById('tabellaClientiBody');
+            body.innerHTML = '<tr><td colspan="6" style="text-align: center;">Caricamento clienti...</td></tr>';
+
+            try {
+                const cliSnapshot = await colClienti.get();
+                if (cliSnapshot.empty) {
+                    body.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessun cliente registrato.</td></tr>';
+                    return;
+                }
+
+                const clienti = cliSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // 1. Raccoglie tutti gli ID delle sedi da cercare
+                const idSedi = clienti.map(cli => cli.idSedeLegale).filter(id => id);
+                
+                // 2. Fetch le sedi con una singola query (ottimizzazione)
+                let sediMap = {};
+                if (idSedi.length > 0) {
+                    // Suddividi in blocchi se gli ID superano i 10 (limite query 'in' di Firestore)
+                    const chunks = [];
+                    for (let i = 0; i < idSedi.length; i += 10) {
+                        chunks.push(idSedi.slice(i, i + 10));
+                    }
+                    
+                    const sediPromises = chunks.map(chunk => colSediCli.where(firebase.firestore.FieldPath.documentId(), 'in', chunk).get());
+                    const sediResults = await Promise.all(sediPromises);
+
+                    sediResults.forEach(result => {
+                        result.forEach(doc => {
+                            sediMap[doc.id] = { id: doc.id, ...doc.data() };
+                        });
+                    });
+                }
+
+                // 3. Popola la tabella
+                body.innerHTML = '';
+                clienti.forEach(cliente => {
+                    const sede = sediMap[cliente.idSedeLegale] || {};
+                    
+                    const row = body.insertRow();
+                    
+                    // IMPORTANTE: Aggiungere data-label per il responsive su mobile
+                    row.insertCell().setAttribute('data-label', 'Ragione Sociale/Nome');
+                    row.cells[0].textContent = cliente.ragioneSociale;
+
+                    row.insertCell().setAttribute('data-label', 'P.IVA/C.F.');
+                    row.cells[1].textContent = cliente.pivaCf;
+                    
+                    row.insertCell().setAttribute('data-label', 'Email');
+                    row.cells[2].textContent = cliente.email || 'N/D';
+                    
+                    row.insertCell().setAttribute('data-label', 'Telefono');
+                    row.cells[3].textContent = cliente.telefono || 'N/D';
+                    
+                    row.insertCell().setAttribute('data-label', 'Indirizzo Sede Legale');
+                    row.cells[4].textContent = `${sede.indirizzo || 'N/D'}, ${sede.citta || ''} (${sede.cap || ''})`;
+                    
+                    const actionsCell = row.insertCell();
+                    actionsCell.setAttribute('data-label', 'Azioni'); // Aggiunto anche per la colonna Azioni
+                    
+                    // Preparazione dati per la modale in modo sicuro
+                    const cliJson = JSON.stringify(cliente).replace(/"/g, '&quot;');
+                    const sedeJson = JSON.stringify(sede).replace(/"/g, '&quot;');
+                    
+                    actionsCell.innerHTML = `
+                        <button class="secondary" onclick="apriModaleCliente(${cliJson}, ${sedeJson})">Modifica</button>
+                        <button class="danger" onclick="eliminaCliente('${cliente.id}')">Elimina</button>
+                    `;
+                });
+
+            } catch (error) {
+                console.error("🔴 Errore nel fetch dei Clienti:", error);
+                body.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Errore nel caricamento dei clienti.</td></tr>';
+            }
+        }
+
+        // =========================================================
+        // 5. INIZIALIZZAZIONE
+        // =========================================================
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('dashboardContainer').style.display = 'flex';
+                // NON NASCONDIAMO PIÙ IL LOGOUT DALLA NAV. IL LOGOUT MOBILE È NEL HEADER DEDICATO.
+                caricaClienti();
+            } else {
+                window.location.href = 'app_login.html';
+            }
+        });
+    </script>
+</body>
+</html>
